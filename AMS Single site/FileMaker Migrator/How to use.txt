@@ -1,0 +1,35 @@
+AMS Migrator - quick instructions
+
+Rename database file from .usr to .fp7
+
+Unlock the database file:
+	Run Passware kit professional and load the fp7 in file
+	File will automatically be unlocked & a new file created in its place 
+	Note the user names that've been unlocked.
+
+Or...
+	Email the file to geoff @ timeharvest & wait a few days...
+
+Load the unlocked file into FM Pro
+   Use one of the unlocked user names ('th' if 'th' is there)
+	(If Geoff has unlocked the file, username should be 'guest' & leave password blank)
+
+Share the data with odbc:
+	Menu -> File\Sharing\ODBC...
+	In dialog, enable sharing and select all users, click on okay.
+	(If this option is greyed out, try loading the database with a different username)
+
+Keep FMPro open!
+
+Ensure ODBC driver is installed from FMpro CD
+
+Open ODBC *Administrator* - in System DSN, if there's no 'LegacyAMS' entry, select 'add' and choose 'DataDirect 32-bit sequelink' option, otherwise select the 'LegacyAMS' entry and click on 'Configure'
+	Give the datasource the name 'LegacyAMS' - Sequelink Host: Localhost
+             - Sequelink Port: 2399
+             - Server Data source: click the button & choose the name that matches the loaded file in Filemaker pro
+
+Test the connection (click on 'Test connect', use same Username / password combo that unlocked the database in FMPRO
+
+Click on 'Apply' and then 'Ok' - Data source is now set up.
+
+Run AMS_Migrator. 

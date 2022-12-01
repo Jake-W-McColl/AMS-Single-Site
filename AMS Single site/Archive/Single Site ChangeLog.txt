@@ -1,0 +1,48 @@
+Version 1 to version 1.1:
+
+General bugfixes / changes:
+
+Fixed: Filter count bug whereby the 'Showing ## of ##' text on the Roll report screen wasn't giving the correct information.
+Fixed: When deleting a roll, assigned General history records were not getting deleted, so when a new roll is created with the same ID, they'd re-appear.
+Fixed: Changed 'Demonstration Copy' to read company name if licence has been applied.
+Database Write Check added to ensure user has write access (otherwise end-user will see failed SQL statements)
+Now freeing image memory allocation before reallocating, caused memory usage increase unnecessarily.
+Now storing 'Depth' values to database.
+Added option to show Depth values on Roll Info screen (In settings).
+Adjusted Roll info listicon gadgets in order to fit in the depth value.
+Adjusted the roll Image and pin placement on the Roll Info screen to fit in the depth value.
+Storing AniCAM Config string to database (Lighting settings, Lens, Zoom etc,.) ; For future comparative work (Prompting user if different settings have been used)
+Changed keyboard shortcut to delete rolls etc from the 'Delete' key to a 'Shift+Delete' combination, otherwise the delete key wasn't functioning normally.
+Re-ordered draw priorities so screen refreshes are completed before switching views.
+Update 'Auto-Import' icon to reflect any change made in the 'Auto-Import' setting window
+
+Added Procedures:	Database_SetMainTimeStamp()
+			Database_SetSiteTimestamp()
+			Database_SetGroupTimeStamp()
+			Database_SetRollTimeStamp()
+			
+			Database_GetMainTimeStamp()
+			Database_GetSiteTimestamp()
+			Database_GetGroupTimeStamp()
+			Database_GetRollTimeStamp()
+
+			MS_Check_Screen_Updates()
+			MS_CheckDatabaseLocation()
+
+			Database_ExportRoll() ;/ Put in to allow transportation of database entries (Ctrl+Alt+Shift+O)
+			Database_ImportRoll() ;/ Put in to allow transportation of database entries (Ctrl+Alt+Shift+I)
+			
+			Image_Manual_Load()
+			Image_Manual_Save()
+
+Database Version increments:
+
+Single Site:
+
+Version 6:	Added Timestamp Fields to AMS_Groups, Sites, Roll_Master and Settings tables.
+Version 7:	Added AniCAM Config & AniCAM Depth fields to both Roll_Master table & Roll_Data table
+Version 8:	Added Show_Depth field to AMS_Settings
+
+Multi-Site:
+
+Version 6:	Added Show_Depth field to AMS_LocalSettings table

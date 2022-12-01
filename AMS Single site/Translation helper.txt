@@ -1,0 +1,53 @@
+Line: 625 Has 4 - MessageRequester("Sorry","You should not be running more than one instance of the AMS application.", #MB_ICONERROR)
+Line: 3545 Has 4 - Navtree()\AddString = " ["+Str(Sites()\Count)+"]"
+Line: 3555 Has 4 - Navtree()\AddString = " ["+Str(Groups()\Count)+"]"
+Line: 3635 Has 6 - If RollVolume <> "0.0" And RollCapacity = "0.0" : RollCapacity = "100.0" : EndIf
+Line: 3875 Has 6 - If RollVolume <> "0.0" And RollCapacity = "0.0" : RollCapacity = "100.0" : EndIf
+Line: 4111 Has 4 - MessageRequester("Error","No Language Files loaded, but still trying to set - Exitting.")
+Line: 4163 Has 4 - MessageRequester("Error", "Language files are missing, exitting.")
+Line: 4278 Has 4 - MessageRequester("Error","Unable to open Language file!")
+Line: 4529 Has 4 - MessageRequester("Error","Could not connect")
+Line: 4588 Has 4 - MessageRequester("Error","Login failed, Username / Password combination not found")
+Line: 4891 Has 6 - Result.S = InputRequesterEx(tTxt(#Str_Creategroup)+"...", tTxt(#Str_Pleaseenternewgroupname)+":","")
+Line: 4898 Has 4 - If Duplicate = 1 : MessageRequester(tTxt(#Str_Error)+" - "+tTxt(#Str_Cannotcreategroup),tTxt(#Str_Sorry)+", "+tTxt(#Str_thisgroupnamealreadyexists),#PB_MessageRequester_Ok) : ProcedureReturn 0 : EndIf
+Line: 4922 Has 4 - Result.S = InputRequesterEx(tTxt(#Str_Renamegroup)+"...", tTxt(#Str_Pleaseenternewgroupname)+":",GroupName)
+Line: 4943 Has 12 - Resulti.i = MessageRequester(tTxt(#Str_Deleteroll)+"...",tTxt(#Str_Youwilllosealldataonroll)+":"+" "+RollText+" "+"- "+tTxt(#Str_AreyouSure)+"?",#PB_MessageRequester_YesNo)
+Line: 5043 Has 6 - Txt.S + "*** "+tTxt(#Str_Warning)+"! "+tTxt(#Str_Rolldatawillbepermanentlydeleted)+" ***"
+Line: 5100 Has 12 - MessageRequester("Error",tTxt(#Str_Sorry)+", "+tTxt(#Str_Demomodelimitationshavebeenreached)+"("+"=>"+Str(System\Settings_SiteLimit)+" "+tTxt(#Str_records)+")")
+Line: 5105 Has 6 - SiteName.s = InputRequesterEx(tTxt(#Str_Createsite)+"...", tTxt(#Str_Pleaseenternewsitename)+":","")
+Line: 5112 Has 4 - MessageRequester(tTxt(#Str_Error)+" - "+tTxt(#Str_CannotcreateSite),tTxt(#Str_Sorry)+", "+tTxt(#Str_thissitenamealreadyexists),#PB_MessageRequester_Ok)
+Line: 5139 Has 10 - MessageRequester(tTxt(#Str_Error), tTxt(#Str_Sorry)+", "+tTxt(#Str_Demomodelimitationshavebeenreached)+"("+"=>"+Str(System\Settings_RollLimit)+" "+tTxt(#Str_records)+")")
+Line: 5144 Has 6 - Result = InputRequesterEx(tTxt(#Str_Rollnameentry)+"...",tTxt(#Str_Pleaseinputnewrollname)+":","")
+Line: 5154 Has 4 - If Duplicate = 1 : MessageRequester(tTxt(#Str_Error)+" - "+tTxt(#Str_Cannotcreateroll),tTxt(#Str_Sorry)+", "+tTxt(#Str_arollbythisnamealreadyexists),#PB_MessageRequester_Ok) : ProcedureReturn 0 : EndIf
+Line: 5229 Has 4 - Result.S = InputRequesterEx(tTxt(#Str_Renameroll)+"...", tTxt(#Str_Pleaseenternewrollname)+":",RollName)
+Line: 5329 Has 4 - SaveImage(#Image_2d_Image_Current,Path+"HistTopSnap"+Str(HistID())+".bmp",#PB_ImagePlugin_BMP)
+Line: 5357 Has 4 - MessageRequester("Message","Exported successfully")
+Line: 5359 Has 4 - MessageRequester("Error","Couln't create file")
+Line: 5380 Has 6 - MessageRequester("Error","This roll name ("+RollName+") already exists on Site")
+Line: 5414 Has 4 - ImportImage = Image_To_Memory(Path+"HistTopSnap"+Str(ImageNumber)+".bmp")
+Line: 5458 Has 4 - MessageRequester("Error","Retrieved Roll ID of zero, stopping import now")
+Line: 5464 Has 4 - MessageRequester("Error","Unable to import, No Files to import?")
+Line: 5670 Has 10 - MessageRequester(tTxt(#Str_Error), tTxt(#Str_Sorry)+", "+tTxt(#Str_Demomodelimitationshavebeenreached)+"("+Str(System\Settings_ReadingsLimit)+" "+"historical "+tTxt(#Str_records)+")")
+Line: 5740 Has 8 - Txt.S + ", AniCAM_Config = '"+AMS_Import\AniCAM_Config+"', Depth = "+AMS_Import\Depth + " Where ID = "+Str(System\Selected_Roll_ID)+";"
+Line: 5768 Has 10 - Txt.s + ", '"+AMS_Import\AniCAM_Config+"', "+AMS_Import\Depth+", $1"+")"+";"
+Line: 5861 Has 6 - MessageRequester(tTxt(#Str_Error), tTxt(#Str_Sorry)+", "+tTxt(#Str_Cannotimportduetorollcountlimitbeingreached)+"("+Str(System\Settings_RollLimit)+")")
+Line: 6042 Has 6 - If MessageRequester(tTxt(#Str_Message)+"...",tTxt(#Str_Youhavemadechangestotherollinformationdata)+", "+tTxt(#Str_doyouwanttosave)+"?",#PB_MessageRequester_YesNo) = #PB_MessageRequester_Yes
+Line: 6266 Has 10 - MessageRequester(tTxt(#Str_Error), tTxt(#Str_Sorry)+", "+tTxt(#Str_Demomodelimitationshavebeenreached)+"("+"=>"+Str(System\Settings_ReadingsLimit)+" "+tTxt(#Str_records)+")")
+Line: 6423 Has 4 - If Error = 1 : MessageRequester(tTxt(#Str_Error)+"...",tTxt(#Str_Cannotsave)+" - "+tTxt(#Str_Oneormorefieldsdonotcontainnumerics),#PB_MessageRequester_Ok) : EndIf
+Line: 6424 Has 4 - If Error = 2 : MessageRequester(tTxt(#Str_Error)+"...",tTxt(#Str_Cannotsave)+" - "+tTxt(#Str_Requiresanoperatorname),#PB_MessageRequester_Ok) : EndIf
+Line: 6425 Has 4 - If Error = 3 : MessageRequester(tTxt(#Str_Error)+"...",tTxt(#Str_Cannotsave)+" - "+tTxt(#Str_Requiresatleastonevolumereadingentry),#PB_MessageRequester_Ok) : EndIf
+Line: 7668 Has 4 - If MessageRequester(tTxt(#Str_Deletepreset)+", "+tTxt(#Str_Areyousure)+"?",Txt,#PB_MessageRequester_YesNo) = #PB_MessageRequester_Yes
+Line: 7788 Has 4 - Sql.s = "Select Count(*) from ams_roll_master, ams_groups WHERE ams_roll_master.groupid = ams_groups.id and siteid = "+Str(System\Selected_Site)+ " and "
+Line: 8044 Has 4 - If MessageRequester(tTxt(#Str_Message),tTxt(#Str_Fileexists)+", "+tTxt(#Str_overwrite)+"?",#PB_MessageRequester_YesNo) = #PB_MessageRequester_No
+Line: 8054 Has 4 - MessageRequester(tTxt(#Str_Error),tTxt(#Str_Cannotwritetofile)+", "+tTxt(#Str_filealreadyopenelsewhere)+"?",#PB_MessageRequester_Ok)
+Line: 8147 Has 4 - If MessageRequester(tTxt(#Str_Message),tTxt(#Str_Fileexists)+", "+tTxt(#Str_overwrite)+"?",#PB_MessageRequester_YesNo) = #PB_MessageRequester_No
+Line: 8157 Has 4 - MessageRequester(tTxt(#Str_Error),tTxt(#Str_Cannotwritetofile)+", "+tTxt(#Str_filealreadyopenelsewhere)+"?",#PB_MessageRequester_Ok)
+Line: 8574 Has 4 - If MessageRequester(tTxt(#Str_Message),tTxt(#Str_Fileexists)+", "+tTxt(#Str_overwrite)+"?",#PB_MessageRequester_YesNo) = #PB_MessageRequester_No
+Line: 8657 Has 4 - MessageRequester(tTxt(#Str_Error),tTxt(#Str_Cannotwritetofile)+", "+tTxt(#Str_filealreadyopenelsewhere)+"?",#PB_MessageRequester_Ok)
+Line: 9132 Has 4 - Text + "System Name: "+GetEnvironmentVariable("COMPUTERNAME") + Chr(10)
+Line: 9133 Has 4 - Text + "User Name: "+GetEnvironmentVariable("USERNAME") + Chr(10)
+Line: 9168 Has 4 - MessageRequester("Sorry","The application must now exit, due to the non-acceptance of the licencing agreement")
+Line: 9648 Has 4 - TextGadget(#Gad_RollInfo_Image_Latest_Text,X + 370,Y,200,18,tTxt(#Str_Lastimported)+" / "+tTxt(#Str_selected)+":") : SetGadgetColor(#Gad_RollInfo_Image_Latest_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+Line: 9987 Has 4 - Txt.s = "Troika Systems - AMS"+Program_Version+" - User: "+System\User_Connected\FullName
+Line: 10511 Has 4 - MessageRequester(tTxt(#Str_Error)+"...",tTxt(#Str_Sorry)+", "+tTxt(#Str_youcannotdeletethemasterreadingiftherearehistoricalreadingspresent),#PB_MessageRequester_Ok)
+Lcount: 52

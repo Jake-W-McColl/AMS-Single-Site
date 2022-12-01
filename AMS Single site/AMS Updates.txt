@@ -1,0 +1,72 @@
+V1.71 24.08.2022
+ - Added button to send Roll ID/Section number to AQC .ini file and trigger a refresh if it's open
+
+V1.70 19.05.2022
+ - Finalise Tolerance/Variance changes and colouration on reports depending on tolerances
+
+V1.69 28.02.2022
+ - Support for Anilox QC Print Distance field as well as continued support for comments
+ - Tolerance/Variance: support for colouration of cells depending on how they meet the configurable tolerances.
+   (tolerances can be set at: Options -> Settings -> Database Lists -> Suitability Types)
+ - Change references from "Capacity" to "Volume Retention"
+ - Store first measured values for Cell Width and Cell Opening per roll
+
+V1.68 - 19.12.2021 -> 06.01.2022
+
+ - Made Capacity & Variance warnings part of the Roll Suitability type setup, allowing individual setups instaed of a single global.
+ - Removed 'Warning Triggers' section from Settings as no longer required.
+
+
+
+V1.65 -> V1.67 16.04.2021
+
+ - Added percentage lines on Graph
+ - Self-drawing Graph; RM Chart drawing was failing to display some foreign characters.
+ - As a consequence, no longer requires RM Chart dll.
+ - Added some pipe-mode bits for potential intercommunications with Anilox QC in future release.
+
+v1.64 12.02.2021
+ - Updated with new Troika logos.
+
+ - Small adjustment to report layout PDF export to allow for new wider logo.
+
+ - Can automatically add Usage to roll by entering 'PD:' (or 'DD:') (Print/Drucke Distance) prefix in Anilox QC comments field.
+	- Can shorthand units by using 'k' or 'm' - I.e. 1250000 can be entered as 1.25m.
+
+ - Automatic cleaning report record creation by using 'CR:', followed by some explanatory text (i.e: 'CR: Bicarb wash 30 minutes' in the comments field in Anilox QC.
+
+ - Added new generic General History selections instead of the need to key it each time - To support new report system.
+	This sucks in existing entries
+	New table to maintain in Options\Settings.
+
+ - Added new report system.
+	Can now create custom layouts, selecting fields you need and in the order you need them.
+	Additional fields addable from General History table or Comments line (1, 2 or 3).
+	Additional filter added to filter out non-populated fields from Comments or General History (GH) Table - added as unable to filter this in SQL.
+		 i.e. If GH:Damage is selected, then enabling the GH Filter will hide any roll that doesn't have a Damage record.
+
+ - Added a rudimentary Usage system.... not much room to implement properly unless roll layout is changed dramatically.
+	Right-clicking on a roll in Roll Info view will allow for addition of a usage figure, this is non-specific, so the units could be anything....
+	A Graph view of Volume by usage is also available, but will be identical to standard volume report (other than legends) as x-axis isn't scaled.
+	Can add Usage on an import if an imported Comment line has a 'Usage:' header.
+
+ - Launching AMS when an instance is already running no longer shows an error message but will display the currently running AMS.
+
+
+v1.6 - 29.05.2019
+ - Added automatic licence importing from USB
+
+v1.5e - 13.06.2018
+ - Screen scaling improvements on High DPI screens (JJ/JS/PH Laptops)
+ - Fixed issue with Windows 'Start Maximized' option (JJ).
+ - Improved OEM Logo scaling for reports.
+ - Fixed: Database Backup feature had incorrect CMS name
+
+v1.5
+ - added compatibility with unicode exports.
+
+v1.4
+ - Added Volumetric graphing
+
+v1.3a
+ - Added folder Permissions
