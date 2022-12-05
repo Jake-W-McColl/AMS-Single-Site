@@ -407,4 +407,5 @@ Enumeration
   #Str_SelectGeneralInformationvalue
   #Str_EngravingPercentage
   #Str_Ref
+  #Str_LastComment
 EndEnumeration

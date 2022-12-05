@@ -659,7 +659,11 @@
 ;/ Usage on reference?
 ;/ extend volume/date graph an additional column as a projection of 'where will we be next?'
 
+;/ v1.71a 12/2022 - (SL) - Changed #Gad_GeneralHistory_Comments from StringGadget to EditorGadget with wordwrap, larger comments can be written
+;/                       - EditorGadget size is larger than the StringGadget, the window has been changed to fit accordingly and items rearranged
 
+;/ v1.71b 12/2022 - (SL) - Updated AMS Import to put the existing comment into the general information and replace it with the new comment
+;/                       - Updated The "comments" to "Last comment" and updated the languages accordingly
 
 ;/  ************ Change Requirements: Additions to the settings window? ***********
 ;/ If an addition to the settings is required, changes are needed in:
@@ -3181,10 +3185,11 @@ Procedure Database_CheckVersion(Quiet = #True)
     If MapSize(Types()) = 0
       Types("Cleaned") = "Cleaned"
       Types("Damaged") = "Damaged"
+      Types("Comment") = "Comment"
     EndIf
     If Types("Cleaned") = "" : Types("Cleaned") = "Cleaned" : EndIf
     If Types("Damaged") = "" : Types("Damaged") = "Damaged" : EndIf
-    
+    If Types("Comment") = "" : Types("Comment") = "Comment" : EndIf
     ;/ add the types() map to the new table
     SortedMap(SortTypes(), Types())
     ForEach SortTypes() ;/ replace odd characters...
@@ -7863,10 +7868,11 @@ Procedure.i Import_AMS(NoLoad.i = 0) ;/ NoLoad for Master Import, to prevent rel
 
    
   If AMS_Import\Comment <> ""
-    If Database_StringQuery("Select Comments from AMS_Roll_Master Where ID = "+Str(System\Selected_Roll_ID)) = ""
-      
-      Database_Update(#Databases_Master,"Update AMS_Roll_Master Set Comments = '"+AMS_Import\Comment+"' Where ID = "+Str(System\Selected_Roll_ID)+";",#PB_Compiler_Line)
-    EndIf
+    ;If Database_StringQuery("Select Comments from AMS_Roll_Master Where ID = "+Str(System\Selected_Roll_ID)) = ""
+    
+    Database_Update(#Databases_Master,"INSERT INTO AMS_General_History (RollID, Date, Type, Comments) Values ("+Str(System\Selected_Roll_ID)+","+Date()+",'Comment','"+GetGadgetText(#Gad_RollInfo_Comment_Box)+"')",#PB_Compiler_Line)
+    Database_Update(#Databases_Master,"Update AMS_Roll_Master Set Comments = '"+AMS_Import\Comment+"' Where ID = "+Str(System\Selected_Roll_ID)+";",#PB_Compiler_Line)
+    ;EndIf
   EndIf
   
   ;/ Set last reading date to today
@@ -8217,8 +8223,8 @@ EndProcedure
 Procedure Init_Window_GeneralHistory_Control(RollID.i,HistoryID.l = -1)
   Protected Settings_Event.i, Exit.i, SQL.S, Result.S, Date.S, Type.S, Location.S, Width.i, Height.i, Comments.s, Txt.s
   
-  Width.i = 640
-  Height = 70
+  Width.i = 430
+  Height = 190
   If HistoryID = -1
     OpenWindow(#Window_GeneralHistory,0,0,Width,Height,tTxt(#Str_Insertaniloxhistoryentry),#PB_Window_WindowCentered|#PB_Window_SystemMenu,WindowID(#Window_Main))  
   Else
@@ -8227,7 +8233,7 @@ Procedure Init_Window_GeneralHistory_Control(RollID.i,HistoryID.l = -1)
   SetGadgetFont(#PB_Default,FontID(#Font_List_Dialogs))
   TextGadget(#Gad_GeneralHistory_Date_Text,4,2,70,18,tTxt(#Str_Date)+":")
   TextGadget(#Gad_GeneralHistory_Type_Text,100,2,70,18,tTxt(#Str_Type))
-  TextGadget(#Gad_GeneralHistory_Comments_Text,210,2,320,18,tTxt(#Str_Comment))
+  TextGadget(#Gad_GeneralHistory_Comments_Text,4,45,320,18,tTxt(#Str_Comment))
   
   DateGadget(#Gad_GeneralHistory_Date,4,20,90,20,"",Date())
   ;StringGadget(#Gad_GeneralHistory_Type,100,20,100,20,"")
@@ -8237,10 +8243,12 @@ Procedure Init_Window_GeneralHistory_Control(RollID.i,HistoryID.l = -1)
   Next
   SetGadgetState(#Gad_GeneralHistory_Type,0)
   
-  StringGadget(#Gad_GeneralHistory_Comments,210,20,420,20,"")
+;  StringGadget(#Gad_GeneralHistory_Comments,2,50,420,100,"")
+
+  EditorGadget(#Gad_GeneralHistory_Comments,4,65,420,100, #PB_Editor_WordWrap)
   
-  ButtonGadget(#Gad_GeneralHistory_Okay,Width - 150,44,70,20,tTxt(#Str_OK))
-  ButtonGadget(#Gad_GeneralHistory_Cancel,Width - 75,44,70,20,tTxt(#Str_Cancel))
+  ButtonGadget(#Gad_GeneralHistory_Okay,270,165,75,20,tTxt(#Str_OK))
+  ButtonGadget(#Gad_GeneralHistory_Cancel,350,165,75,20,tTxt(#Str_Cancel))
   
   SetActiveWindow(#Window_GeneralHistory)
   
@@ -8551,7 +8559,7 @@ Procedure Init_Window_Readings_Edit(RollID.i, EditType.i = 0, DataType.i = 0, Re
     Operator = GetGadgetTextMac(#Gad_Reading_Examiner)
     System\Last_Keyed_Operator = GetGadgetText(#Gad_Reading_Examiner)
     ;    ReadingCount = GetGadgetState(#Gad_Reading_Quantity_Combo) + 1
-    Protected Dim Vol.f(5)
+    ;Protected Dim Vol.f(5)
     ReadingCount = 0
     
     If ValFs(GetGadgetTextMac(#Gad_Reading_Vol1)) > 0
@@ -12809,7 +12817,7 @@ Procedure Init_Window_RollInformation()
   ;    SendMessage_(GadgetID(#Gad_RollInfo_GeneralHistory_History_List), #LVM_SETEXTENDEDLISTVIEWSTYLE, #LVS_EX_FULLROWSELECT, #LVS_EX_FULLROWSELECT)
   
   Y = SavedY
-  TextGadget(#Gad_RollInfo_Comment_Text,X + 370,Y+2,80,18,tTxt(#Str_Comments)+":") :  SetGadgetColor(#Gad_RollInfo_Comment_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+  TextGadget(#Gad_RollInfo_Comment_Text,X + 370,Y+2,200,18,tTxt(#Str_LastComment)+":") :  SetGadgetColor(#Gad_RollInfo_Comment_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
   Y = SavedY + 20
   EditorGadget(#Gad_RollInfo_Comment_Box,X + 370,Y,250,38)
   SetGadgetFont(#Gad_RollInfo_Comment_Box,FontID(#Font_List_S))
@@ -15018,21 +15026,20 @@ DataSection
 EndDataSection
 ;}
 
-; IDE Options = PureBasic 5.71 LTS (Windows - x86)
-; CursorPosition = 11902
-; FirstLine = 11605
-; Folding = --v0--fskh-f9--9-f-+--+-00----h8-
-; Markers = 3223
+; IDE Options = PureBasic 6.00 LTS (Windows - x64)
+; CursorPosition = 665
+; FirstLine = 644
+; Folding = --v0--fu1h-f9--9-f----+-00----h8-
 ; EnableThread
 ; EnableXP
 ; EnableUser
 ; UseIcon = Images\AniCAM_Mini_T.ico
-; Executable = Executable\Anilox Management System v1.70.exe
+; Executable = Executable\Anilox Management System v1.71b.exe
 ; CPU = 5
 ; CompileSourceDirectory
 ; Warnings = Display
 ; EnablePurifier
-; EnableCompileCount = 826
-; EnableBuildCount = 13
+; EnableCompileCount = 879
+; EnableBuildCount = 15
 ; Watchlist = System\Settings_Volume_UnitMask
 ; EnableUnicode
