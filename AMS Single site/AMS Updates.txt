@@ -1,3 +1,15 @@
+v1.71c 01/2023 - (SL) 
+- Fixed a bug where the export button was showing on the main window
+- Updated the Export to AQC procedure so that it doesn't add random characters to the end of the file
+
+v1.71b 12/2022 - (SL) 
+- Updated AMS Import to put the existing comment into the general information and replace it with the new comment
+- Updated The "comments" to "Last comment" and updated the languages accordingly
+
+v1.71a 12/2022 - (SL) 
+- Changed #Gad_GeneralHistory_Comments from StringGadget to EditorGadget with wordwrap, larger comments can be written
+- EditorGadget size is larger than the StringGadget, the window has been changed to fit accordingly and items rearranged
+
 V1.71 24.08.2022
  - Added button to send Roll ID/Section number to AQC .ini file and trigger a refresh if it's open
 
