@@ -667,6 +667,7 @@
 
 ;/ v1.71c 01/2023 - (SL) - Fixed a bug where the export button was showing on the main window, when selecting different rolls
 ;/                       - Updated the Export to AQC procedure so that it doesn't add random characters to the end of the file
+;/                       - Added a check to see if RollID is in the ini file and to inform the user it needs setting before using Export to AQC
 
 ;/  ************ Change Requirements: Additions to the settings window? ***********
 ;/ If an addition to the settings is required, changes are needed in:
@@ -2447,6 +2448,7 @@ Procedure SendToAQCIni(RollName.s, RollID.i)
       LineNumber = LineNumber + 1
       AllText = AllText + lineTxt + #LF$
     Until Eof(0)
+    CloseFile(0)
   EndIf
 
   If RollLineNum>0
@@ -2460,6 +2462,9 @@ Procedure SendToAQCIni(RollName.s, RollID.i)
      Debug(Val)
       CloseFile(0)
     EndIf
+  Else
+    MessageRequester("Roll ID Not Found", "Please ensure the Roll ID in Anilox QC has been set before trying to Export to AQC.", #PB_MessageRequester_Warning)
+    ProcedureReturn
   EndIf
   
 
@@ -2491,6 +2496,7 @@ Procedure SendToAQCIni(RollName.s, RollID.i)
       LineNumber = LineNumber + 1
       AllText = AllText + lineTxt + #LF$
     Until Eof(1)
+    CloseFile(1)
   EndIf
   
   If RollLineNum>0
@@ -2504,6 +2510,9 @@ Procedure SendToAQCIni(RollName.s, RollID.i)
      Debug(Val)
       CloseFile(1)
     EndIf
+  Else
+    MessageRequester("Roll ID Not Found", "Please ensure the Roll ID in Anilox QC_HD has been set before trying to Export to AQC.", #PB_MessageRequester_Warning)
+    ProcedureReturn
   EndIf
 
   FreeMemory(Mem)
@@ -15037,8 +15046,8 @@ EndDataSection
 ;}
 
 ; IDE Options = PureBasic 6.00 LTS (Windows - x64)
-; CursorPosition = 667
-; FirstLine = 644
+; CursorPosition = 670
+; FirstLine = 643
 ; Folding = --v0--fu1h-f9--9-f----+-00----h8-
 ; EnableThread
 ; EnableXP
@@ -15049,7 +15058,7 @@ EndDataSection
 ; CompileSourceDirectory
 ; Warnings = Display
 ; EnablePurifier
-; EnableCompileCount = 1018
-; EnableBuildCount = 18
+; EnableCompileCount = 1025
+; EnableBuildCount = 19
 ; Watchlist = System\Settings_Volume_UnitMask
 ; EnableUnicode
