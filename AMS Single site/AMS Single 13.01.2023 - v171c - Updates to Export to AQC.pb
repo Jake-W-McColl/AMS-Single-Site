@@ -669,6 +669,8 @@
 ;/                       - Updated the Export to AQC procedure so that it doesn't add random characters to the end of the file
 ;/                       - Added a check to see if RollID is in the ini file and to inform the user it needs setting before using Export to AQC
 
+;/ v1.71d 02/2023 - (SL) - Added word wrapping to reports for Group, Cell Opening and Width as they were clipping through each other on separate languages
+
 ;/  ************ Change Requirements: Additions to the settings window? ***********
 ;/ If an addition to the settings is required, changes are needed in:
 ;/   The System structure for the new flag / flags
@@ -712,9 +714,9 @@ EndIf
 XIncludeFile("AMS Language Enumerations.PBI") ;/ controls the text translations
 
 If Multi_Site_Mode = 0
-  Program_Version.s = " V1.71c - Single-Site"  ;/DNT
+  Program_Version.s = " V1.71d - Single-Site"  ;/DNT
 Else
-  Program_Version.s = " V1.71c - Multi-Site" ;/DNT
+  Program_Version.s = " V1.71d - Multi-Site" ;/DNT
 EndIf
 
 ;/ ** Includes **
@@ -11249,7 +11251,7 @@ EndProcedure
 Procedure.i Export_Rollinfo_PDF()
   Protected MyLoop.i, File.s, PageWidth.i, PageHeight.i, MinX.i, MaxX.i, MinY.i, MaxY.i, SizeX.f, SizeY.f, PageSizeX.i, PageSizeY.i, ScaleX.f, ScaleY.f, PosX.f, PosY.f
   Protected GadSizeX.f, GadSizeY.f, Excluded.i, LeftBorder.i, Column.i, OnLine.i, LineCount.i, FilePattern.s, TopBorder.i, Col.i, Justify.s, TempImage.i
-  
+  Protected strText.s
   SetActiveGadget(-1) ;/ remove any gadget selection
   
   FilePattern = "*.pdf|*.pdf" ;/DNT
@@ -11330,6 +11332,8 @@ Procedure.i Export_Rollinfo_PDF()
       If MyLoop = #Gad_RollInfo_Commit : Excluded = 1 : EndIf
       If MyLoop = #Gad_RollInfo_Import_New : Excluded = 1 : EndIf
       
+      
+
       If Excluded = 0
         ForEach GadgetScale()
           If GadgetScale()\Gadget = MyLoop : Break : EndIf
@@ -11466,6 +11470,18 @@ Procedure.i Export_Rollinfo_PDF()
               pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-2)
               pdfy = ((GadgetScale()\KeyPosY-MinY)/ScaleY)+24+TopBorder
               pdf_MultiCell(GadgetScale()\KeySizeX / ScaleX,(GadgetScale()\KeySizeY / ScaleY)/4.0,GetGadgetText(MyLoop),0,#PDF_ALIGN_Justified,0,0,3)
+            Case #Gad_RollInfo_Opening_IDText ;/SL20230210
+                pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-4)
+                pdfy = ((GadgetScale()\KeyPosY-MinY)/ScaleY)+24+TopBorder
+                pdf_MultiCell(GadgetScale()\KeySizeX / ScaleX,(GadgetScale()\KeySizeY / ScaleY)/4.0,GetGadgetText(MyLoop),0,#PDF_ALIGN_LEFT,0,0,3)
+            Case #Gad_RollInfo_Width_IDText ;/SL20230210
+                pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-4)
+                pdfy = ((GadgetScale()\KeyPosY-MinY)/ScaleY)+24+TopBorder
+                pdf_MultiCell(GadgetScale()\KeySizeX / ScaleX,(GadgetScale()\KeySizeY / ScaleY)/4.0,GetGadgetText(MyLoop),0,#PDF_ALIGN_LEFT,0,0,3)
+            Case #Gad_Rollinfo_Group_Combo ;/SL20230210
+                pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-4)
+                pdfy = ((GadgetScale()\KeyPosY-MinY)/ScaleY)+24+TopBorder
+                pdf_MultiCell(GadgetScale()\KeySizeX / ScaleX,(GadgetScale()\KeySizeY / ScaleY)/4.0,GetGadgetText(MyLoop),0,#PDF_ALIGN_LEFT,0,0,3)
             Default
               pdf_Text(PosX-1,PosY,GetGadgetText(MyLoop))
           EndSelect
@@ -12762,7 +12778,7 @@ Procedure Init_Window_HomeScreen(SiteID.i=1)
   
 EndProcedure
 Procedure Init_Window_RollInformation()
-  Protected Y.i, SavedY.i, X.i = 310, Tmp.s
+  Protected Y.i, SavedY.i, X.i = 310, Tmp.s, strCellOpening.s
   ;  AddGadgetItem(#Gad_TabGadget,#Panel_Roll_Info,"Roll Information",ImageID(#Image_Info))
   ;  ContainerGadget(#Gad_Container_RollInfo, 0, 0, 716, 662, #PB_Container_Raised)
   
@@ -15046,19 +15062,19 @@ EndDataSection
 ;}
 
 ; IDE Options = PureBasic 6.00 LTS (Windows - x64)
-; CursorPosition = 670
-; FirstLine = 643
-; Folding = --v0--fu1h-f9--9-f----+-00----h8-
+; CursorPosition = 661
+; FirstLine = 658
+; Folding = --v0--fu1h-f9--9-f----+-0-----h8-
 ; EnableThread
 ; EnableXP
 ; EnableUser
 ; UseIcon = Images\AniCAM_Mini_T.ico
-; Executable = Executable\Anilox Management System v1.71c.exe
+; Executable = Executable\Anilox Management System v1.71d.exe
 ; CPU = 5
 ; CompileSourceDirectory
 ; Warnings = Display
 ; EnablePurifier
-; EnableCompileCount = 1025
-; EnableBuildCount = 19
+; EnableCompileCount = 1096
+; EnableBuildCount = 20
 ; Watchlist = System\Settings_Volume_UnitMask
 ; EnableUnicode
