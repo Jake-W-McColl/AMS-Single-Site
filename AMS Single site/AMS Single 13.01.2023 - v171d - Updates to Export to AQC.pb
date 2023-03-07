@@ -670,6 +670,8 @@
 ;/                       - Added a check to see if RollID is in the ini file and to inform the user it needs setting before using Export to AQC
 
 ;/ v1.71d 02/2023 - (SL) - Added word wrapping to reports for Group, Cell Opening and Width as they were clipping through each other on separate languages
+;/ v1.71d 02/2023 - (SL) - Fixed word wrapping of group name, as it had gone to the left a little and merged with the border.
+
 
 ;/  ************ Change Requirements: Additions to the settings window? ***********
 ;/ If an addition to the settings is required, changes are needed in:
@@ -11479,7 +11481,7 @@ Procedure.i Export_Rollinfo_PDF()
                 pdfy = ((GadgetScale()\KeyPosY-MinY)/ScaleY)+24+TopBorder
                 pdf_MultiCell(GadgetScale()\KeySizeX / ScaleX,(GadgetScale()\KeySizeY / ScaleY)/4.0,GetGadgetText(MyLoop),0,#PDF_ALIGN_LEFT,0,0,3)
             Case #Gad_Rollinfo_Group_Combo ;/SL20230210
-                pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-4)
+                pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-2)
                 pdfy = ((GadgetScale()\KeyPosY-MinY)/ScaleY)+24+TopBorder
                 pdf_MultiCell(GadgetScale()\KeySizeX / ScaleX,(GadgetScale()\KeySizeY / ScaleY)/4.0,GetGadgetText(MyLoop),0,#PDF_ALIGN_LEFT,0,0,3)
             Default
@@ -15062,8 +15064,8 @@ EndDataSection
 ;}
 
 ; IDE Options = PureBasic 6.00 LTS (Windows - x64)
-; CursorPosition = 661
-; FirstLine = 658
+; CursorPosition = 672
+; FirstLine = 644
 ; Folding = --v0--fu1h-f9--9-f----+-0-----h8-
 ; EnableThread
 ; EnableXP
@@ -15074,7 +15076,7 @@ EndDataSection
 ; CompileSourceDirectory
 ; Warnings = Display
 ; EnablePurifier
-; EnableCompileCount = 1096
-; EnableBuildCount = 20
+; EnableCompileCount = 1103
+; EnableBuildCount = 22
 ; Watchlist = System\Settings_Volume_UnitMask
 ; EnableUnicode
