@@ -869,7 +869,7 @@ Enumeration ;/Menu Items
   #Menu_Help_Input_Code
   #Menu_Help_Input_Code_Export
   #Menu_Help_Input_Code_Import
-  #Menu_Help_CheckForUpdates
+  ;#Menu_Help_CheckForUpdates
   #Menu_Help_ViewEULA
   
   #Menu_Popup0_Company_Rename
@@ -7839,7 +7839,7 @@ Procedure.i Import_AMS(NoLoad.i = 0) ;/ NoLoad for Master Import, to prevent rel
         Txt.S + Str(System\Selected_Roll_ID)+","+Str(AMS_Import\DateNum)+",'"+AMS_Import\Operator+"',"+AMS_Import\Sample1+","+AMS_Import\Sample2+","+AMS_Import\Sample3+","+AMS_Import\Sample4
         
       Case "5"
-        Txt.S + "ReadingDate, Operator, Vol1, Vol2, Vol3, Vol4, Vol5, AniCAM_Config, Depth, Usage, Wall, Opening,  , OpeningNew, HistTopSnapImage) VALUES ("
+        Txt.S + "ReadingDate, Operator, Vol1, Vol2, Vol3, Vol4, Vol5, AniCAM_Config, Depth, Usage, Wall, Opening, WallNew, OpeningNew, HistTopSnapImage) VALUES ("
         Txt.S + Str(System\Selected_Roll_ID)+","+Str(AMS_Import\DateNum)+",'"+AMS_Import\Operator+"',"+AMS_Import\Sample1+","+AMS_Import\Sample2+","+AMS_Import\Sample3+","+AMS_Import\Sample4+","+AMS_Import\Sample5
     EndSelect
     
@@ -8582,28 +8582,28 @@ Procedure Init_Window_Readings_Edit(RollID.i, EditType.i = 0, DataType.i = 0, Re
     Operator = GetGadgetTextMac(#Gad_Reading_Examiner)
     System\Last_Keyed_Operator = GetGadgetText(#Gad_Reading_Examiner)
     ;    ReadingCount = GetGadgetState(#Gad_Reading_Quantity_Combo) + 1
-    ;Protected Dim Vol.f(5)
+    Protected Dim VolReadings.f(5)
     ReadingCount = 0
     
     If ValFs(GetGadgetTextMac(#Gad_Reading_Vol1)) > 0
       ReadingCount + 1
-      Vol(ReadingCount) = ValFs(GetGadgetTextMac(#Gad_Reading_Vol1))  
+      VolReadings(ReadingCount) = ValFs(GetGadgetTextMac(#Gad_Reading_Vol1))  
     EndIf
     If ValFs(GetGadgetTextMac(#Gad_Reading_Vol2)) > 0
       ReadingCount + 1
-      Vol(ReadingCount) = ValFs(GetGadgetTextMac(#Gad_Reading_Vol2))  
+      VolReadings(ReadingCount) = ValFs(GetGadgetTextMac(#Gad_Reading_Vol2))  
     EndIf
     If ValFs(GetGadgetTextMac(#Gad_Reading_Vol3)) > 0
       ReadingCount + 1
-      Vol(ReadingCount) = ValFs(GetGadgetTextMac(#Gad_Reading_Vol3))  
+      VolReadings(ReadingCount) = ValFs(GetGadgetTextMac(#Gad_Reading_Vol3))  
     EndIf
     If ValFs(GetGadgetTextMac(#Gad_Reading_Vol4)) > 0
       ReadingCount + 1
-      Vol(ReadingCount) = ValFs(GetGadgetTextMac(#Gad_Reading_Vol4))  
+      VolReadings(ReadingCount) = ValFs(GetGadgetTextMac(#Gad_Reading_Vol4))  
     EndIf
     If ValFs(GetGadgetTextMac(#Gad_Reading_Vol5)) > 0
       ReadingCount + 1
-      Vol(ReadingCount) = ValFs(GetGadgetTextMac(#Gad_Reading_Vol5))  
+      VolReadings(ReadingCount) = ValFs(GetGadgetTextMac(#Gad_Reading_Vol5))  
     EndIf
     Depth = Val(GetGadgetTextMac(#Gad_Reading_Depth))  
     Usage = TxttoValI(GetGadgetTextMac(#Gad_Reading_Usage))
@@ -8616,15 +8616,15 @@ Procedure Init_Window_Readings_Edit(RollID.i, EditType.i = 0, DataType.i = 0, Re
       Txt.S = "Update AMS_Roll_Master SET "  ;/DNT
       Select ReadingCount
         Case 1
-          Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol3 = "+StrF(Vol(1),2) ;/DNT
+          Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol3 = "+StrF(VolReadings(1),2) ;/DNT
         Case 2
-          Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol2 = "+StrF(Vol(1),2)+", Vol4 = "+StrF(Vol(2),2) ;/DNT
+          Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol2 = "+StrF(VolReadings(1),2)+", Vol4 = "+StrF(VolReadings(2),2) ;/DNT
         Case 3
-          Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol1 = "+StrF(Vol(1),2)+", Vol3 = "+StrF(Vol(2),2)+", Vol5 = "+StrF(Vol(3),2) ;/DNT
+          Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol1 = "+StrF(VolReadings(1),2)+", Vol3 = "+StrF(VolReadings(2),2)+", Vol5 = "+StrF(VolReadings(3),2) ;/DNT
         Case 4
-          Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol1 = "+StrF(Vol(1),2)+", Vol2 = "+StrF(Vol(2),2)+", Vol4 = "+StrF(Vol(3),2)+", Vol5 = "+StrF(Vol(4),2) ;/DNT
+          Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol1 = "+StrF(VolReadings(1),2)+", Vol2 = "+StrF(VolReadings(2),2)+", Vol4 = "+StrF(VolReadings(3),2)+", Vol5 = "+StrF(VolReadings(4),2) ;/DNT
         Case 5
-          Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol1 = "+StrF(Vol(1),2)+", Vol2 = "+StrF(Vol(2),2)+", Vol3 = "+StrF(Vol(3),2)+", Vol4 = "+StrF(Vol(4),2)+", Vol5 = "+StrF(Vol(5),2) ;/DNT
+          Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol1 = "+StrF(VolReadings(1),2)+", Vol2 = "+StrF(VolReadings(2),2)+", Vol3 = "+StrF(VolReadings(3),2)+", Vol4 = "+StrF(VolReadings(4),2)+", Vol5 = "+StrF(VolReadings(5),2) ;/DNT
       EndSelect
       
       Txt.S + ", Depth = "+Str(Depth)+ ", Usage = "+Str(Usage)+" Where ID = "+Str(System\Selected_Roll_ID)+";" ;/DNT
@@ -8639,18 +8639,18 @@ Procedure Init_Window_Readings_Edit(RollID.i, EditType.i = 0, DataType.i = 0, Re
         Select ReadingCount
           Case 1
             ;Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol3 = "+StrF(Vol(1),2) ;/DNT
-            Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol1 = 0, Vol2 = 0, Vol3 = "+StrF(Vol(1),2)+", Vol4 = 0, Vol5 = 0" ;/DNT
+            Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol1 = 0, Vol2 = 0, Vol3 = "+StrF(VolReadings(1),2)+", Vol4 = 0, Vol5 = 0" ;/DNT
           Case 2
             ;           Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol2 = "+StrF(Vol(1),2)+", Vol4 = "+StrF(Vol(2),2) ;/DNT
-            Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol1 = 0, Vol2 = "+StrF(Vol(1),2)+", Vol3 = 0, Vol4 = "+StrF(Vol(2),2)+", Vol5 = 0" ;/DNT
+            Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol1 = 0, Vol2 = "+StrF(VolReadings(1),2)+", Vol3 = 0, Vol4 = "+StrF(VolReadings(2),2)+", Vol5 = 0" ;/DNT
           Case 3
             ;            Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol1 = "+StrF(Vol(1),2)+", Vol3 = "+StrF(Vol(2),2)+", Vol5 = "+StrF(Vol(3),2) ;/DNT
-            Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol1 = "+StrF(Vol(1),2)+", Vol2 = 0, Vol3 = "+StrF(Vol(2),2)+", Vol4 = 0, Vol5 = "+StrF(Vol(3),2) ;/DNT
+            Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol1 = "+StrF(VolReadings(1),2)+", Vol2 = 0, Vol3 = "+StrF(VolReadings(2),2)+", Vol4 = 0, Vol5 = "+StrF(VolReadings(3),2) ;/DNT
           Case 4
             ;            Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol1 = "+StrF(Vol(1),2)+", Vol2 = "+StrF(Vol(2),2)+", Vol4 = "+StrF(Vol(3),2)+", Vol5 = "+StrF(Vol(4),2) ;/DNT
-            Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol1 = "+StrF(Vol(1),2)+", Vol2 = "+StrF(Vol(2),2)+", Vol3 = 0, Vol4 = "+StrF(Vol(3),2)+", Vol5 = "+StrF(Vol(4),2) ;/DNT
+            Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol1 = "+StrF(VolReadings(1),2)+", Vol2 = "+StrF(VolReadings(2),2)+", Vol3 = 0, Vol4 = "+StrF(VolReadings(3),2)+", Vol5 = "+StrF(VolReadings(4),2) ;/DNT
           Case 5
-            Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol1 = "+StrF(Vol(1),2)+", Vol2 = "+StrF(Vol(2),2)+", Vol3 = "+StrF(Vol(3),2)+", Vol4 = "+StrF(Vol(4),2)+", Vol5 = "+StrF(Vol(5),2) ;/DNT
+            Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol1 = "+StrF(VolReadings(1),2)+", Vol2 = "+StrF(VolReadings(2),2)+", Vol3 = "+StrF(VolReadings(3),2)+", Vol4 = "+StrF(VolReadings(4),2)+", Vol5 = "+StrF(VolReadings(5),2) ;/DNT
         EndSelect
         
         Txt.S + ", Depth = "+Str(Depth)+ ", Usage = "+Str(Usage)+" Where ID = "+Str(ReadingID)+";" ;/DNT
@@ -8672,15 +8672,15 @@ Procedure Init_Window_Readings_Edit(RollID.i, EditType.i = 0, DataType.i = 0, Re
         
         Select ReadingCount
           Case 1
-            Txt.S + Str(System\Selected_Roll_ID)+", " + Str(Date)+", '"+Operator+"', "+StrF(Vol(1),2)+", "+Str(Depth)+", "+Str(Usage) ;/DNT
+            Txt.S + Str(System\Selected_Roll_ID)+", " + Str(Date)+", '"+Operator+"', "+StrF(VolReadings(1),2)+", "+Str(Depth)+", "+Str(Usage) ;/DNT
           Case 2
-            Txt.S + Str(System\Selected_Roll_ID)+", " + Str(Date)+", '"+Operator+"', "+StrF(Vol(1),2)+", "+StrF(Vol(2),2)+", "+Str(Depth) +", "+Str(Usage) ;/DNT
+            Txt.S + Str(System\Selected_Roll_ID)+", " + Str(Date)+", '"+Operator+"', "+StrF(VolReadings(1),2)+", "+StrF(VolReadings(2),2)+", "+Str(Depth) +", "+Str(Usage) ;/DNT
           Case 3
-            Txt.S + Str(System\Selected_Roll_ID)+", " + Str(Date)+", '"+Operator+"', "+StrF(Vol(1),2)+", "+StrF(Vol(2),2)+", "+StrF(Vol(3),2)+", "+Str(Depth) +", "+Str(Usage) ;/DNT
+            Txt.S + Str(System\Selected_Roll_ID)+", " + Str(Date)+", '"+Operator+"', "+StrF(VolReadings(1),2)+", "+StrF(VolReadings(2),2)+", "+StrF(VolReadings(3),2)+", "+Str(Depth) +", "+Str(Usage) ;/DNT
           Case 4
-            Txt.S + Str(System\Selected_Roll_ID)+", " + Str(Date)+", '"+Operator+"', "+StrF(Vol(1),2)+", "+StrF(Vol(2),2)+", "+StrF(Vol(3),2)+", "+StrF(Vol(4),2)+", "+Str(Depth) +", "+Str(Usage) ;/DNT
+            Txt.S + Str(System\Selected_Roll_ID)+", " + Str(Date)+", '"+Operator+"', "+StrF(VolReadings(1),2)+", "+StrF(VolReadings(2),2)+", "+StrF(VolReadings(3),2)+", "+StrF(VolReadings(4),2)+", "+Str(Depth) +", "+Str(Usage) ;/DNT
           Case 5
-            Txt.S + Str(System\Selected_Roll_ID)+", " + Str(Date)+", '"+Operator+"', "+StrF(Vol(1),2)+", "+StrF(Vol(2),2)+", "+StrF(Vol(3),2)+", "+StrF(Vol(4),2)+", "+StrF(Vol(5),2)+", "+Str(Depth)+", "+Str(Usage) ;/DNT
+            Txt.S + Str(System\Selected_Roll_ID)+", " + Str(Date)+", '"+Operator+"', "+StrF(VolReadings(1),2)+", "+StrF(VolReadings(2),2)+", "+StrF(VolReadings(3),2)+", "+StrF(VolReadings(4),2)+", "+StrF(VolReadings(5),2)+", "+Str(Depth)+", "+Str(Usage) ;/DNT
         EndSelect
         
         Txt.S + ")"+";"
@@ -12536,8 +12536,8 @@ Procedure Init_Menu()
   MenuBar()
   MenuItem(#Menu_Help_ViewEULA,tTxt(#Str_ShowLicenceAgreement))
   MenuBar()
-  MenuItem(#Menu_Help_CheckForUpdates,tTxt(#Str_Checkforupdate)+"...")
-  MenuBar()
+  ;MenuItem(#Menu_Help_CheckForUpdates,tTxt(#Str_Checkforupdate)+"...") ;/SL20230406 Hidden as website links are no longer valid
+  ;MenuBar()
   OpenSubMenu(tTxt(#Str_Licencecode)+"...") 
   ;(tTxt(#Str_Export)+"...")
   
@@ -13965,8 +13965,8 @@ Procedure Process_Menu_Events() ;/*CHG*
       Init_About(#Window_Main)
     Case #Menu_Help_ViewEULA
       Init_Eula(1)
-    Case #Menu_Help_CheckForUpdates
-      Tool_CheckForUpdate()
+    ;Case #Menu_Help_CheckForUpdates ;/SL20230406 Hidden on request of JJ, as the website links are no longer valid.
+    ;  Tool_CheckForUpdate()
     Case #Menu_Help_Input_Code_Import
       Init_Code_Input(0)
     Case #Menu_Help_Input_Code_Export
@@ -14733,7 +14733,7 @@ Procedure Database_CreateLocalSettingsDB()
   Result = Database_Update(#Databases_LocalSettings,SQL,#PB_Compiler_Line)
   
   If Result = 0
-    MessageRequester("Error","Unable to generate local settings database, exitting")  
+    MessageRequester("Error","Unable to generate local settings database, exitting")
     End
   EndIf
   
@@ -14812,6 +14812,7 @@ Redraw_NavTree()
 Show_Window(#Panel_HomeScreen,#PB_Compiler_Line)
 ResizeGadgets()
 SendMessage_(WindowID(#Window_Main),#WM_SETREDRAW,#True,0)
+
 
 ;{- Main loop
 System\LiveMonitorNextTime = ElapsedMilliseconds() + 2000
@@ -15064,9 +15065,9 @@ EndDataSection
 ;}
 
 ; IDE Options = PureBasic 6.00 LTS (Windows - x64)
-; CursorPosition = 672
-; FirstLine = 644
-; Folding = --v0--fu1h-f9--9-f----+-0-----h8-
+; CursorPosition = 6156
+; FirstLine = 6144
+; Folding = ---------------------------------
 ; EnableThread
 ; EnableXP
 ; EnableUser
@@ -15076,7 +15077,7 @@ EndDataSection
 ; CompileSourceDirectory
 ; Warnings = Display
 ; EnablePurifier
-; EnableCompileCount = 1103
+; EnableCompileCount = 1151
 ; EnableBuildCount = 22
 ; Watchlist = System\Settings_Volume_UnitMask
 ; EnableUnicode
