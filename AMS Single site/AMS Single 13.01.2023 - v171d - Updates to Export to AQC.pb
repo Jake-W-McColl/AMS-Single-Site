@@ -672,6 +672,7 @@
 ;/ v1.71d 02/2023 - (SL) - Added word wrapping to reports for Group, Cell Opening and Width as they were clipping through each other on separate languages
 ;/ v1.71d 02/2023 - (SL) - Fixed word wrapping of group name, as it had gone to the left a little and merged with the border.
 
+;/ v1.71d 05/2023 - (SL) - Changed report layout
 
 ;/  ************ Change Requirements: Additions to the settings window? ***********
 ;/ If an addition to the settings is required, changes are needed in:
@@ -3999,12 +4000,12 @@ Procedure.l RollInfo_CheckEditted()
     
     ;/ if not Editted, show buttons, else hide
     If Editted > 0
-      HideGadget(#Gad_RollInfo_Commit,0)  
-      HideGadget(#Gad_RollInfo_Undo,0) 
+      DisableGadget(#Gad_RollInfo_Commit, 0)
+      DisableGadget(#Gad_RollInfo_Undo, 0)
       System\Editted = System\Selected_Roll_ID
     Else
-      HideGadget(#Gad_RollInfo_Commit,1)  
-      HideGadget(#Gad_RollInfo_Undo,1) 
+      DisableGadget(#Gad_RollInfo_Commit, 1)
+      DisableGadget(#Gad_RollInfo_Undo, 1)
       System\Editted = #False
     EndIf
   EndIf
@@ -6291,7 +6292,6 @@ Procedure.i Database_SaveSettings()
     Database_Update(#Databases_LocalSettings,SQL,#PB_Compiler_Line)
     
   EndIf
-  
   If System\Language_Update = 1
     Language_Set(System\Settings_Language)
   EndIf
@@ -7449,8 +7449,8 @@ Procedure Show_Window(Panel.i, LineNumber.i)
       For MyLoop = #Gad_RollInfo_Hide_Begin To #Gad_RollInfo_Hide_End
         If IsGadget(MyLoop) : HideGadget(MyLoop,0) : EndIf 
       Next
-      HideGadget(#Gad_RollInfo_Commit,1)  
-      HideGadget(#Gad_RollInfo_Undo,1) 
+      HideGadget(#Gad_RollInfo_Commit,0)  
+      HideGadget(#Gad_RollInfo_Undo,0) 
       SetWindowColor(#Window_Main,#WinCol_RollInfo)
       System\Showing_Panel = #Panel_Roll_Info
       Debug "Showing Roll Window"
@@ -11250,11 +11250,262 @@ Procedure.i Export_RollReport_PDF()
   
 EndProcedure
 
+; Procedure.i Export_Rollinfo_PDF()
+;   Protected MyLoop.i, File.s, PageWidth.i, PageHeight.i, MinX.i, MaxX.i, MinY.i, MaxY.i, SizeX.f, SizeY.f, PageSizeX.i, PageSizeY.i, ScaleX.f, ScaleY.f, PosX.f, PosY.f
+;   Protected GadSizeX.f, GadSizeY.f, Excluded.i, LeftBorder.i, Column.i, OnLine.i, LineCount.i, FilePattern.s, TopBorder.i, Col.i, Justify.s, TempImage.i
+;   Protected strText.s
+;   SetActiveGadget(-1) ;/ remove any gadget selection
+;   
+;   FilePattern = "*.pdf|*.pdf" ;/DNT
+;   File.s = SaveFileRequester(tTxt(#Str_Enterfilename),"",FilePattern,0)
+;   
+;   If File = "" : ProcedureReturn : EndIf
+;   If FileSize(File) > 0 ;/ file exists, prompt to overwrite)
+;     If MessageRequester(tTxt(#Str_Message),tTxt(#Str_Fileexists)+", "+tTxt(#Str_overwrite)+"?",#PB_MessageRequester_YesNo) = #PB_MessageRequester_No
+;       ProcedureReturn 
+;     EndIf
+;   EndIf
+;   
+;   If UCase(Right(File,4)) <> ".PDF" : File + ".pdf" : EndIf ;/DNT
+;   
+;   If CreateFile(1,File)
+;     CloseFile(1)
+;   Else
+;     MessageRequester(tTxt(#Str_Error),tTxt(#Str_Cannotwritetofile)+", "+tTxt(#Str_filealreadyopenelsewhere)+"?",#PB_MessageRequester_Ok)
+;     ProcedureReturn 
+;   EndIf
+;   
+;   MinX = 9999 : MaxX = -9999
+;   MinY = 9999 : MaxY = -9999
+;   
+;   For MyLoop = #Gad_RollInfo_Start To #Gad_RollInfo_Finish
+;     If IsGadget(MyLoop)
+;       ForEach GadgetScale()
+;         If GadgetScale()\Gadget = MyLoop : Break : EndIf
+;       Next
+;       If GadgetScale()\KeyPosX < MinX : MinX = GadgetScale()\KeyPosX : EndIf
+;       If GadgetScale()\KeyPosX + GadgetScale()\KeySizeX > MaxX : MaxX = GadgetScale()\KeyPosX + GadgetScale()\KeySizeX: EndIf
+;       If GadgetScale()\KeyPosY < MinY : MinY = GadgetScale()\KeyPosY : EndIf
+;       If GadgetScale()\KeyPosY + GadgetScale()\KeySizeY > MaxY : MaxY = GadgetScale()\KeyPosY + GadgetScale()\KeySizeY: EndIf
+;     EndIf
+;   Next
+;   
+;   pdf_Create()
+;   pdf_SetDisplayMode(#PDF_ZOOM_REAL,#PDF_LAYOUT_SINGLE)
+;   pdf_SetProcHeader(@PDF_Header())
+;   pdf_SetProcFooter(@PDF_Footer())
+;   pdf_AddPage("P",#PDF_PAGE_FORMAT_A4)
+;   pdf_StartPageNums()
+;   
+;   Debug "Font debug issue (Russian) >> "
+;   Debug "**** System Font: "+System\Font_Name
+;   pdf_SetFont(System\Font_Name,"",8)  ;/DNT
+;   ;pdf_SetFont(System\Font_Name,"",8)  ;/DNT
+;   
+;   
+;   PageSizeX = pdf_GetW() - 4
+;   PageSizeY = pdf_GetH() - 96 ;/ remove header
+;   Debug "Page Size: "+Str(PageSizeX)+", "+Str(PageSizeY)
+;   
+;   SizeX = MaxX - MinX
+;   SizeY = MaxY - MinY
+;   ScaleX = SizeX / PageSizeX
+;   ScaleY = SizeY / PageSizey
+;   LeftBorder = 8
+;   TopBorder = 10
+;   Debug "Scale XY: "+StrF(ScaleX,1)+", "+StrF(ScaleY,1)
+;   Debug "Min XY: "+Str(MinX)+", "+Str(MinY)
+;   Debug "Max XY: "+Str(MaxX)+", "+Str(MaxY)
+;   
+;   pdf_SetFillColor(255,255,255)
+;   pdf_RoundRect(2+LeftBorder,20+TopBorder,pdf_GetW()-24-LeftBorder,62,2,#PDF_STYLE_DRAWANDFILL)
+;   
+;   pdf_SetFillColor(240,240,240)
+;   
+;   For MyLoop = #Gad_RollInfo_Start To #Gad_RollInfo_Finish
+;     If IsGadget(MyLoop)
+;       ;/ Exclude specific gadgets from being displayed on the report
+;       Excluded = 0
+;       If MyLoop = #Gad_RollInfo_Commit : Excluded = 1 : EndIf
+;       If MyLoop = #Gad_RollInfo_Undo : Excluded = 1 : EndIf
+;       If MyLoop = #Gad_RollInfo_Import_AMS : Excluded = 1 : EndIf
+;       If MyLoop = #Gad_RollInfo_ExportRollName : Excluded = 1 : EndIf ;/JM20220816
+;       If MyLoop = #Gad_RollInfo_Import_ACP : Excluded = 1 : EndIf
+;       If MyLoop = #Gad_RollInfo_Commit : Excluded = 1 : EndIf
+;       If MyLoop = #Gad_RollInfo_Import_New : Excluded = 1 : EndIf
+;       
+;       
+; 
+;       If Excluded = 0
+;         ForEach GadgetScale()
+;           If GadgetScale()\Gadget = MyLoop : Break : EndIf
+;         Next
+;         
+;         If Myloop = #Gad_RollInfo_GeneralHistory_History_List
+;           
+;           pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-1)
+;           pdfy = ((GadgetScale()\KeyPosY-MinY)/ScaleY)+23+TopBorder
+;           LineCount = CountGadgetItems(#Gad_RollInfo_GeneralHistory_History_List)
+;           If LineCount > 3 : LineCount = 3 : EndIf ;/ limit the amount of lines being displayed on the general history box
+;           SetGadgetState(#Gad_RollInfo_GeneralHistory_History_List,-1)
+;           For OnLine = -1 To Linecount
+;             For Column = 0 To 2
+;               pdf_Cell(GadgetScale()\ColumnSize[Column] / ScaleX ,4,GetGadgetItemText(Myloop,Online,Column),-15,0,#PDF_ALIGN_LEFT,1)
+;             Next
+;             pdf_Ln() : pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-1)
+;           Next
+;         EndIf
+;         
+;         If Myloop = #Gad_RollInfo_Original_List
+;           SetGadgetState(#Gad_RollInfo_Original_List,-1)
+;           
+;           pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-1)
+;           pdfy = ((GadgetScale()\KeyPosY-MinY)/ScaleY) + 24 + TopBorder
+;           For OnLine = 0 To 1
+;             For Column = 0 To 12 
+;               ;Debug "GadgetScale "+Str(GadgetScale()\ColumnSize[Column])
+;               
+;               Justify = #PDF_ALIGN_LEFT
+;               If Column > 1 
+;                 Justify = #PDF_ALIGN_CENTER
+;               EndIf
+;               
+;               ;/ Set foreground / Background colouring
+;               Col.i = GetGadgetItemColor(Myloop,Online,#PB_Gadget_FrontColor,Column)
+;               If Col = -1 : Col = 0 : EndIf
+;               pdf_SetTextColor(Red(Col), Green(Col), Blue(Col))
+;               
+;               Col.i = GetGadgetItemColor(Myloop,Online,#PB_Gadget_BackColor,Column)
+;               If Col = -1 : Col = RGB(255,255,255) : EndIf
+;               pdf_SetFillColor(Red(Col), Green(Col), Blue(Col))
+;               
+;               pdf_Cell(GadgetScale()\ColumnSize[Column] / ScaleX ,6,GetGadgetItemText(Myloop,Online,Column),-15,0,Justify,1)
+;             Next
+;             pdf_Ln() : pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-1)
+;           Next
+;         EndIf
+;         
+;         If Myloop = #Gad_RollInfo_History_List
+;           SetGadgetState(#Gad_RollInfo_History_List,-1)
+;           
+;           pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-1)
+;           pdfy = ((GadgetScale()\KeyPosY-MinY)/ScaleY)+24+TopBorder
+;           LineCount = CountGadgetItems(#Gad_RollInfo_History_List) - 1
+;           If LineCount > 15 : LineCount = 15 : EndIf
+;           For OnLine = 0 To Linecount
+;             For Column = 0 To 12
+;               
+;               Justify = #PDF_ALIGN_LEFT
+;               If Column > 1 
+;                 Justify = #PDF_ALIGN_CENTER
+;               EndIf
+;               
+;               Col.i = GetGadgetItemColor(Myloop,Online,#PB_Gadget_FrontColor,Column)
+;               If Col = -1 : Col = 0 : EndIf
+;               
+;               pdf_SetTextColor(Red(Col), Green(Col), Blue(Col))
+;               
+;               Col.i = GetGadgetItemColor(Myloop,Online,#PB_Gadget_BackColor,Column)
+;               If Col = -1 : Col = RGB(255,255,255) : EndIf
+;               
+;               pdf_SetFillColor(Red(Col), Green(Col), Blue(Col))
+;               pdf_Cell(GadgetScale()\ColumnSize[Column] / ScaleX ,6,GetGadgetItemText(Myloop,Online,Column),-15,0,Justify,1)
+;             Next
+;             pdf_Ln() : pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-1)
+;           Next
+;         EndIf
+;         
+;         PosX = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + leftborder
+;         PosY = ((GadgetScale()\KeyPosY-MinY)/ScaleY)+26+TopBorder
+;         GadSizeX = GadgetScale()\KeySizeX / ScaleX
+;         GadSizeY = GadgetScale()\KeySizeY / ScaleY
+;         
+;         ;Debug "PosX(Y): "+Str(PosX)+", "+Str(PosY)
+;         If GadgetType(GadgetScale()\Gadget) <> #PB_GadgetType_Text And GadgetType(GadgetScale()\Gadget) <> #PB_GadgetType_Image
+;           If GetGadgetText(MyLoop) <> "" : pdf_RoundRect(PosX-2,PosY-3,GadSizeX,GadSizeY,1,#PDF_STYLE_DRAWANDFILL) : EndIf
+;         EndIf
+;         
+;         If GadgetType(GadgetScale()\Gadget) = #PB_GadgetType_Image
+;           Select GadgetScale()\Gadget
+;             Case #Gad_RollInfo_Image_Reference
+;               If System\Reference_Image_Length > 0
+;                 Debug "Ref Image: "+Str(System\ReferenceImage)+" - Length: "+Str(System\Reference_Image_Length)
+;                 pdf_ImageMem("Scan1",System\ReferenceImage,System\Reference_Image_Length,PosX-2,PosY-3,GadSizeX,GadSizeY)   ;/DNT 
+;               EndIf
+;               
+;             Case #Gad_RollInfo_Image_Latest
+;               If System\Current_Image_Length > 0
+;                 Debug "Current Image: "+Str(System\CurrentImage)+" - Length: "+Str(System\Current_Image_Length)
+;                 pdf_ImageMem("Scan2",System\CurrentImage,System\Current_Image_Length,PosX-2,PosY-3,GadSizeX,GadSizeY);/DNT
+;               EndIf
+;               
+;             Case #Gad_RollInfo_Wall_Image
+;               pdf_ImageMem("Wall",?Roll_Wall_Opaque,?Roll_Wall_Opaque_End - ?Roll_Wall_Opaque,PosX-2,PosY-3,GadSizeX,GadSizeY);/DNT
+;               
+;             Case #Gad_RollInfo_Opening_Image
+;               pdf_ImageMem("Opening",?Roll_Opening_Opaque,?Roll_Opening_Opaque_End - ?Roll_Opening_Opaque,PosX-2,PosY-3,GadSizeX,GadSizeY);/DNT
+;               
+;             Case #Gad_RollInfo_Screen_Image
+;               pdf_ImageMem("Screen",?Roll_Screen_Opaque,?Roll_Screen_Opaque_End - ?Roll_Screen_Opaque,PosX-2,PosY-3,GadSizeX,GadSizeY);/DNT
+;               
+;             Case #Gad_RollInfo_AniCAM_Image
+;               pdf_ImageMem("AniCAM",?AniCAM_Opaque,?AniCAM_Opaque_End - ?AniCAM_Opaque,PosX-2,PosY-3,GadSizeX,GadSizeY);/DNT
+;               
+;             Case #Gad_RollInfo_Roll_Image
+;               pdf_ImageMem("Roll",?Roll_Opaque,?Roll_Opaque_End - ?Roll_Opaque,PosX-2,PosY-3.5,GadSizeX,GadSizeY+1);/DNT
+;               
+;             Case #Gad_RollInfo_Roll_Pins
+;               pdf_ImageMem("RollPins",?Roll_Pins_Opaque,?Roll_Pins_Opaque_End - ?Roll_Pins_Opaque,PosX-2,PosY-3.5,GadSizeX,GadSizeY+1) ;/DNT
+;               
+;           EndSelect
+;           
+;         EndIf
+;         
+;         If GetGadgetText(MyLoop) <> "" 
+;           Select MyLoop
+;             Case #Gad_Rollinfo_Readings_Text ;/ increase font size on readings text only
+;               pdf_SetFontSize(14)            ;/DNT
+;               pdf_Text(PosX-1,PosY,GetGadgetText(MyLoop))
+;               pdf_SetFontSize(8)  ;/DNT
+;             Case #Gad_RollInfo_Comment_Box
+;               ;2+LeftBorder,20+TopBorder,pdf_GetW()-24-LeftBorder,62,2,#PDF_STYLE_DRAWANDFILL)
+;               pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-2)
+;               pdfy = ((GadgetScale()\KeyPosY-MinY)/ScaleY)+24+TopBorder
+;               pdf_MultiCell(GadgetScale()\KeySizeX / ScaleX,(GadgetScale()\KeySizeY / ScaleY)/4.0,GetGadgetText(MyLoop),0,#PDF_ALIGN_Justified,0,0,3)
+;             Case #Gad_RollInfo_Opening_IDText ;/SL20230210
+;                 pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-4)
+;                 pdfy = ((GadgetScale()\KeyPosY-MinY)/ScaleY)+24+TopBorder
+;                 pdf_MultiCell(GadgetScale()\KeySizeX / ScaleX,(GadgetScale()\KeySizeY / ScaleY)/4.0,GetGadgetText(MyLoop),0,#PDF_ALIGN_LEFT,0,0,3)
+;             Case #Gad_RollInfo_Width_IDText ;/SL20230210
+;                 pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-4)
+;                 pdfy = ((GadgetScale()\KeyPosY-MinY)/ScaleY)+24+TopBorder
+;                 pdf_MultiCell(GadgetScale()\KeySizeX / ScaleX,(GadgetScale()\KeySizeY / ScaleY)/4.0,GetGadgetText(MyLoop),0,#PDF_ALIGN_LEFT,0,0,3)
+;             Case #Gad_Rollinfo_Group_Combo ;/SL20230210
+;                 pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-2)
+;                 pdfy = ((GadgetScale()\KeyPosY-MinY)/ScaleY)+24+TopBorder
+;                 pdf_MultiCell(GadgetScale()\KeySizeX / ScaleX,(GadgetScale()\KeySizeY / ScaleY)/4.0,GetGadgetText(MyLoop),0,#PDF_ALIGN_LEFT,0,0,3)
+;             Default
+;               pdf_Text(PosX-1,PosY,GetGadgetText(MyLoop))
+;           EndSelect
+;           
+;         EndIf 
+;       EndIf
+;       
+;     EndIf
+;   Next
+;   
+;   pdf_StopPageNums()
+;   pdf_Save(File)
+;   pdf_End()
+;   RunProgram(File)
+;   
+; EndProcedure
 Procedure.i Export_Rollinfo_PDF()
   Protected MyLoop.i, File.s, PageWidth.i, PageHeight.i, MinX.i, MaxX.i, MinY.i, MaxY.i, SizeX.f, SizeY.f, PageSizeX.i, PageSizeY.i, ScaleX.f, ScaleY.f, PosX.f, PosY.f
-  Protected GadSizeX.f, GadSizeY.f, Excluded.i, LeftBorder.i, Column.i, OnLine.i, LineCount.i, FilePattern.s, TopBorder.i, Col.i, Justify.s, TempImage.i
+  Protected GadSizeX.f, GadSizeY.f, Excluded.i, LeftBorder.i, Column.i, OnLine.i, LineCount.i, FilePattern.s, TopBorder.i, Col.i, Justify.s
   Protected strText.s
-  SetActiveGadget(-1) ;/ remove any gadget selection
+
+  SetActiveGadget(-1)
   
   FilePattern = "*.pdf|*.pdf" ;/DNT
   File.s = SaveFileRequester(tTxt(#Str_Enterfilename),"",FilePattern,0)
@@ -11274,10 +11525,10 @@ Procedure.i Export_Rollinfo_PDF()
     MessageRequester(tTxt(#Str_Error),tTxt(#Str_Cannotwritetofile)+", "+tTxt(#Str_filealreadyopenelsewhere)+"?",#PB_MessageRequester_Ok)
     ProcedureReturn 
   EndIf
-  
+
   MinX = 9999 : MaxX = -9999
   MinY = 9999 : MaxY = -9999
-  
+
   For MyLoop = #Gad_RollInfo_Start To #Gad_RollInfo_Finish
     If IsGadget(MyLoop)
       ForEach GadgetScale()
@@ -11289,7 +11540,7 @@ Procedure.i Export_Rollinfo_PDF()
       If GadgetScale()\KeyPosY + GadgetScale()\KeySizeY > MaxY : MaxY = GadgetScale()\KeyPosY + GadgetScale()\KeySizeY: EndIf
     EndIf
   Next
-  
+
   pdf_Create()
   pdf_SetDisplayMode(#PDF_ZOOM_REAL,#PDF_LAYOUT_SINGLE)
   pdf_SetProcHeader(@PDF_Header())
@@ -11297,11 +11548,8 @@ Procedure.i Export_Rollinfo_PDF()
   pdf_AddPage("P",#PDF_PAGE_FORMAT_A4)
   pdf_StartPageNums()
   
-  Debug "Font debug issue (Russian) >> "
   Debug "**** System Font: "+System\Font_Name
   pdf_SetFont(System\Font_Name,"",8)  ;/DNT
-  ;pdf_SetFont(System\Font_Name,"",8)  ;/DNT
-  
   
   PageSizeX = pdf_GetW() - 4
   PageSizeY = pdf_GetH() - 96 ;/ remove header
@@ -11318,10 +11566,10 @@ Procedure.i Export_Rollinfo_PDF()
   Debug "Max XY: "+Str(MaxX)+", "+Str(MaxY)
   
   pdf_SetFillColor(255,255,255)
-  pdf_RoundRect(2+LeftBorder,20+TopBorder,pdf_GetW()-24-LeftBorder,62,2,#PDF_STYLE_DRAWANDFILL)
+  pdf_RoundRect(5,20+TopBorder,pdf_GetW()-10,pdf_GetH()-35,2,#PDF_STYLE_DRAWANDFILL)
   
   pdf_SetFillColor(240,240,240)
-  
+
   For MyLoop = #Gad_RollInfo_Start To #Gad_RollInfo_Finish
     If IsGadget(MyLoop)
       ;/ Exclude specific gadgets from being displayed on the report
@@ -11334,36 +11582,33 @@ Procedure.i Export_Rollinfo_PDF()
       If MyLoop = #Gad_RollInfo_Commit : Excluded = 1 : EndIf
       If MyLoop = #Gad_RollInfo_Import_New : Excluded = 1 : EndIf
       
-      
-
       If Excluded = 0
         ForEach GadgetScale()
           If GadgetScale()\Gadget = MyLoop : Break : EndIf
         Next
-        
+
         If Myloop = #Gad_RollInfo_GeneralHistory_History_List
-          
-          pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-1)
+          pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-5)
           pdfy = ((GadgetScale()\KeyPosY-MinY)/ScaleY)+23+TopBorder
           LineCount = CountGadgetItems(#Gad_RollInfo_GeneralHistory_History_List)
           If LineCount > 3 : LineCount = 3 : EndIf ;/ limit the amount of lines being displayed on the general history box
           SetGadgetState(#Gad_RollInfo_GeneralHistory_History_List,-1)
           For OnLine = -1 To Linecount
             For Column = 0 To 2
-              pdf_Cell(GadgetScale()\ColumnSize[Column] / ScaleX ,4,GetGadgetItemText(Myloop,Online,Column),-15,0,#PDF_ALIGN_LEFT,1)
+              pdf_Cell(GadgetScale()\ColumnSize[Column] / ScaleX+2.6 ,4,GetGadgetItemText(Myloop,Online,Column),-15,0,#PDF_ALIGN_LEFT,1)
             Next
-            pdf_Ln() : pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-1)
+            pdf_Ln() : pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-5)
           Next
         EndIf
         
         If Myloop = #Gad_RollInfo_Original_List
           SetGadgetState(#Gad_RollInfo_Original_List,-1)
           
-          pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-1)
-          pdfy = ((GadgetScale()\KeyPosY-MinY)/ScaleY) + 24 + TopBorder
+          pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX-1) + (leftborder-1)
+          pdfy = ((GadgetScale()\KeyPosY-MinY)/ScaleY)+24+TopBorder
           For OnLine = 0 To 1
-            For Column = 0 To 12 
-              ;Debug "GadgetScale "+Str(GadgetScale()\ColumnSize[Column])
+            For Column = 0 To 12
+              Debug "GadgetScale "+Str(GadgetScale()\ColumnSize[Column])
               
               Justify = #PDF_ALIGN_LEFT
               If Column > 1 
@@ -11378,17 +11623,17 @@ Procedure.i Export_Rollinfo_PDF()
               Col.i = GetGadgetItemColor(Myloop,Online,#PB_Gadget_BackColor,Column)
               If Col = -1 : Col = RGB(255,255,255) : EndIf
               pdf_SetFillColor(Red(Col), Green(Col), Blue(Col))
-              
-              pdf_Cell(GadgetScale()\ColumnSize[Column] / ScaleX ,6,GetGadgetItemText(Myloop,Online,Column),-15,0,Justify,1)
+
+              pdf_Cell(GadgetScale()\ColumnSize[Column] / ScaleX+0.09, 6, GetGadgetItemText(Myloop,Online,Column), -15, 0, Justify, 1)
             Next
-            pdf_Ln() : pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-1)
+            pdf_Ln() : pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX-1) + (leftborder-1)
           Next
         EndIf
         
         If Myloop = #Gad_RollInfo_History_List
           SetGadgetState(#Gad_RollInfo_History_List,-1)
           
-          pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-1)
+          pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX-1) + (leftborder-1)
           pdfy = ((GadgetScale()\KeyPosY-MinY)/ScaleY)+24+TopBorder
           LineCount = CountGadgetItems(#Gad_RollInfo_History_List) - 1
           If LineCount > 15 : LineCount = 15 : EndIf
@@ -11399,7 +11644,7 @@ Procedure.i Export_Rollinfo_PDF()
               If Column > 1 
                 Justify = #PDF_ALIGN_CENTER
               EndIf
-              
+
               Col.i = GetGadgetItemColor(Myloop,Online,#PB_Gadget_FrontColor,Column)
               If Col = -1 : Col = 0 : EndIf
               
@@ -11409,33 +11654,52 @@ Procedure.i Export_Rollinfo_PDF()
               If Col = -1 : Col = RGB(255,255,255) : EndIf
               
               pdf_SetFillColor(Red(Col), Green(Col), Blue(Col))
-              pdf_Cell(GadgetScale()\ColumnSize[Column] / ScaleX ,6,GetGadgetItemText(Myloop,Online,Column),-15,0,Justify,1)
+              pdf_Cell(GadgetScale()\ColumnSize[Column] / ScaleX+0.09 ,6,GetGadgetItemText(Myloop,Online,Column),-15,0,Justify,1)
             Next
-            pdf_Ln() : pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-1)
+            pdf_Ln() : pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX-1) + (leftborder-1)
           Next
         EndIf
-        
+
         PosX = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + leftborder
         PosY = ((GadgetScale()\KeyPosY-MinY)/ScaleY)+26+TopBorder
         GadSizeX = GadgetScale()\KeySizeX / ScaleX
         GadSizeY = GadgetScale()\KeySizeY / ScaleY
         
-        ;Debug "PosX(Y): "+Str(PosX)+", "+Str(PosY)
+        Debug "PosX(Y): "+Str(PosX)+", "+Str(PosY)
         If GadgetType(GadgetScale()\Gadget) <> #PB_GadgetType_Text And GadgetType(GadgetScale()\Gadget) <> #PB_GadgetType_Image
           If GetGadgetText(MyLoop) <> "" : pdf_RoundRect(PosX-2,PosY-3,GadSizeX,GadSizeY,1,#PDF_STYLE_DRAWANDFILL) : EndIf
         EndIf
         
+
+        If MyLoop = #Gad_Rollinfo_Suitability_String
+            pdf_RoundRect(PosX-2,PosY-3,GadSizeX+11.2,GadSizeY,1,#PDF_STYLE_DRAWANDFILL)
+        EndIf
+
+        If MyLoop = #Gad_RollInfo_GeneralHistory_History_Text
+          pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-15)
+          pdfy = ((GadgetScale()\KeyPosY-MinY)/ScaleY)+23+TopBorder
+        EndIf
+
+
+
         If GadgetType(GadgetScale()\Gadget) = #PB_GadgetType_Image
           Select GadgetScale()\Gadget
             Case #Gad_RollInfo_Image_Reference
+              Debug "*********************** Exporting System reference image"
+              Debug "Ref Image: "+Str(System\ReferenceImage)
+              Debug "Length: "+Str(System\Reference_Image_Length)
+              Debug "Gadgetsize X & Y: "+Str(GadSizeX)+" - "+Str(GadSizeY)
               If System\Reference_Image_Length > 0
-                Debug "Ref Image: "+Str(System\ReferenceImage)+" - Length: "+Str(System\Reference_Image_Length)
+                
                 pdf_ImageMem("Scan1",System\ReferenceImage,System\Reference_Image_Length,PosX-2,PosY-3,GadSizeX,GadSizeY)   ;/DNT 
               EndIf
               
             Case #Gad_RollInfo_Image_Latest
+              Debug "********************** Exporting Current image"
+              Debug "Ref Image: "+Str(System\CurrentImage)
+              Debug "Length: "+Str(System\Current_Image_Length)
+              Debug "Gadgetsize X & Y: "+Str(GadSizeX)+" - "+Str(GadSizeY)
               If System\Current_Image_Length > 0
-                Debug "Current Image: "+Str(System\CurrentImage)+" - Length: "+Str(System\Current_Image_Length)
                 pdf_ImageMem("Scan2",System\CurrentImage,System\Current_Image_Length,PosX-2,PosY-3,GadSizeX,GadSizeY);/DNT
               EndIf
               
@@ -11447,7 +11711,7 @@ Procedure.i Export_Rollinfo_PDF()
               
             Case #Gad_RollInfo_Screen_Image
               pdf_ImageMem("Screen",?Roll_Screen_Opaque,?Roll_Screen_Opaque_End - ?Roll_Screen_Opaque,PosX-2,PosY-3,GadSizeX,GadSizeY);/DNT
-              
+
             Case #Gad_RollInfo_AniCAM_Image
               pdf_ImageMem("AniCAM",?AniCAM_Opaque,?AniCAM_Opaque_End - ?AniCAM_Opaque,PosX-2,PosY-3,GadSizeX,GadSizeY);/DNT
               
@@ -11460,15 +11724,18 @@ Procedure.i Export_Rollinfo_PDF()
           EndSelect
           
         EndIf
+
+        If MyLoop = #Gad_RollInfo_Comment_Box
+            pdf_RoundRect(PosX-2,PosY-3,GadSizeX+2.6,GadSizeY,1,#PDF_STYLE_DRAWANDFILL)
+        EndIf
         
         If GetGadgetText(MyLoop) <> "" 
           Select MyLoop
             Case #Gad_Rollinfo_Readings_Text ;/ increase font size on readings text only
-              pdf_SetFontSize(14)            ;/DNT
-              pdf_Text(PosX-1,PosY,GetGadgetText(MyLoop))
-              pdf_SetFontSize(8)  ;/DNT
+              pdf_SetFontSize(14) ;/DNT
+              pdf_Text(PosX+3.5,PosY,GetGadgetText(MyLoop))
+              pdf_SetFontSize(7)  ;/DNT
             Case #Gad_RollInfo_Comment_Box
-              ;2+LeftBorder,20+TopBorder,pdf_GetW()-24-LeftBorder,62,2,#PDF_STYLE_DRAWANDFILL)
               pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-2)
               pdfy = ((GadgetScale()\KeyPosY-MinY)/ScaleY)+24+TopBorder
               pdf_MultiCell(GadgetScale()\KeySizeX / ScaleX,(GadgetScale()\KeySizeY / ScaleY)/4.0,GetGadgetText(MyLoop),0,#PDF_ALIGN_Justified,0,0,3)
@@ -11484,10 +11751,21 @@ Procedure.i Export_Rollinfo_PDF()
                 pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-2)
                 pdfy = ((GadgetScale()\KeyPosY-MinY)/ScaleY)+24+TopBorder
                 pdf_MultiCell(GadgetScale()\KeySizeX / ScaleX,(GadgetScale()\KeySizeY / ScaleY)/4.0,GetGadgetText(MyLoop),0,#PDF_ALIGN_LEFT,0,0,3)
+            Case #Gad_RollInfo_GeneralHistory_History_Text
+                pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX-1) + (leftborder-2)
+                pdfy = ((GadgetScale()\KeyPosY-MinY)/ScaleY)+26+TopBorder
+                pdf_MultiCell(GadgetScale()\KeySizeX / ScaleX,(GadgetScale()\KeySizeY / ScaleY)/4.0,GetGadgetText(MyLoop),0,#PDF_ALIGN_LEFT,0,0,3)
+            Case #Gad_RollInfo_Original_Text
+                pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX+2.5) + (leftborder-2)
+                pdfy = ((GadgetScale()\KeyPosY-MinY)/ScaleY)+26+TopBorder
+                pdf_MultiCell(GadgetScale()\KeySizeX / ScaleX,(GadgetScale()\KeySizeY / ScaleY)/4.0,GetGadgetText(MyLoop),0,#PDF_ALIGN_LEFT,0,0,3)
+            Case #Gad_RollInfo_History_Text
+                pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX+4.6) + (leftborder-2)
+                pdfy = ((GadgetScale()\KeyPosY-MinY)/ScaleY)+26+TopBorder
+                pdf_MultiCell(GadgetScale()\KeySizeX / ScaleX,(GadgetScale()\KeySizeY / ScaleY)/4.0,GetGadgetText(MyLoop),0,#PDF_ALIGN_LEFT,0,0,3)
             Default
               pdf_Text(PosX-1,PosY,GetGadgetText(MyLoop))
           EndSelect
-          
         EndIf 
       EndIf
       
@@ -11498,9 +11776,8 @@ Procedure.i Export_Rollinfo_PDF()
   pdf_Save(File)
   pdf_End()
   RunProgram(File)
-  
-EndProcedure
 
+EndProcedure
 Procedure.i Export_Excel(View.i) ;/ Report = 0, Anilox = 1
   Protected MyLoop.i, File.s, Text.s, Column.i, ColumnCount.i, ColumnLetter.s, SM.s, TmpTxt.s, Temp.i, Online.i
   Protected ExcelObject.COMateObject , WorkBook.i, CellColour.i, Range.s, Tmp.s, CellData.i, CellText.s
@@ -12779,6 +13056,211 @@ Procedure Init_Window_HomeScreen(SiteID.i=1)
   Redraw_HomeScreen()
   
 EndProcedure
+; Procedure Init_Window_RollInformation()
+;   Protected Y.i, SavedY.i, X.i = 310, Tmp.s, strCellOpening.s
+;   ;  AddGadgetItem(#Gad_TabGadget,#Panel_Roll_Info,"Roll Information",ImageID(#Image_Info))
+;   ;  ContainerGadget(#Gad_Container_RollInfo, 0, 0, 716, 662, #PB_Container_Raised)
+;   
+;   Y = 6
+;   
+;   TextGadget(#Gad_Rollinfo_RollID_Text,X + 20,Y,118,16,tTxt(#Str_RollID)) :  SetGadgetColor(#Gad_Rollinfo_RollID_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+;   TextGadget(#Gad_Rollinfo_Manufacturer_Text,X + 146,Y,118,16,tTxt(#Str_Manufacturer)) :  SetGadgetColor(#Gad_Rollinfo_Manufacturer_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+;   TextGadget(#Gad_Rollinfo_DateMade_Text,X + 270,Y,90,16,tTxt(#Str_Datemade)) :  SetGadgetColor(#Gad_Rollinfo_DateMade_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+;   TextGadget(#Gad_Rollinfo_Group_Text,X + 364,Y,90,16,tTxt(#Str_Group)) :  SetGadgetColor(#Gad_Rollinfo_Group_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+;   TextGadget(#Gad_Rollinfo_Suitability_Text,X + 475,Y,120,16,tTxt(#Str_Suitability)) :  SetGadgetColor(#Gad_Rollinfo_Suitability_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+;   
+;   ButtonGadget(#Gad_RollInfo_Commit,X + 620,Y+2,90,20,tTxt(#Str_Commitchanges))
+;   ButtonGadget(#Gad_RollInfo_Undo,X + 620,Y+24,90,20,tTxt(#Str_Undochanges))
+;   
+;   Y + 17
+;   StringGadget(#Gad_Rollinfo_RollID_String,X + 20,Y,124,20,"",#PB_String_ReadOnly); :  setgadgetcolor(#Gad_Rollinfo_RollID_String,#PB_Gadget_BackColor,#WinCol_RollInfo)
+;   ComboBoxGadget(#Gad_Rollinfo_Manufacturer_String,X + 146,Y,120,20)              ;:  setgadgetcolor(#Gad_Rollinfo_Manufacturer_String,#PB_Gadget_BackColor,#WinCol_RollInfo)
+;                                                                                   ;AddGadgetItem(#Gad_Rollinfo_Manufacturer_String,-1,"*"+ tTxt(#Str_Unknown) +"*") ;/DNT
+;   ForEach ManufacturerList()
+;     AddGadgetItem(#Gad_Rollinfo_Manufacturer_String,-1,ManufacturerList()\Text)
+;   Next
+;   
+;   DateGadget(#Gad_Rollinfo_DateMade_Date,X + 270,Y,90,20); :  setgadgetcolor(#Gad_Rollinfo_DateMade_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+;   
+;   StringGadget(#Gad_Rollinfo_Group_Combo,X + 362,Y,110,20,"",#PB_String_ReadOnly) ; :  setgadgetcolor(#Gad_Rollinfo_Group_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+;   
+;   ComboBoxGadget(#Gad_Rollinfo_Suitability_String,X + 475,Y,140,20); :  setgadgetcolor(#Gad_Rollinfo_Suitability_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+;   Refresh_Suitability_List()
+;   ;AddGadgetItem(#Gad_Rollinfo_Suitability_String,-1,"*"+tTxt(#Str_Notset)+"*")
+;   ;ForEach SuitabilityList()
+;   ;  AddGadgetItem(#Gad_Rollinfo_Suitability_String,-1,SuitabilityList()\Text)
+;   ;Next
+;   
+;   Y + 28 : SavedY = Y
+;   
+;   ImageGadget(#Gad_RollInfo_Screen_Image,X + 16,Y,ImageWidth(#Image_RollInfo_Screen),ImageHeight(#Image_RollInfo_Screen),ImageID(#Image_RollInfo_Screen))
+;   ImageGadget(#Gad_RollInfo_Wall_Image,X + 121,Y,ImageWidth(#Image_RollInfo_Wall),ImageHeight(#Image_RollInfo_Wall),ImageID(#Image_RollInfo_Wall))
+;   ImageGadget(#Gad_RollInfo_Opening_Image,X + 226,Y,ImageWidth(#Image_RollInfo_Opening),ImageHeight(#Image_RollInfo_Opening),ImageID(#Image_RollInfo_Opening))
+;   
+;   Y + 22
+;   StringGadget(#Gad_RollInfo_Screen_String,X + 20,Y,40,18,"")
+;   StringGadget(#Gad_RollInfo_Wall_String_New,X + 145,Y,30,18,"") ;/JM20220221 Make room for 2 measurments, reference and current
+;   StringGadget(#Gad_RollInfo_Wall_String,X + 115,Y,30,18,"")
+;   StringGadget(#Gad_RollInfo_Opening_String_New,X + 250,Y,30,18,"") ;/JM20220221
+;   StringGadget(#Gad_RollInfo_Opening_String,X + 220,Y,30,18,"")
+;   StringGadget(#Gad_RollInfo_Width_String,X + 305,Y,40,18,"")
+;   
+;   TextGadget(#Gad_RollInfo_Ref_String_One,X + 95,Y,20,20,tTxt(#Str_Ref)) :  SetGadgetColor(#Gad_RollInfo_Ref_String_One,#PB_Gadget_BackColor,#WinCol_RollInfo)
+;   TextGadget(#Gad_RollInfo_Screen_UnitText,X + 62,Y,20,20,System\Settings_Screen_UnitMask) :  SetGadgetColor(#Gad_RollInfo_Screen_UnitText,#PB_Gadget_BackColor,#WinCol_RollInfo)
+;   TextGadget(#Gad_RollInfo_Ref_String_Two,X + 200,Y,20,20,tTxt(#Str_Ref)) :  SetGadgetColor(#Gad_RollInfo_Ref_String_Two,#PB_Gadget_BackColor,#WinCol_RollInfo)
+;   TextGadget(#Gad_RollInfo_Wall_UnitText,X + 175,Y,20,20,System\Settings_Length_UnitMask) :  SetGadgetColor(#Gad_RollInfo_Wall_UnitText,#PB_Gadget_BackColor,#WinCol_RollInfo)
+;   TextGadget(#Gad_RollInfo_Opening_UnitText,X + 280,Y,20,20,System\Settings_Length_UnitMask) :  SetGadgetColor(#Gad_RollInfo_Opening_UnitText,#PB_Gadget_BackColor,#WinCol_RollInfo)
+;   TextGadget(#Gad_RollInfo_Width_UnitText,X + 347,Y,22,20,System\Settings_MLength_UnitMask) :  SetGadgetColor(#Gad_RollInfo_Width_UnitText,#PB_Gadget_BackColor,#WinCol_RollInfo)
+;   
+;   Y + 20
+;   TextGadget(#Gad_RollInfo_Screen_IDText,X + 20,Y,80,20,tTxt(#Str_Screen))    :  SetGadgetColor(#Gad_RollInfo_Screen_IDText,#PB_Gadget_BackColor,#WinCol_RollInfo)
+;   TextGadget(#Gad_RollInfo_Wall_IDText,X + 120,Y,80,40,tTxt(#Str_Wallwidth)) :  SetGadgetColor(#Gad_RollInfo_Wall_IDText,#PB_Gadget_BackColor,#WinCol_RollInfo) 
+;   TextGadget(#Gad_RollInfo_Opening_IDText,X + 220,Y,80,40,tTxt(#Str_Cellopening)) :  SetGadgetColor(#Gad_RollInfo_Opening_IDText,#PB_Gadget_BackColor,#WinCol_RollInfo)
+;   TextGadget(#Gad_RollInfo_Width_IDText,X + 305,Y,70,40,tTxt(#Str_Rollwidth)) :  SetGadgetColor(#Gad_RollInfo_Width_IDText,#PB_Gadget_BackColor,#WinCol_RollInfo)
+;   
+;   Y + 18
+;   TextGadget(#Gad_RollInfo_GeneralHistory_History_Text,X + 20,Y,180,18,tTxt(#Str_Generalhistory)+":") : SetGadgetColor(#Gad_RollInfo_GeneralHistory_History_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+;   
+;   Y + 18
+;   
+;   ListIconGadget(#Gad_RollInfo_GeneralHistory_History_List,X + 20,Y,600,90,tTxt(#Str_Date),80,#PB_ListIcon_FullRowSelect|#PB_ListIcon_GridLines)
+;   AddGadgetColumn(#Gad_RollInfo_GeneralHistory_History_List,1,tTxt(#Str_Type),100)
+;   AddGadgetColumn(#Gad_RollInfo_GeneralHistory_History_List,2,tTxt(#Str_Comments),390)
+;   
+;   SendMessage_(GadgetID(#Gad_RollInfo_GeneralHistory_History_List), #LVM_SETEXTENDEDLISTVIEWSTYLE, 0, #LVS_EX_LABELTIP|#LVS_EX_FULLROWSELECT) 
+;   ;    SendMessage_(GadgetID(#Gad_RollInfo_GeneralHistory_History_List), #LVM_SETEXTENDEDLISTVIEWSTYLE, #LVS_EX_FULLROWSELECT, #LVS_EX_FULLROWSELECT)
+;   
+;   Y = SavedY
+;   TextGadget(#Gad_RollInfo_Comment_Text,X + 370,Y+2,200,18,tTxt(#Str_LastComment)+":") :  SetGadgetColor(#Gad_RollInfo_Comment_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+;   Y = SavedY + 20
+;   EditorGadget(#Gad_RollInfo_Comment_Box,X + 370,Y,250,38)
+;   SetGadgetFont(#Gad_RollInfo_Comment_Box,FontID(#Font_List_S))
+;   ;Debug "Original FonID: "+Str(#Font_List_M)
+;   
+;   Y + 154
+;   TextGadget(#Gad_RollInfo_Image_Reference_Text,X + 80,Y,240,18,tTxt(#Str_Reference)+":") :  SetGadgetColor(#Gad_RollInfo_Image_Reference_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+;   TextGadget(#Gad_RollInfo_Image_Latest_Text,X + 370,Y,280,18,tTxt(#Str_Lastimported)+" / "+tTxt(#Str_selected)+": ["+tTxt(#Str_PrintDistance)+": "+"]") : SetGadgetColor(#Gad_RollInfo_Image_Latest_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+;   ImageGadget(#Gad_RollInfo_Image_Reference,X + 80,Y+18,240,180,0,#PB_Image_Border)
+;   ImageGadget(#Gad_RollInfo_Image_Latest,X + 370,Y+18,240,180,0,#PB_Image_Border)
+;   
+;   Y + 210
+;   
+;   ImageGadget(#Gad_RollInfo_AniCAM_Image,X + 10,Y,ImageWidth(#Image_AniCAM),ImageHeight(#Image_AniCAM),ImageID(#Image_AniCAM))
+;   
+;   ImageGadget(#Gad_RollInfo_Roll_Image,X + 174,Y+16,ImageWidth(#Image_Roll_Large),ImageHeight(#Image_Roll_Large),ImageID(#Image_Roll_Large))
+;   DisableGadget(#Gad_RollInfo_Roll_Image,1)
+;   ImageGadget(#Gad_RollInfo_Roll_Pins,X + 174,Y+80+41,ImageWidth(#Image_Roll_Pins),ImageHeight(#Image_Roll_Pins),ImageID(#Image_Roll_Pins))
+;   DisableGadget(#Gad_RollInfo_Roll_Pins,1)
+;   
+;   TextGadget(#Gad_Rollinfo_Readings_Text,X+75,Y+36,100,30,tTxt(#Str_Readings),#PB_Text_Center) : SetGadgetColor(#Gad_Rollinfo_Readings_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+;   SetGadgetFont(#Gad_Rollinfo_Readings_Text,FontID(#Font_List_L))
+;   
+;   Y + 80
+;   
+;   TextGadget(#Gad_RollInfo_Original_Text,X-10 ,Y+20,62,20,tTxt(#Str_Reference)+":",#PB_Text_Right):  SetGadgetColor(#Gad_RollInfo_Original_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+;   ListIconGadget(#Gad_RollInfo_Original_List,X + 60,Y-4,652,48,tTxt(#Str_Date)+":",66,#PB_ListIcon_FullRowSelect|#PB_ListIcon_GridLines|#LVS_NOCOLUMNHEADER)
+;   ;    ListIconGadget(#Gad_RollInfo_Original_List,X + 60,Y-4,580,48,tTxt(#Str_Date)+":",80,#PB_ListIcon_FullRowSelect|#PB_ListIcon_GridLines)
+;   ;SetListIconColumnJustification(#Gad_RollInfo_Original_List,0,#PB_ListIcon_JustifyColumnCenter)
+;   AddGadgetColumn(#Gad_RollInfo_Original_List,1,tTxt(#Str_Examiner),70)
+;   AddGadgetColumn(#Gad_RollInfo_Original_List,2,"1",38)
+;   SetListIconColumnJustification(#Gad_RollInfo_Original_List,2,#PB_ListIcon_JustifyColumnCenter)
+;   AddGadgetColumn(#Gad_RollInfo_Original_List,3,"2",38)
+;   SetListIconColumnJustification(#Gad_RollInfo_Original_List,3,#PB_ListIcon_JustifyColumnCenter)
+;   AddGadgetColumn(#Gad_RollInfo_Original_List,4,"3",38)
+;   SetListIconColumnJustification(#Gad_RollInfo_Original_List,4,#PB_ListIcon_JustifyColumnCenter)
+;   AddGadgetColumn(#Gad_RollInfo_Original_List,5,"4",38)
+;   SetListIconColumnJustification(#Gad_RollInfo_Original_List,5,#PB_ListIcon_JustifyColumnCenter)
+;   AddGadgetColumn(#Gad_RollInfo_Original_List,6,"5",38)
+;   SetListIconColumnJustification(#Gad_RollInfo_Original_List,6,#PB_ListIcon_JustifyColumnCenter)
+;   AddGadgetColumn(#Gad_RollInfo_Original_List,7,":",18)
+;   AddGadgetColumn(#Gad_RollInfo_Original_List,8,"cm3/m2",50) ;/DNT
+;   SetListIconColumnJustification(#Gad_RollInfo_Original_List,8,#PB_ListIcon_JustifyColumnCenter)
+;   AddGadgetColumn(#Gad_RollInfo_Original_List,9,tTxt(#Str_Variance),56)
+;   SetListIconColumnJustification(#Gad_RollInfo_Original_List,9,#PB_ListIcon_JustifyColumnCenter)
+;   AddGadgetColumn(#Gad_RollInfo_Original_List,10,tTxt(#Str_Capacity),96) ;/JM20220124 increase width to allow for new text of "Volume Retention"
+;   SetListIconColumnJustification(#Gad_RollInfo_Original_List,10,#PB_ListIcon_JustifyColumnCenter)
+;   ;MessageRequester("Show Depth: "+Str(System\Show_Depth),",")
+;   
+;   ;If System\Show_Depth = 1
+;     AddGadgetColumn(#Gad_RollInfo_Original_List,11,tTxt(#Str_Depth),46)
+;     SetListIconColumnJustification(#Gad_RollInfo_Original_List,11,#PB_ListIcon_JustifyColumnCenter)
+;   ;EndIf
+;   
+;   AddGadgetColumn(#Gad_RollInfo_Original_List,12,tTxt(#Str_Usage),38)
+;   SetListIconColumnJustification(#Gad_RollInfo_Original_List,12,#PB_ListIcon_JustifyColumnCenter)
+;   
+;   
+;   ;    SetGadgetItemColor(#Gad_RollInfo_Original_List,-1,#PB_Gadget_BackColor,RGB(250,200,200),4)
+;   ;    SetGadgetItemColor(#Gad_RollInfo_Original_List,-1,#PB_Gadget_BackColor,RGB(250,200,200),6)
+;   
+;   ;AddGadgetItem(#Gad_RollInfo_Original_List,-1,tTxt(#Str_Test))
+;   SendMessage_(GadgetID(#Gad_RollInfo_Original_List), #LVM_SETEXTENDEDLISTVIEWSTYLE, 0, #LVS_EX_LABELTIP|#LVS_EX_FULLROWSELECT) 
+;   
+;   ;    SetGadgetItemColor(#Gad_RollInfo_Original_List,0,#PB_Gadget_BackColor,RGB(0,255,0),9)
+;   
+;   Y + 50
+;   TextGadget(#Gad_RollInfo_History_Text,X-10 ,Y,62,20,tTxt(#Str_Historical)+":",#PB_Text_Right)
+;   SetGadgetColor(#Gad_RollInfo_History_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+;   ListIconGadget(#Gad_RollInfo_History_List,X + 60,Y,652,100,tTxt(#Str_Date),66,#PB_ListIcon_FullRowSelect|#PB_ListIcon_GridLines|#LVS_NOCOLUMNHEADER|#PB_ListIcon_AlwaysShowSelection)
+;   AddGadgetColumn(#Gad_RollInfo_History_List,1,tTxt(#Str_Examiner),70)
+;   AddGadgetColumn(#Gad_RollInfo_History_List,2,"1",38)
+;   SetListIconColumnJustification(#Gad_RollInfo_History_List,2,#PB_ListIcon_JustifyColumnCenter)
+;   AddGadgetColumn(#Gad_RollInfo_History_List,3,"2",38)
+;   SetListIconColumnJustification(#Gad_RollInfo_History_List,3,#PB_ListIcon_JustifyColumnCenter)
+;   AddGadgetColumn(#Gad_RollInfo_History_List,4,"3",38)
+;   SetListIconColumnJustification(#Gad_RollInfo_History_List,4,#PB_ListIcon_JustifyColumnCenter)
+;   AddGadgetColumn(#Gad_RollInfo_History_List,5,"4",38)
+;   SetListIconColumnJustification(#Gad_RollInfo_History_List,5,#PB_ListIcon_JustifyColumnCenter)
+;   AddGadgetColumn(#Gad_RollInfo_History_List,6,"5",38)
+;   SetListIconColumnJustification(#Gad_RollInfo_History_List,6,#PB_ListIcon_JustifyColumnCenter)
+;   AddGadgetColumn(#Gad_RollInfo_History_List,7,"=",18)
+;   AddGadgetColumn(#Gad_RollInfo_History_List,8,"cm3/m2",50) ;/DNT
+;   SetListIconColumnJustification(#Gad_RollInfo_History_List,8,#PB_ListIcon_JustifyColumnCenter)
+;   AddGadgetColumn(#Gad_RollInfo_History_List,9,tTxt(#Str_Variance),56) 
+;   SetListIconColumnJustification(#Gad_RollInfo_History_List,9,#PB_ListIcon_JustifyColumnCenter)
+;   AddGadgetColumn(#Gad_RollInfo_History_List,10,tTxt(#Str_Capacity),96)
+;   SetListIconColumnJustification(#Gad_RollInfo_History_List,10,#PB_ListIcon_JustifyColumnCenter)
+;   ;If System\Show_Depth = 1
+;     AddGadgetColumn(#Gad_RollInfo_History_List,11,tTxt(#Str_Depth),46)
+;     SetListIconColumnJustification(#Gad_RollInfo_History_List,11,#PB_ListIcon_JustifyColumnCenter)
+;   ;EndIf
+;   
+;   AddGadgetColumn(#Gad_RollInfo_History_List,12,tTxt(#Str_Usage),38)
+;   SetListIconColumnJustification(#Gad_RollInfo_History_List,12,#PB_ListIcon_JustifyColumnCenter)
+;     
+;   SendMessage_(GadgetID(#Gad_RollInfo_History_List), #LVM_SETEXTENDEDLISTVIEWSTYLE, 0, #LVS_EX_LABELTIP|#LVS_EX_FULLROWSELECT) 
+;   Y-100
+;   ;    Framegadget(#Gad_RollInfo_Import_Frame,600,Y,100,90,"Import options") : Y + 20
+;   Tmp.s = ":"+" "+tTxt(#Str_AMS)
+;   ButtonGadget(#Gad_RollInfo_Import_New,x+460,y,24,20,"+")
+;   GadgetToolTip(#Gad_RollInfo_Import_New,tTxt(#Str_Insertnewreading))
+;   ButtonGadget(#Gad_RollInfo_Import_AMS,X + 500,Y-12,80,20,tTxt(#Str_Import)+Tmp)
+;   ButtonGadget(#Gad_RollInfo_ExportRollName, X + 500, Y + 12, 80, 20, "Export to AQC") ;/JM20220816
+;   ButtonImageGadget(#Gad_RollInfo_GraphIcon, x + 590 ,Y-10 ,50,40,ImageID(#Image_GraphIcon))  
+;   
+;   : Y + 20
+;   Tmp.s = ":"+" "+tTxt(#Str_ACP)
+;   
+;   
+;   
+;   ;    ButtonGadget(#Gad_RollInfo_Import_ACP,X + 550,Y,80,20,tTxt(#Str_Import)+Tmp)       : Y + 22
+;   ;    DisableGadget(#Gad_RollInfo_Import_ACP,1)
+;   ;    ButtonGadget(#Gad_RollInfo_Import_New,X + 610,Y,80,18,"Manual Entry")       : Y + 40
+;   ;    ButtonGadget(#Gad_RollInfo_Edit,X + 600,Y,90,18,"Edit Selected")           : Y + 20
+;   ;    ButtonGadget(#Gad_RollInfo_Delete,X + 600,Y,90,18,"Delete Selected")       : Y + 20
+;   
+;   ;SetGadgetColor(#Gad_RollInfo_Import_AMS,#PB_Gadget_BackColor,RGB(80,220,80))
+;   
+;   ;  #Gad_RollInfo_Import_AMS
+;   ;  #Gad_RollInfo_Import_ACP
+;   ;  #Gad_RollInfo_Import_New ;Manually input values
+;   ;  #Gad_RollInfo_Delete
+;   ;  #Gad_RollInfo_Edit
+;   
+;   
+;   ;  CloseGadgetList()
+;   ;  SetGadgetColor(#Gad_Container_RollInfo,#PB_Gadget_BackColor,#WinCol_RollInfo)
+; EndProcedure
 Procedure Init_Window_RollInformation()
   Protected Y.i, SavedY.i, X.i = 310, Tmp.s, strCellOpening.s
   ;  AddGadgetItem(#Gad_TabGadget,#Panel_Roll_Info,"Roll Information",ImageID(#Image_Info))
@@ -12786,28 +13268,28 @@ Procedure Init_Window_RollInformation()
   
   Y = 6
   
-  TextGadget(#Gad_Rollinfo_RollID_Text,X + 20,Y,118,16,tTxt(#Str_RollID)) :  SetGadgetColor(#Gad_Rollinfo_RollID_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
-  TextGadget(#Gad_Rollinfo_Manufacturer_Text,X + 146,Y,118,16,tTxt(#Str_Manufacturer)) :  SetGadgetColor(#Gad_Rollinfo_Manufacturer_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
-  TextGadget(#Gad_Rollinfo_DateMade_Text,X + 270,Y,90,16,tTxt(#Str_Datemade)) :  SetGadgetColor(#Gad_Rollinfo_DateMade_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
-  TextGadget(#Gad_Rollinfo_Group_Text,X + 364,Y,90,16,tTxt(#Str_Group)) :  SetGadgetColor(#Gad_Rollinfo_Group_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
-  TextGadget(#Gad_Rollinfo_Suitability_Text,X + 475,Y,120,16,tTxt(#Str_Suitability)) :  SetGadgetColor(#Gad_Rollinfo_Suitability_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+  TextGadget(#Gad_Rollinfo_RollID_Text,X,Y,118,16,tTxt(#Str_RollID)) :  SetGadgetColor(#Gad_Rollinfo_RollID_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+  TextGadget(#Gad_Rollinfo_Manufacturer_Text,X + 126,Y,118,16,tTxt(#Str_Manufacturer)) :  SetGadgetColor(#Gad_Rollinfo_Manufacturer_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+  TextGadget(#Gad_Rollinfo_DateMade_Text,X + 250,Y,90,16,tTxt(#Str_Datemade)) :  SetGadgetColor(#Gad_Rollinfo_DateMade_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+  TextGadget(#Gad_Rollinfo_Group_Text,X + 344,Y,90,16,tTxt(#Str_Group)) :  SetGadgetColor(#Gad_Rollinfo_Group_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+  TextGadget(#Gad_Rollinfo_Suitability_Text,X + 455,Y,120,16,tTxt(#Str_Suitability)) :  SetGadgetColor(#Gad_Rollinfo_Suitability_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
   
-  ButtonGadget(#Gad_RollInfo_Commit,X + 620,Y+2,90,20,tTxt(#Str_Commitchanges))
-  ButtonGadget(#Gad_RollInfo_Undo,X + 620,Y+24,90,20,tTxt(#Str_Undochanges))
+  ButtonGadget(#Gad_RollInfo_Commit,X + 610,Y+16,90,20,tTxt(#Str_Commitchanges))
+  ButtonGadget(#Gad_RollInfo_Undo,X + 610,Y+37,90,20,tTxt(#Str_Undochanges))
   
   Y + 17
-  StringGadget(#Gad_Rollinfo_RollID_String,X + 20,Y,124,20,"",#PB_String_ReadOnly); :  setgadgetcolor(#Gad_Rollinfo_RollID_String,#PB_Gadget_BackColor,#WinCol_RollInfo)
-  ComboBoxGadget(#Gad_Rollinfo_Manufacturer_String,X + 146,Y,120,20)              ;:  setgadgetcolor(#Gad_Rollinfo_Manufacturer_String,#PB_Gadget_BackColor,#WinCol_RollInfo)
-                                                                                  ;AddGadgetItem(#Gad_Rollinfo_Manufacturer_String,-1,"*"+ tTxt(#Str_Unknown) +"*") ;/DNT
+  StringGadget(#Gad_Rollinfo_RollID_String,X,Y,124,20,"",#PB_String_ReadOnly); :  setgadgetcolor(#Gad_Rollinfo_RollID_String,#PB_Gadget_BackColor,#WinCol_RollInfo)
+  ComboBoxGadget(#Gad_Rollinfo_Manufacturer_String,X + 126,Y,120,20) ;:  setgadgetcolor(#Gad_Rollinfo_Manufacturer_String,#PB_Gadget_BackColor,#WinCol_RollInfo)
+  ;AddGadgetItem(#Gad_Rollinfo_Manufacturer_String,-1,"*"+ tTxt(#Str_Unknown) +"*") ;/DNT
   ForEach ManufacturerList()
     AddGadgetItem(#Gad_Rollinfo_Manufacturer_String,-1,ManufacturerList()\Text)
   Next
   
-  DateGadget(#Gad_Rollinfo_DateMade_Date,X + 270,Y,90,20); :  setgadgetcolor(#Gad_Rollinfo_DateMade_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+  DateGadget(#Gad_Rollinfo_DateMade_Date,X + 250,Y,90,20); :  setgadgetcolor(#Gad_Rollinfo_DateMade_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
   
-  StringGadget(#Gad_Rollinfo_Group_Combo,X + 362,Y,110,20,"",#PB_String_ReadOnly) ; :  setgadgetcolor(#Gad_Rollinfo_Group_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+  StringGadget(#Gad_Rollinfo_Group_Combo,X + 342,Y,110,20,"",#PB_String_ReadOnly) ; :  setgadgetcolor(#Gad_Rollinfo_Group_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
   
-  ComboBoxGadget(#Gad_Rollinfo_Suitability_String,X + 475,Y,140,20); :  setgadgetcolor(#Gad_Rollinfo_Suitability_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+  ComboBoxGadget(#Gad_Rollinfo_Suitability_String,X + 455,Y,145,20); :  setgadgetcolor(#Gad_Rollinfo_Suitability_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
   Refresh_Suitability_List()
   ;AddGadgetItem(#Gad_Rollinfo_Suitability_String,-1,"*"+tTxt(#Str_Notset)+"*")
   ;ForEach SuitabilityList()
@@ -12818,37 +13300,37 @@ Procedure Init_Window_RollInformation()
   
   ImageGadget(#Gad_RollInfo_Screen_Image,X + 16,Y,ImageWidth(#Image_RollInfo_Screen),ImageHeight(#Image_RollInfo_Screen),ImageID(#Image_RollInfo_Screen))
   ImageGadget(#Gad_RollInfo_Wall_Image,X + 121,Y,ImageWidth(#Image_RollInfo_Wall),ImageHeight(#Image_RollInfo_Wall),ImageID(#Image_RollInfo_Wall))
-  ImageGadget(#Gad_RollInfo_Opening_Image,X + 226,Y,ImageWidth(#Image_RollInfo_Opening),ImageHeight(#Image_RollInfo_Opening),ImageID(#Image_RollInfo_Opening))
+  ImageGadget(#Gad_RollInfo_Opening_Image,X + 206,Y,ImageWidth(#Image_RollInfo_Opening),ImageHeight(#Image_RollInfo_Opening),ImageID(#Image_RollInfo_Opening))
   
   Y + 22
   StringGadget(#Gad_RollInfo_Screen_String,X + 20,Y,40,18,"")
-  StringGadget(#Gad_RollInfo_Wall_String_New,X + 145,Y,30,18,"") ;/JM20220221 Make room for 2 measurments, reference and current
+  StringGadget(#Gad_RollInfo_Wall_String_New,X + 145,Y,30,18,"") ;/SL20230405 Make room for 2 measurments, reference and current
   StringGadget(#Gad_RollInfo_Wall_String,X + 115,Y,30,18,"")
-  StringGadget(#Gad_RollInfo_Opening_String_New,X + 250,Y,30,18,"") ;/JM20220221
-  StringGadget(#Gad_RollInfo_Opening_String,X + 220,Y,30,18,"")
-  StringGadget(#Gad_RollInfo_Width_String,X + 305,Y,40,18,"")
+  StringGadget(#Gad_RollInfo_Opening_String_New,X + 235,Y,30,18,"") ;/SL20230405
+  StringGadget(#Gad_RollInfo_Opening_String,X + 205,Y,30,18,"")
+  StringGadget(#Gad_RollInfo_Width_String,X + 293,Y,40,18,"")
   
-  TextGadget(#Gad_RollInfo_Ref_String_One,X + 95,Y,20,20,tTxt(#Str_Ref)) :  SetGadgetColor(#Gad_RollInfo_Ref_String_One,#PB_Gadget_BackColor,#WinCol_RollInfo)
-  TextGadget(#Gad_RollInfo_Screen_UnitText,X + 62,Y,20,20,System\Settings_Screen_UnitMask) :  SetGadgetColor(#Gad_RollInfo_Screen_UnitText,#PB_Gadget_BackColor,#WinCol_RollInfo)
-  TextGadget(#Gad_RollInfo_Ref_String_Two,X + 200,Y,20,20,tTxt(#Str_Ref)) :  SetGadgetColor(#Gad_RollInfo_Ref_String_Two,#PB_Gadget_BackColor,#WinCol_RollInfo)
+;  TextGadget(#Gad_RollInfo_Ref_String_One,X + 95,Y,20,20,tTxt(#Str_Ref)) :  SetGadgetColor(#Gad_RollInfo_Ref_String_One,#PB_Gadget_BackColor,#WinCol_RollInfo)
+  TextGadget(#Gad_RollInfo_Screen_UnitText,X + 66,Y,20,20,System\Settings_Screen_UnitMask) :  SetGadgetColor(#Gad_RollInfo_Screen_UnitText,#PB_Gadget_BackColor,#WinCol_RollInfo)
+;  TextGadget(#Gad_RollInfo_Ref_String_Two,X + 200,Y,20,20,tTxt(#Str_Ref)) :  SetGadgetColor(#Gad_RollInfo_Ref_String_Two,#PB_Gadget_BackColor,#WinCol_RollInfo)
   TextGadget(#Gad_RollInfo_Wall_UnitText,X + 175,Y,20,20,System\Settings_Length_UnitMask) :  SetGadgetColor(#Gad_RollInfo_Wall_UnitText,#PB_Gadget_BackColor,#WinCol_RollInfo)
-  TextGadget(#Gad_RollInfo_Opening_UnitText,X + 280,Y,20,20,System\Settings_Length_UnitMask) :  SetGadgetColor(#Gad_RollInfo_Opening_UnitText,#PB_Gadget_BackColor,#WinCol_RollInfo)
-  TextGadget(#Gad_RollInfo_Width_UnitText,X + 347,Y,22,20,System\Settings_MLength_UnitMask) :  SetGadgetColor(#Gad_RollInfo_Width_UnitText,#PB_Gadget_BackColor,#WinCol_RollInfo)
-  
+  TextGadget(#Gad_RollInfo_Opening_UnitText,X + 266,Y,20,20,System\Settings_Length_UnitMask) :  SetGadgetColor(#Gad_RollInfo_Opening_UnitText,#PB_Gadget_BackColor,#WinCol_RollInfo)
+  TextGadget(#Gad_RollInfo_Width_UnitText,X + 333,Y,22,20,System\Settings_MLength_UnitMask) :  SetGadgetColor(#Gad_RollInfo_Width_UnitText,#PB_Gadget_BackColor,#WinCol_RollInfo)
+
   Y + 20
   TextGadget(#Gad_RollInfo_Screen_IDText,X + 20,Y,80,20,tTxt(#Str_Screen))    :  SetGadgetColor(#Gad_RollInfo_Screen_IDText,#PB_Gadget_BackColor,#WinCol_RollInfo)
-  TextGadget(#Gad_RollInfo_Wall_IDText,X + 120,Y,80,40,tTxt(#Str_Wallwidth)) :  SetGadgetColor(#Gad_RollInfo_Wall_IDText,#PB_Gadget_BackColor,#WinCol_RollInfo) 
-  TextGadget(#Gad_RollInfo_Opening_IDText,X + 220,Y,80,40,tTxt(#Str_Cellopening)) :  SetGadgetColor(#Gad_RollInfo_Opening_IDText,#PB_Gadget_BackColor,#WinCol_RollInfo)
-  TextGadget(#Gad_RollInfo_Width_IDText,X + 305,Y,70,40,tTxt(#Str_Rollwidth)) :  SetGadgetColor(#Gad_RollInfo_Width_IDText,#PB_Gadget_BackColor,#WinCol_RollInfo)
+  TextGadget(#Gad_RollInfo_Wall_IDText,X + 115,Y,80,40,tTxt(#Str_Wallwidth)) :  SetGadgetColor(#Gad_RollInfo_Wall_IDText,#PB_Gadget_BackColor,#WinCol_RollInfo)
+  TextGadget(#Gad_RollInfo_Opening_IDText,X + 205,Y,80,40,tTxt(#Str_Cellopening)) :  SetGadgetColor(#Gad_RollInfo_Opening_IDText,#PB_Gadget_BackColor,#WinCol_RollInfo)
+  TextGadget(#Gad_RollInfo_Width_IDText,X + 293,Y,70,40,tTxt(#Str_Rollwidth)) :  SetGadgetColor(#Gad_RollInfo_Width_IDText,#PB_Gadget_BackColor,#WinCol_RollInfo)
   
   Y + 18
-  TextGadget(#Gad_RollInfo_GeneralHistory_History_Text,X + 20,Y,180,18,tTxt(#Str_Generalhistory)+":") : SetGadgetColor(#Gad_RollInfo_GeneralHistory_History_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+  TextGadget(#Gad_RollInfo_GeneralHistory_History_Text, X, Y,180,18,tTxt(#Str_Generalhistory)+":") : SetGadgetColor(#Gad_RollInfo_GeneralHistory_History_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
   
   Y + 18
   
-  ListIconGadget(#Gad_RollInfo_GeneralHistory_History_List,X + 20,Y,600,90,tTxt(#Str_Date),80,#PB_ListIcon_FullRowSelect|#PB_ListIcon_GridLines)
+  ListIconGadget(#Gad_RollInfo_GeneralHistory_History_List,X + 10, Y,640,90,tTxt(#Str_Date),80,#PB_ListIcon_FullRowSelect|#PB_ListIcon_GridLines)
   AddGadgetColumn(#Gad_RollInfo_GeneralHistory_History_List,1,tTxt(#Str_Type),100)
-  AddGadgetColumn(#Gad_RollInfo_GeneralHistory_History_List,2,tTxt(#Str_Comments),390)
+  AddGadgetColumn(#Gad_RollInfo_GeneralHistory_History_List,2,tTxt(#Str_Comments),433)
   
   SendMessage_(GadgetID(#Gad_RollInfo_GeneralHistory_History_List), #LVM_SETEXTENDEDLISTVIEWSTYLE, 0, #LVS_EX_LABELTIP|#LVS_EX_FULLROWSELECT) 
   ;    SendMessage_(GadgetID(#Gad_RollInfo_GeneralHistory_History_List), #LVM_SETEXTENDEDLISTVIEWSTYLE, #LVS_EX_FULLROWSELECT, #LVS_EX_FULLROWSELECT)
@@ -12856,33 +13338,35 @@ Procedure Init_Window_RollInformation()
   Y = SavedY
   TextGadget(#Gad_RollInfo_Comment_Text,X + 370,Y+2,200,18,tTxt(#Str_LastComment)+":") :  SetGadgetColor(#Gad_RollInfo_Comment_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
   Y = SavedY + 20
-  EditorGadget(#Gad_RollInfo_Comment_Box,X + 370,Y,250,38)
+  EditorGadget(#Gad_RollInfo_Comment_Box,X + 370,Y,260,38)
   SetGadgetFont(#Gad_RollInfo_Comment_Box,FontID(#Font_List_S))
   ;Debug "Original FonID: "+Str(#Font_List_M)
   
   Y + 154
-  TextGadget(#Gad_RollInfo_Image_Reference_Text,X + 80,Y,240,18,tTxt(#Str_Reference)+":") :  SetGadgetColor(#Gad_RollInfo_Image_Reference_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
-  TextGadget(#Gad_RollInfo_Image_Latest_Text,X + 370,Y,280,18,tTxt(#Str_Lastimported)+" / "+tTxt(#Str_selected)+": ["+tTxt(#Str_PrintDistance)+": "+"]") : SetGadgetColor(#Gad_RollInfo_Image_Latest_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
-  ImageGadget(#Gad_RollInfo_Image_Reference,X + 80,Y+18,240,180,0,#PB_Image_Border)
-  ImageGadget(#Gad_RollInfo_Image_Latest,X + 370,Y+18,240,180,0,#PB_Image_Border)
+  TextGadget(#Gad_RollInfo_Image_Reference_Text,X + 70,Y,240,18,tTxt(#Str_Reference)+":") :  SetGadgetColor(#Gad_RollInfo_Image_Reference_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+  TextGadget(#Gad_RollInfo_Image_Latest_Text,X + 340,Y,280,18,tTxt(#Str_Lastimported)+" / "+tTxt(#Str_selected)+":") : SetGadgetColor(#Gad_RollInfo_Image_Latest_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+  ImageGadget(#Gad_RollInfo_Image_Reference,X + 70,Y+18,240,180,0,#PB_Image_Border)
+  ImageGadget(#Gad_RollInfo_Image_Latest,X + 340,Y+18,240,180,0,#PB_Image_Border)
   
   Y + 210
   
-  ImageGadget(#Gad_RollInfo_AniCAM_Image,X + 10,Y,ImageWidth(#Image_AniCAM),ImageHeight(#Image_AniCAM),ImageID(#Image_AniCAM))
+  ;ImageGadget(#Gad_RollInfo_AniCAM_Image,X + 10,Y,ImageWidth(#Image_AniCAM),ImageHeight(#Image_AniCAM),ImageID(#Image_AniCAM))
   
-  ImageGadget(#Gad_RollInfo_Roll_Image,X + 174,Y+16,ImageWidth(#Image_Roll_Large),ImageHeight(#Image_Roll_Large),ImageID(#Image_Roll_Large))
+  ImageGadget(#Gad_RollInfo_Roll_Image,X + 114,Y+16,ImageWidth(#Image_Roll_Large),ImageHeight(#Image_Roll_Large),ImageID(#Image_Roll_Large))
   DisableGadget(#Gad_RollInfo_Roll_Image,1)
-  ImageGadget(#Gad_RollInfo_Roll_Pins,X + 174,Y+80+41,ImageWidth(#Image_Roll_Pins),ImageHeight(#Image_Roll_Pins),ImageID(#Image_Roll_Pins))
+  ImageGadget(#Gad_RollInfo_Roll_Pins,X + 114,Y+80+41,ImageWidth(#Image_Roll_Pins), ImageHeight(#Image_Roll_Pins),ImageID(#Image_Roll_Pins))
   DisableGadget(#Gad_RollInfo_Roll_Pins,1)
   
-  TextGadget(#Gad_Rollinfo_Readings_Text,X+75,Y+36,100,30,tTxt(#Str_Readings),#PB_Text_Center) : SetGadgetColor(#Gad_Rollinfo_Readings_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+  TextGadget(#Gad_Rollinfo_Readings_Text, X-20, Y,100,30,tTxt(#Str_Readings),#PB_Text_Center) : SetGadgetColor(#Gad_Rollinfo_Readings_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
   SetGadgetFont(#Gad_Rollinfo_Readings_Text,FontID(#Font_List_L))
   
   Y + 80
   
-  TextGadget(#Gad_RollInfo_Original_Text,X-10 ,Y+20,62,20,tTxt(#Str_Reference)+":",#PB_Text_Right):  SetGadgetColor(#Gad_RollInfo_Original_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
-  ListIconGadget(#Gad_RollInfo_Original_List,X + 60,Y-4,652,48,tTxt(#Str_Date)+":",66,#PB_ListIcon_FullRowSelect|#PB_ListIcon_GridLines|#LVS_NOCOLUMNHEADER)
-  ;    ListIconGadget(#Gad_RollInfo_Original_List,X + 60,Y-4,580,48,tTxt(#Str_Date)+":",80,#PB_ListIcon_FullRowSelect|#PB_ListIcon_GridLines)
+  TextGadget(#Gad_RollInfo_Original_Text,X-13,Y-20,62,20,tTxt(#Str_Reference)+":",#PB_Text_Right):  SetGadgetColor(#Gad_RollInfo_Original_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+  ListIconGadget(#Gad_RollInfo_Original_List, X, Y-4,652,40,tTxt(#Str_Date)+":",66,#PB_ListIcon_FullRowSelect|#PB_ListIcon_GridLines|#LVS_NOCOLUMNHEADER)
+  
+
+;    ListIconGadget(#Gad_RollInfo_Original_List,X + 60,Y-4,580,48,tTxt(#Str_Date)+":",80,#PB_ListIcon_FullRowSelect|#PB_ListIcon_GridLines)
   ;SetListIconColumnJustification(#Gad_RollInfo_Original_List,0,#PB_ListIcon_JustifyColumnCenter)
   AddGadgetColumn(#Gad_RollInfo_Original_List,1,tTxt(#Str_Examiner),70)
   AddGadgetColumn(#Gad_RollInfo_Original_List,2,"1",38)
@@ -12900,31 +13384,26 @@ Procedure Init_Window_RollInformation()
   SetListIconColumnJustification(#Gad_RollInfo_Original_List,8,#PB_ListIcon_JustifyColumnCenter)
   AddGadgetColumn(#Gad_RollInfo_Original_List,9,tTxt(#Str_Variance),56)
   SetListIconColumnJustification(#Gad_RollInfo_Original_List,9,#PB_ListIcon_JustifyColumnCenter)
-  AddGadgetColumn(#Gad_RollInfo_Original_List,10,tTxt(#Str_Capacity),96) ;/JM20220124 increase width to allow for new text of "Volume Retention"
+  AddGadgetColumn(#Gad_RollInfo_Original_List,10,tTxt(#Str_Capacity),96) ;/SL20230405 increase width to allow for new text of "Volume Retention"
   SetListIconColumnJustification(#Gad_RollInfo_Original_List,10,#PB_ListIcon_JustifyColumnCenter)
   ;MessageRequester("Show Depth: "+Str(System\Show_Depth),",")
   
-  ;If System\Show_Depth = 1
-    AddGadgetColumn(#Gad_RollInfo_Original_List,11,tTxt(#Str_Depth),46)
+  If System\Show_Depth = 1
+    AddGadgetColumn(#Gad_RollInfo_Original_List,11,tTxt(#Str_Depth),40)
     SetListIconColumnJustification(#Gad_RollInfo_Original_List,11,#PB_ListIcon_JustifyColumnCenter)
-  ;EndIf
+  EndIf
+
   
-  AddGadgetColumn(#Gad_RollInfo_Original_List,12,tTxt(#Str_Usage),38)
+  AddGadgetColumn(#Gad_RollInfo_Original_List,12,tTxt(#Str_Usage),50)
   SetListIconColumnJustification(#Gad_RollInfo_Original_List,12,#PB_ListIcon_JustifyColumnCenter)
-  
-  
-  ;    SetGadgetItemColor(#Gad_RollInfo_Original_List,-1,#PB_Gadget_BackColor,RGB(250,200,200),4)
-  ;    SetGadgetItemColor(#Gad_RollInfo_Original_List,-1,#PB_Gadget_BackColor,RGB(250,200,200),6)
-  
+
   ;AddGadgetItem(#Gad_RollInfo_Original_List,-1,tTxt(#Str_Test))
   SendMessage_(GadgetID(#Gad_RollInfo_Original_List), #LVM_SETEXTENDEDLISTVIEWSTYLE, 0, #LVS_EX_LABELTIP|#LVS_EX_FULLROWSELECT) 
-  
-  ;    SetGadgetItemColor(#Gad_RollInfo_Original_List,0,#PB_Gadget_BackColor,RGB(0,255,0),9)
-  
+
   Y + 50
-  TextGadget(#Gad_RollInfo_History_Text,X-10 ,Y,62,20,tTxt(#Str_Historical)+":",#PB_Text_Right)
+  TextGadget(#Gad_RollInfo_History_Text,X-20 ,Y-10,62,20,tTxt(#Str_Historical)+":",#PB_Text_Right)
   SetGadgetColor(#Gad_RollInfo_History_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
-  ListIconGadget(#Gad_RollInfo_History_List,X + 60,Y,652,100,tTxt(#Str_Date),66,#PB_ListIcon_FullRowSelect|#PB_ListIcon_GridLines|#LVS_NOCOLUMNHEADER|#PB_ListIcon_AlwaysShowSelection)
+  ListIconGadget(#Gad_RollInfo_History_List,X, Y+5,652,90,tTxt(#Str_Date),66,#PB_ListIcon_FullRowSelect|#PB_ListIcon_GridLines|#LVS_NOCOLUMNHEADER|#PB_ListIcon_AlwaysShowSelection)
   AddGadgetColumn(#Gad_RollInfo_History_List,1,tTxt(#Str_Examiner),70)
   AddGadgetColumn(#Gad_RollInfo_History_List,2,"1",38)
   SetListIconColumnJustification(#Gad_RollInfo_History_List,2,#PB_ListIcon_JustifyColumnCenter)
@@ -12943,46 +13422,27 @@ Procedure Init_Window_RollInformation()
   SetListIconColumnJustification(#Gad_RollInfo_History_List,9,#PB_ListIcon_JustifyColumnCenter)
   AddGadgetColumn(#Gad_RollInfo_History_List,10,tTxt(#Str_Capacity),96)
   SetListIconColumnJustification(#Gad_RollInfo_History_List,10,#PB_ListIcon_JustifyColumnCenter)
-  ;If System\Show_Depth = 1
-    AddGadgetColumn(#Gad_RollInfo_History_List,11,tTxt(#Str_Depth),46)
-    SetListIconColumnJustification(#Gad_RollInfo_History_List,11,#PB_ListIcon_JustifyColumnCenter)
-  ;EndIf
   
-  AddGadgetColumn(#Gad_RollInfo_History_List,12,tTxt(#Str_Usage),38)
+  If System\Show_Depth = 1
+    AddGadgetColumn(#Gad_RollInfo_History_List,11,tTxt(#Str_Depth),40)
+    SetListIconColumnJustification(#Gad_RollInfo_History_List,11,#PB_ListIcon_JustifyColumnCenter)
+  EndIf
+
+  AddGadgetColumn(#Gad_RollInfo_History_List,12,tTxt(#Str_Usage),50)
   SetListIconColumnJustification(#Gad_RollInfo_History_List,12,#PB_ListIcon_JustifyColumnCenter)
-    
+
   SendMessage_(GadgetID(#Gad_RollInfo_History_List), #LVM_SETEXTENDEDLISTVIEWSTYLE, 0, #LVS_EX_LABELTIP|#LVS_EX_FULLROWSELECT) 
   Y-100
-  ;    Framegadget(#Gad_RollInfo_Import_Frame,600,Y,100,90,"Import options") : Y + 20
+  ;    FrameGadget(#Gad_RollInfo_Import_Frame,600,Y,100,90,"Import options") : Y + 20
   Tmp.s = ":"+" "+tTxt(#Str_AMS)
-  ButtonGadget(#Gad_RollInfo_Import_New,x+460,y,24,20,"+")
-  GadgetToolTip(#Gad_RollInfo_Import_New,tTxt(#Str_Insertnewreading))
-  ButtonGadget(#Gad_RollInfo_Import_AMS,X + 500,Y-12,80,20,tTxt(#Str_Import)+Tmp)
-  ButtonGadget(#Gad_RollInfo_ExportRollName, X + 500, Y + 12, 80, 20, "Export to AQC") ;/JM20220816
-  ButtonImageGadget(#Gad_RollInfo_GraphIcon, x + 590 ,Y-10 ,50,40,ImageID(#Image_GraphIcon))  
+  ;If System\User_AccessLevel <> #Access_ReadOnly
+    ButtonGadget(#Gad_RollInfo_Import_New,x+450,y,24,20,"+")
+    GadgetToolTip(#Gad_RollInfo_Import_New,tTxt(#Str_Insertnewreading))
+    ButtonGadget(#Gad_RollInfo_Import_AMS,X + 477,Y,80,20,tTxt(#Str_Import)+Tmp) : Y + 20
+    ButtonGadget(#Gad_RollInfo_ExportRollName, X + 477, Y, 80, 20, "Export to AQC") ;/JM20220816
+    ButtonImageGadget(#Gad_RollInfo_GraphIcon, x + 563,Y-20,42+8,32+8,ImageID(#Image_GraphIcon))
+  ;EndIf
   
-  : Y + 20
-  Tmp.s = ":"+" "+tTxt(#Str_ACP)
-  
-  
-  
-  ;    ButtonGadget(#Gad_RollInfo_Import_ACP,X + 550,Y,80,20,tTxt(#Str_Import)+Tmp)       : Y + 22
-  ;    DisableGadget(#Gad_RollInfo_Import_ACP,1)
-  ;    ButtonGadget(#Gad_RollInfo_Import_New,X + 610,Y,80,18,"Manual Entry")       : Y + 40
-  ;    ButtonGadget(#Gad_RollInfo_Edit,X + 600,Y,90,18,"Edit Selected")           : Y + 20
-  ;    ButtonGadget(#Gad_RollInfo_Delete,X + 600,Y,90,18,"Delete Selected")       : Y + 20
-  
-  ;SetGadgetColor(#Gad_RollInfo_Import_AMS,#PB_Gadget_BackColor,RGB(80,220,80))
-  
-  ;  #Gad_RollInfo_Import_AMS
-  ;  #Gad_RollInfo_Import_ACP
-  ;  #Gad_RollInfo_Import_New ;Manually input values
-  ;  #Gad_RollInfo_Delete
-  ;  #Gad_RollInfo_Edit
-  
-  
-  ;  CloseGadgetList()
-  ;  SetGadgetColor(#Gad_Container_RollInfo,#PB_Gadget_BackColor,#WinCol_RollInfo)
 EndProcedure
 Procedure Init_Window_Reporting()
   Protected X.i = 296, Y = 14, Val.i, Layout.s, Filter.s
@@ -15065,8 +15525,8 @@ EndDataSection
 ;}
 
 ; IDE Options = PureBasic 6.00 LTS (Windows - x64)
-; CursorPosition = 6156
-; FirstLine = 6144
+; CursorPosition = 4645
+; FirstLine = 4777
 ; Folding = ---------------------------------
 ; EnableThread
 ; EnableXP
@@ -15077,7 +15537,7 @@ EndDataSection
 ; CompileSourceDirectory
 ; Warnings = Display
 ; EnablePurifier
-; EnableCompileCount = 1151
+; EnableCompileCount = 1167
 ; EnableBuildCount = 22
 ; Watchlist = System\Settings_Volume_UnitMask
 ; EnableUnicode
