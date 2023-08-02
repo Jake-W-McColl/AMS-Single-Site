@@ -778,6 +778,8 @@ XIncludeFile "Includes\ComatePlus.pbi"           ;/DNT
 XIncludeFile "Includes\ExcelFunktion.pbi"       ;/DNT
 XIncludeFile "Includes\UserAdminCheck.pbi"       ;/DNT
 
+
+
 If IniSwitch_NoAdmin = 1
   If Not IsUserAdmin()
     If RelaunchAndElevate()
@@ -1539,6 +1541,8 @@ Enumeration ;/Gadgets
   #Gad_Presets_Name
   #Gad_Presets_Name_Text
   #Gad_Presets_Query
+  #Gad_Date_From
+  #Gad_Date_To
   #Gad_Presets_QueryCount
   #Gad_Presets_Query_Text
   #Gad_Presets_Save
@@ -9852,9 +9856,10 @@ Procedure Init_Settings() ;/ Last Updated PJ 06.01.2022
 EndProcedure
 
 Procedure Init_Presets(Type.i)
-  Protected Presets_Event.i, Width.i, Height.i, Exit.i, Error.i, ErrorText.S, X.i, Y.i, RedrawList.i, myLoop.i
+  Protected Presets_Event.i, Width.i, Height.i, Exit.i, Error.i, ErrorText.S, X.i, Y.i, RedrawList.i, myLoop.i, strDateMask.s
   Protected ResultS.S, Resulti.i, DeleteFlag.i, Txt.s, Editting.i, NoSave.i, SQL.s, Val.i, OldFilter.s, Added.i, StringCount.i
-  
+  Protected strEpochDate.s, index.i, result.s, strSQL.s
+
   Width.i = 440 : Height.i = 350 : Editting = 0
   
   If type = 2 ;/ Edit
@@ -9928,8 +9933,20 @@ Procedure Init_Presets(Type.i)
   StringGadget(#Gad_Presets_Name,90,4,336,20,"")
   
   TextGadget(#Gad_Presets_Query_Text,4,36,80,20,tTxt(#Str_Presetquery)+":")
-  EditorGadget(#Gad_Presets_Query,90,34,336,60)
-  TextGadget(#Gad_Presets_QueryCount,90,96,336,20,tTxt(#Str_Queryreturnscounts))
+  EditorGadget(#Gad_Presets_Query,90,55,336,20)
+
+  If System\Settings_Date_Mask = "DD/MM/YYYY"
+    strDateMask = "%dd/%mm/%yyyy"
+  Else
+    strDateMask = "%mm/%dd/%yyyy"
+  EndIf
+
+  TextGadget(#PB_Any,91,34,50,20,"From:") ;/SL20230614
+  DateGadget(#Gad_Date_From, 120, 34, 120,20, strDateMask) ;/SL20230614
+  TextGadget(#PB_Any,286,34,50,20,"To:") ;/SL20230614
+  DateGadget(#Gad_Date_To, 306, 34, 120,20, strDateMask) ;/SL20230614
+
+  TextGadget(#Gad_Presets_QueryCount,90,76,336,20,tTxt(#Str_Queryreturnscounts))
   
   TextGadget(#Gad_Presets_RollTable_Text,4,120,120,20,"AMS_Roll_Master") ;/DNT
   TextGadget(#Gad_Presets_SuitabilityTable_Text,128,120,120,20,"AMS_Suitability") ;/DNT
@@ -9965,7 +9982,28 @@ Procedure Init_Presets(Type.i)
     If Resulti > 0
       SelectElement(Report_PresetList(),Resulti)
       SetGadgetText(#Gad_Presets_Name,tTxt(#Str_New)+" - "+Report_PresetList()\Name)
-      SetGadgetText(#Gad_Presets_query,Report_PresetList()\SQL)
+
+      index.i = FindString(Report_PresetList()\SQL, "-", -1, #PB_String_NoCase)
+
+      If index > 0
+        strEpochDate = Mid(Report_PresetList()\SQL, index + 1)
+        strEpochDate = Trim(strEpochDate)
+
+        Debug Date()
+      EndIf 
+      
+      strSQL = Report_PresetList()\SQL
+      strSQL = ReplaceString(strSQL, strEpochDate, FormatDate(strDateMask, Date() - Val(strEpochDate)))
+      strSQL = ReplaceString(strSQL, " - ", "")
+      strSQL = ReplaceString(strSQL, "/DATE/", "")
+      ;strSQL = ReplaceString(strSQL, "<", "Before")
+      ;strSQL = ReplaceString(strSQL, ">", "After")
+    
+;      Debug GetGadgetState(#Gad_Date_From)
+
+      SetGadgetText(#Gad_Presets_Query, strSQL)
+
+     ; SetGadgetText(#Gad_Presets_query,Report_PresetList()\SQL)
       Type = 1
     EndIf
   EndIf
@@ -9979,6 +10017,7 @@ Procedure Init_Presets(Type.i)
       SetGadgetText(#Gad_Presets_query,Report_PresetList()\SQL)
     EndIf
   EndIf
+
   Exit = 0
   Protected *el1, *el2, SetAfterRefresh = -1
   Repeat
@@ -9994,7 +10033,9 @@ Procedure Init_Presets(Type.i)
             If OldFilter <> GetGadgetText(#Gad_Presets_Query)
               OldFilter = GetGadgetText(#Gad_Presets_Query)
               SQL.s = "Select Count(*) From (Select * From AMS_Roll_Master,AMS_Groups Where AMS_Roll_Master.GroupID = AMS_Groups.ID and AMS_Groups.SiteID = 1) where "
-              SQL.s + ReplaceString( GetGadgetText(#Gad_Presets_Query),"/DATE/",Str(Date()))  ;/DNT
+              SQL.s + ReplaceString( GetGadgetText(#Gad_Presets_Query),"/DATE/", Str(GetGadgetState(#Gad_Date_From)))  ;/DNT
+              ;SQL.s + ReplaceString( GetGadgetText(#Gad_Presets_Query),"/DATE/", Str(Date()))  ;/DNT
+              Debug SQL
               Val = Database_CountQuery(SQL,#PB_Compiler_Line,1)
               SetGadgetText(#Gad_Presets_QueryCount,tTxt(#Str_Thequeryreturned)+Str(val) +" "+tTxt(#Str_results)+".")
             EndIf
@@ -10007,7 +10048,28 @@ Procedure Init_Presets(Type.i)
             ;If GetGadgetText(#Gad_Presets_Query) = "" : MessageRequester(tTxt(#Str_Error),tTxt(#Str_Youmustenterapresetquery),#PB_MessageRequester_Ok) : NoSave = 1 : EndIf
             If NoSave = 0
               Exit = 2
-            EndIf 
+            EndIf
+          Case #Gad_Date_From
+              index.i = FindString(Report_PresetList()\SQL, "-", -1, #PB_String_NoCase)
+
+              If index > 0
+                strEpochDate = Mid(Report_PresetList()\SQL, index + 1)
+                strEpochDate = Trim(strEpochDate)
+        
+                Debug Date()
+              EndIf
+
+              strSQL = Report_PresetList()\SQL
+              strSQL = ReplaceString(strSQL, strEpochDate, FormatDate(strDateMask, GetGadgetState(#Gad_Date_From) - Val(strEpochDate)))
+              strSQL = ReplaceString(strSQL, " - ", "")
+              strSQL = ReplaceString(strSQL, "/DATE/", "")
+              strSQL = ReplaceString(strSQL, "<", "Before")
+              strSQL = ReplaceString(strSQL, ">", "After")
+
+              SetGadgetText(#Gad_Presets_Query, strSQL)
+
+              SQL.s = "Select Count(*) From (Select * From AMS_Roll_Master,AMS_Groups Where AMS_Roll_Master.GroupID = AMS_Groups.ID and AMS_Groups.SiteID = 1) where "
+              SQL.s + ReplaceString(GetGadgetText(#Gad_Presets_Query),"/DATE/", Str(GetGadgetState(#Gad_Date_From)))  ;/DNT
         EndSelect
         
     EndSelect
@@ -14740,13 +14802,11 @@ Procedure Process_Window_Events()
     Case #PB_Event_Gadget
       System\LastSelectedGadget = EventGadget()
       Debug(System\LastSelectedGadget)
-      
       Select System\LastSelectedGadget
         Case #Gad_Graph_Type_Combo
           Redraw_Graph(System\Graph_Roll.i)
         Case #Gad_Graph_Tolerance_Combo
           Redraw_Graph(System\Graph_Roll.i)
-          
         Case #Gad_RollInfo_GraphIcon
           If Database_CountQuery("Select Count(*) From AMS_Roll_Data where RollID = "+Str(System\Selected_Roll_ID)+";",#PB_Compiler_Line) > 0
             Show_Window(#Panel_Graph,#PB_Compiler_Line)
@@ -14797,7 +14857,7 @@ Procedure Process_Window_Events()
           If System\Showing_Panel = #Panel_Roll_Info  : Export_RollInfo_Print() : EndIf
           
           If System\Showing_Panel = #Panel_Graph  : Export_Graph_Print() : EndIf
-          
+
         Case #Gad_Icon_Export_IMG
           ;/ Grab the image before the menu is displayed as stops any delays waiting for the menu text to fade out
           Image_FullScreen_Grab(0)
@@ -15073,7 +15133,6 @@ Procedure Process_Window_Events()
           
         Case #Gad_2D_Analysis_Image
           Debug "2d Event: "+Str(EventType())
-          
         Case #Gad_NavTree
           
           If EventType() = #PB_EventType_DragStart
@@ -15525,9 +15584,10 @@ EndDataSection
 ;}
 
 ; IDE Options = PureBasic 6.00 LTS (Windows - x64)
-; CursorPosition = 4645
-; FirstLine = 4777
+; CursorPosition = 3174
+; FirstLine = 3151
 ; Folding = ---------------------------------
+; Markers = 9935
 ; EnableThread
 ; EnableXP
 ; EnableUser
@@ -15537,7 +15597,7 @@ EndDataSection
 ; CompileSourceDirectory
 ; Warnings = Display
 ; EnablePurifier
-; EnableCompileCount = 1167
+; EnableCompileCount = 1252
 ; EnableBuildCount = 22
 ; Watchlist = System\Settings_Volume_UnitMask
 ; EnableUnicode
