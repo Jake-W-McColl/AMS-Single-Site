@@ -1,4 +1,4 @@
-Global Dim tTxt.s(1000)
+Global Dim tTxt.s(500) ;/ will need to extend if stringtable extends.
 
 Enumeration
   #Str_MMDDYYYY
@@ -351,4 +351,33 @@ Enumeration
   #Str_Seconds
   #Str_Depth
   #Str_ShowreadingDepths
+  #Str_MassRollReallocation
+  #Str_Database
+  #Str_Backup
+  #Str_Restore
+  #Str_PleasechoosethepathfortheAMSBackup
+  #Str_BackupSuccessful
+  #Str_AnerroroccurredwhenattemptingtobackupyourAMSdatabase
+  #Str_Overwritecurrentdatabase
+  #Str_AnerroroccurredwhenattemptingtorestoreyourAMSdatabase
+  #Str_RestoreSuccessful
+  #Str_AMSrestartrequired
+  #Str_PleasechoosethepathfortheAMSRestore
+  #Str_RollTransferControl
+  #Str_TransferFrom
+  #Str_TransferTo
+  #Str_Transfer
+  #Str_Rolls
+  #Str_RollTransferInformation
+  #Str_RollTransferComplete
+  #Str_Moved
+  #Str_Close
+  #Str_Relocate
+  #Str_Graphingby
+  #Str_Depthvalueat
+  #Str_FromReferencemeasurement
 EndEnumeration
+
+; IDE Options = PureBasic 5.71 beta 1 LTS (Windows - x86)
+; Folding = -
+; EnableXP

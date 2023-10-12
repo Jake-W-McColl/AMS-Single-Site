@@ -746,8 +746,6 @@ Procedure CheckIni()
 EndProcedure
 CheckIni()
 
-
-
 Procedure AlreadyRunning() ;/ Procedure to prevent more than a single instance of AMS running
   Protected hwnd
   ; Ensure the current program is not already running
@@ -777,8 +775,6 @@ XIncludeFile "Includes\ComatePlus.pbi"           ;/DNT
 ;XIncludeFile "Includes\ExcelFunctions.pbi"       ;/DNT
 XIncludeFile "Includes\ExcelFunktion.pbi"       ;/DNT
 XIncludeFile "Includes\UserAdminCheck.pbi"       ;/DNT
-
-
 
 If IniSwitch_NoAdmin = 1
   If Not IsUserAdmin()
@@ -980,7 +976,15 @@ Enumeration ;/Images
   #Image_Star
   
   #Image_Troika_Large_Logo
-  
+    ;/ SL- 04/10/2023 For the initiation 
+    #CAMERACONTROL
+    #BTN_HOMEHEAD
+    #BTN_3DSCAN
+    #SPIN_SECTIONS
+    #SPIN_SAMPLES
+    #TXT_SECTIONNAME
+
+
   #Image_Anilox_Opening
   #Image_Anilox_Screen
   #Image_Anilox_Roll
@@ -1293,6 +1297,7 @@ Enumeration ;/Gadgets
   #Gad_RollInfo_Import_Frame
   #Gad_RollInfo_Import_AMS
   #Gad_RollInfo_ExportRollName ;/JM20220816
+  #Gad_RollInfo_SetScan ;/SL20231005
   #Gad_RollInfo_Import_ACP
   #Gad_RollInfo_Import_New ;/Manually input values
   #Gad_RollInfo_Delete 
@@ -1831,6 +1836,10 @@ EndEnumeration
 
 ;/ Define structures
 
+Structure ListOpenWindows
+    WindowName.s
+EndStructure
+
 Structure pjGraph
   Width.i
   Height.i
@@ -1894,6 +1903,7 @@ Structure Database_Company_Data
   Company_ExpansionS5.S
   
 EndStructure
+
 Structure Database_User_Data
   User_Name.S
   User_Password.S
@@ -2341,6 +2351,8 @@ Global NewList Report_PresetList.Report_Preset()
 Global NewList Report_Layout.Report_Layout()
 Global NewList Report_FlatList.s()
 Global NewList LangMaster.Languagemaster()
+
+Global NewList ListOpenWindows.ListOpenWindows() ;/SL20231009 List to store currently running windows processes
 
 Global NewMap GeneralHistoryLookup.s()
 
@@ -2854,27 +2866,29 @@ Procedure.f Database_FloatQuery(SQL.S,LineNum.i)
 EndProcedure
 Procedure.i Database_SetMainTimeStamp()
   
-  Debug "*******************************************"
-  Debug "*** Updating Main timestamp ***"
-  Debug "*******************************************"
+;   Debug "*******************************************"
+;   Debug "*** Updating Main timestamp ***"
+;   Debug "*******************************************"
   
   Database_Update(#Databases_Master,"Update AMS_Settings Set TimeStamp = "+Str(Date()),#PB_Compiler_Line)
 EndProcedure
+
 Procedure.i Database_SetSiteTimeStamp(Site.i)
   If Site > 0
-    Debug "*******************************************"
-    Debug "*** Updating Site timestamp ***"
-    Debug "*******************************************"
+;     Debug "*******************************************"
+;     Debug "*** Updating Site timestamp ***"
+;     Debug "*******************************************"
     Database_Update(#Databases_Master,"Update AMS_Sites Set TimeStamp = "+Str(Date())+" where ID = "+Str(Site)+";",#PB_Compiler_Line)
     Database_SetMainTimeStamp()
   EndIf
 EndProcedure
+
 Procedure.i Database_SetGroupTimeStamp(Group.i)
   Protected SiteID.i
   If Group > 0
-    Debug "*******************************************"
-    Debug "*** Updating Group timestamp ***"
-    Debug "*******************************************"
+;     Debug "*******************************************"
+;     Debug "*** Updating Group timestamp ***"
+;     Debug "*******************************************"
     SiteID = Database_IntQuery("Select SiteID From AMS_groups Where ID = "+Str(Group)+";",#Databases_Master,#PB_Compiler_Line)
     Database_Update(#Databases_Master,"Update AMS_Groups Set TimeStamp = "+Str(Date())+" where ID = "+Str(Group)+";",#PB_Compiler_Line)
     If SiteID > 0
@@ -2886,9 +2900,9 @@ Procedure.i Database_SetRollTimeStamp(Roll.i)
   Protected GroupID.i
   
   If Roll > 0
-    Debug "*******************************************"
-    Debug "*** Updating Roll timestamp ***"
-    Debug "*******************************************"
+;     Debug "*******************************************"
+;     Debug "*** Updating Roll timestamp ***"
+;     Debug "*******************************************"
     GroupID = Database_IntQuery("Select GroupID From AMS_Roll_Master Where ID = "+Str(Roll)+";",#Databases_Master,#PB_Compiler_Line)
     Database_Update(#Databases_Master,"Update AMS_Roll_Master Set TimeStamp = "+Str(Date())+" where ID = "+Str(Roll)+";",#PB_Compiler_Line)
     If GroupID > 0
@@ -2896,18 +2910,23 @@ Procedure.i Database_SetRollTimeStamp(Roll.i)
     EndIf
   EndIf
 EndProcedure
+
 Procedure.i Database_GetMainTimeStamp()
   ProcedureReturn Database_IntQuery("Select TimeStamp from AMS_Settings",#Databases_Master,#PB_Compiler_Line)
 EndProcedure
+
 Procedure.i Database_GetSiteTimeStamp(Site.i)
   ProcedureReturn Database_IntQuery("Select TimeStamp from AMS_Sites Where ID = "+Str(Site)+";",#Databases_Master,#PB_Compiler_Line)
 EndProcedure
+
 Procedure.i Database_GetGroupTimeStamp(Group.i)
   ProcedureReturn Database_IntQuery("Select TimeStamp from AMS_Groups Where ID = "+Str(Group)+";",#Databases_Master,#PB_Compiler_Line)
 EndProcedure
+
 Procedure.i Database_GetRollTimeStamp(Roll.i)
   ProcedureReturn Database_IntQuery("Select TimeStamp from AMS_Roll_Master Where ID = "+Str(Roll)+";",#Databases_Master,#PB_Compiler_Line)
 EndProcedure
+
 Procedure SQLite_Process_Live_Update()
   Protected MyLoop.i, MyDBLoop.i, SQL.S, Txt.S, Add_Txt.S, Columns.i, Difference.i
   Debug "Running live UPDATE"
@@ -5853,7 +5872,7 @@ Procedure Language_Set(Language.s="English")
   Protected MyLoop.i, LanguageNum.i
   
   If ListSize(Langmaster()) = 0
-    MessageRequester("Error","No Language Files loaded, but still trying to set - Exitting.")
+    MessageRequester("Error","No Language Files loaded, but still trying to set - exiting.")
     End
   EndIf
   
@@ -5904,7 +5923,7 @@ Procedure Language_Parse_Files()
   
   ;/ If no Language files are found, show error and end
   If ListSize(LangMaster()) = 0
-    MessageRequester("Error", "Language files are missing, exitting.")
+    MessageRequester("Error", "Language files are missing, exiting.")
     End
   EndIf
   
@@ -6408,7 +6427,7 @@ Procedure.i MS_CheckDatabaseLocation(Reassign.i=0)
     
     Path = GetPathPart(Path)
     If FileSize(Path+"AMS_SS.DB") = 0
-      MessageRequester("Error","The AMS database was not found in the specified directory"+","+" exitting") ;/TD
+      MessageRequester("Error","The AMS database was not found in the specified directory"+","+" exiting") ;/TD
       If Reassign = 0
         End
       Else
@@ -6448,7 +6467,7 @@ Procedure.i MS_CheckDatabaseLocation(Reassign.i=0)
     
     Path = GetPathPart(Path)
     If FileSize(Path+"AMS_SS.DB") = 0
-      MessageRequester("Error","The AMS database was not found in the specified directory"+","+" exitting") ;/TD
+      MessageRequester("Error","The AMS database was not found in the specified directory"+","+" exiting") ;/TD
       End
     EndIf
     
@@ -8325,13 +8344,89 @@ Procedure Init_Window_GeneralHistory_Control(RollID.i,HistoryID.l = -1)
     Redraw_RollID(RollID)
     
   EndIf
-  ;   
+   
   CloseWindow(#Window_GeneralHistory)
   SetActiveWindow(#Window_Main)
   
 EndProcedure
 
-Procedure Init_Window_Readings_Edit(RollID.i, EditType.i = 0, DataType.i = 0, ReadingID.i=-1) ;/ Manages the manual creation & editting of readings
+Procedure ListWindows(hWnd,Param)
+    Protected strWindow.s
+
+    If GetWindowLong_(hWnd,#GWL_EXSTYLE) ! #WS_EX_TOOLWINDOW And GetWindowLong_(hwnd,#GWL_STYLE) & #WS_VISIBLE
+        strWindow = Space(250)
+        GetWindowText_(hWnd, strWindow, 250)
+        If Not strWindow = ""
+            AddElement(ListOpenWindows())
+            ListOpenWindows()\WindowName = strWindow
+        EndIf
+    EndIf
+
+    ProcedureReturn #True
+
+EndProcedure
+
+;/SL20231005 
+Procedure CameraSetAVGMode(strRollID.s)
+    Protected strFilePath.s, strExecutable.s, result.i
+
+    DatabaseQuery(#Databases_LocalSettings, "SELECT CAM_TYPE FROM AMS_Localsettings")
+    
+    If Right(DatabaseError(), 8) = "CAM_TYPE"
+        DatabaseUpdate(#Databases_LocalSettings, "ALTER TABLE AMS_LocalSettings ADD COLUMN [CAM_TYPE] INT")
+    EndIf
+
+    strFilePath = GetSpecialFolder(#CSIDL_PROGRAM_FILES) + "Troika Systems LTD\"
+    
+    DatabaseQuery(#Databases_LocalSettings, "SELECT CAM_TYPE FROM AMS_Localsettings")
+    
+    Select NextDatabaseRow(#Databases_LocalSettings)
+        Case 1 ;/7.3
+            strExecutable = "Anilox QC.exe"
+        Case 2 ;/HD and HD+
+            strExecutable = "Anilox QC_HD.exe"
+        Case 3 ;/Low Screen
+            strExecutable = "Low Screen Anilox QC.exe"
+        Default
+
+    EndSelect
+
+    HW\PipeName = ""
+
+    PopulateNamedPipes()
+
+    If HW\PipeName_DeviceOnly = ""
+        If RunProgram(strFilePath + strExecutable) = 0
+            MessageRequester("Anilox Error", "Anilox Not Found, please make sure it is installed", #PB_MessageRequester_Error)
+            ProcedureReturn
+        EndIf
+        Delay(5000)
+    EndIf
+
+    PopulateNamedPipes()
+
+    Repeat
+        If Len(HW\PipeName) = 0 
+            Delay(500)
+        EndIf
+    Until Len(HW\PipeName) > 1
+
+    Debug Command_SendToAniCAMPipe("?$VIEWVIDEO")
+
+    If Command_SendToAniCAMPipe("?$VIEWVIDEO") = "0"
+        Command_SendToAniCAMPipe("$VIEWVIDEO=1")
+        Delay(6000)
+    EndIf   
+
+    Command_SendToAniCAMPipe("$AVGMODERESET=1")    
+    Command_SendToAniCAMPipe("$AVGMODESETCUSTOMER=" + System\Database_Company)
+    Command_SendToAniCAMPipe("$AVGMODESETROLLID=" + strRollID)
+    Command_SendToAniCAMPipe("$AVGMODESECTIONINDEX=0")
+    Command_SendToAniCAMPipe("$VIEWAVGMODE=1")
+
+EndProcedure
+
+Procedure Init_Window_Readings_Edit(RollID.i, EditType.i = 0, DataType.i = 0, ReadingID.i=-1) ;/ Manages the manual creation & editing of readings
 
   Protected Settings_Event.i, Exit.i, SQL.S, Result.S, Date.i, Operator.S, Vol1.f, Vol2.f, Vol3.f, Vol4.f, Vol5.f, MyLoop.i, Reading.f, Average.f, Depth.i, Usage.i
   Protected ReadingCount.i, Database.S, Error.i, Txt.S, Count.i, Zerocheck.f
@@ -8406,7 +8501,7 @@ Procedure Init_Window_Readings_Edit(RollID.i, EditType.i = 0, DataType.i = 0, Re
   
   SetActiveWindow(#Window_Readings)
   
-  ;/ If editting an existing entry, populate fields
+  ;/ If editing an existing entry, populate fields
   
   ;/ Identify Count of active *Set to master* , need to flip between master and history
   ClearList(ReadingCountList())
@@ -8616,7 +8711,7 @@ Procedure Init_Window_Readings_Edit(RollID.i, EditType.i = 0, DataType.i = 0, Re
     If DataType = #Reading_Master ;/ Master Data - No insert, only overwrite
                                   ;/ remove current master data
       Database_Update(#Databases_Master,"Update AMS_Roll_Master SET Vol1 = 0, Vol2 = 0, Vol3 = 0, Vol4 = 0, Vol5 = 0 Where ID = "+Str(System\Selected_Roll_ID)+";",#PB_Compiler_Line)
-      Debug "ReadingCount: "+Str(ReadingCount)
+      ;Debug "ReadingCount: "+Str(ReadingCount)
       Txt.S = "Update AMS_Roll_Master SET "  ;/DNT
       Select ReadingCount
         Case 1
@@ -8728,7 +8823,7 @@ Procedure Init_Roll_GroupAssign(RollID.i, Site.i)
       Result.S = GetDatabaseString(#Databases_Master,0) 
       GroupList()\Name = Result
       GroupList()\ID = GetDatabaseLong(#Databases_Master,1)
-      Debug "Adding: "+Result+" To Grouplist ("+Str(GroupList()\ID)+")"
+      ;Debug "Adding: "+Result+" To Grouplist ("+Str(GroupList()\ID)+")"
     Wend 
   Else
     MessageRequester(tTxt(#Str_ErrorwithSQL)+"?"+" "+SQL, DatabaseError())
@@ -8741,7 +8836,7 @@ Procedure Init_Roll_GroupAssign(RollID.i, Site.i)
   ComboBoxGadget(#AssignGroup_Combo,76,4,120,20)
   
   ForEach GroupList()
-    Debug "Adding Group: "+ GroupList()\Name
+    ;Debug "Adding Group: "+ GroupList()\Name
     AddGadgetItem(#AssignGroup_Combo,-1,GroupList()\Name)  
   Next
   SetGadgetState(#AssignGroup_Combo,0)
@@ -8885,12 +8980,12 @@ Procedure Init_Code_Input(Type.i) ;/ shows current code, and allows input of oth
                 Else ;/ Checksum is Read
                   Codestring(7) = ReplaceString(Codestring(7),Chr(10),"")
                   Codestring(7) = ReplaceString(Codestring(7),Chr(13),"")
-                  Debug "RHS: "+Str(Asc(Right(Codestring(7),1)))
+                  ;Debug "RHS: "+Str(Asc(Right(Codestring(7),1)))
                 EndIf
                 Debug CodeString(CheckLoop)
                 ;  Debug "Len: "+Str(Len(ChecksumString)
               Next
-              Debug "Len: "+Str(Len(ChecksumString))
+              ;Debug "Len: "+Str(Len(ChecksumString))
               
               ;/ Check Checksum string
               Debug "Checksum: "+Fingerprint(@ChecksumString, Len(ChecksumString),#PB_Cipher_MD5)
@@ -9046,10 +9141,10 @@ Procedure Init_CS_Editor(SiteID.i) ;/ 0 = company, >0 = Site
   Height = 170
   
   If SiteID = 0
-    Debug "Editting Company details"
+    ;Debug "Editing Company details"
     OpenWindow(#Window_CompanySiteEditor,0,0,Width,Height,tTxt(#Str_Editcompanydetails),#PB_Window_ScreenCentered|#PB_Window_SystemMenu)
   Else
-    Debug "Editting Site Details: "+Str(siteID)
+    ;Debug "Editing Site Details: "+Str(siteID)
     OpenWindow(#Window_CompanySiteEditor,0,0,Width,Height,tTxt(#Str_Editsitedetails),#PB_Window_ScreenCentered|#PB_Window_SystemMenu)
   EndIf
   SetGadgetFont(#PB_Default,FontID(#Font_List_Dialogs))
@@ -9325,26 +9420,19 @@ Procedure Init_Settings() ;/ Last Updated PJ 06.01.2022
     EndIf
   Next
   ;/ New PJ 04.01.2022
-  Debug 1
   SetGadgetState(#Settings_Suitability_List,0)
-  Debug 2
   DatabaseID = Get_Suitability_Value(GetGadgetItemText(#Settings_Suitability_List,0))
-  Debug 3
   SelectElement(SuitabilityList(),Get_Suitability_Index(DatabaseID))
-  Debug 4
   SetGadgetText(#Settings_Unit_Warnings_Variance_Good,Str(SuitabilityList()\VarianceGood)) 
   SetGadgetText(#Settings_Unit_Warnings_Variance_Bad,Str(SuitabilityList()\VarianceBad)) 
   SetGadgetText(#Settings_Unit_Warnings_Capacity_Good,Str(SuitabilityList()\CapacityGood)) 
   SetGadgetText(#Settings_Unit_Warnings_Capacity_Bad,Str(SuitabilityList()\CapacityBad))
-  
-  
   
   ButtonGadget(#Settings_Suitability_Save,X+146,Y+104,200,20,tTxt(#Str_Save))
   
   ButtonGadget(#Settings_Suitability_New,X+4,Y+140,80,20,tTxt(#Str_New))
   ButtonGadget(#Settings_Suitability_Edit,X+88,Y+140,80,20,tTxt(#Str_Edit))
   ButtonGadget(#Settings_Suitability_Delete,X+172,Y+140,80,20,tTxt(#Str_Delete))
-
 
   X = 210 :  Y = 24
   FrameGadget(#Settings_GeneralHistoryList_Frame,X,Y,236,160,tTxt(#Str_GeneralHistoryList))
@@ -9419,8 +9507,8 @@ Procedure Init_Settings() ;/ Last Updated PJ 06.01.2022
             EndIf
             
           Case #Settings_Gad_Language_CSVDelimiter
-            Debug "CSV update: "+Str(GetGadgetState(#Settings_Gad_Language_CSVDelimiter))
-            Debug System\Language_Current_File
+            ;Debug "CSV update: "+Str(GetGadgetState(#Settings_Gad_Language_CSVDelimiter))
+            ;Debug System\Language_Current_File
             If OpenDatabase(#Databases_Language,System\Language_Current_File,"","",#PB_Database_SQLite)
               Database_Update(#Databases_Language,"Update AMS_Language_Master SET CSVDelimiter = "+Str(GetGadgetState(#Settings_Gad_Language_CSVDelimiter))+";",#PB_Compiler_Line)
               System\CSVDelimiter = GetGadgetState(#Settings_Gad_Language_CSVDelimiter)
@@ -9430,8 +9518,8 @@ Procedure Init_Settings() ;/ Last Updated PJ 06.01.2022
             EndIf
             
           Case #Settings_Gad_Language_DecimalNotation
-            Debug "Decimal notation update: "+Str(GetGadgetState(#Settings_Gad_Language_DecimalNotation))
-            Debug System\Language_Current_File
+            ;Debug "Decimal notation update: "+Str(GetGadgetState(#Settings_Gad_Language_DecimalNotation))
+            ;Debug System\Language_Current_File
             If OpenDatabase(#Databases_Language,System\Language_Current_File,"","",#PB_Database_SQLite)
               Database_Update(#Databases_Language,"Update AMS_Language_Master SET DecimalNotation = "+Str(GetGadgetState(#Settings_Gad_Language_DecimalNotation))+";",#PB_Compiler_Line)
               System\DecimalNotation = GetGadgetState(#Settings_Gad_Language_DecimalNotation)
@@ -9473,37 +9561,6 @@ Procedure Init_Settings() ;/ Last Updated PJ 06.01.2022
                     For MyLoop = #Settings_Gad_Unit_Start To #Settings_Gad_Unit_End
                       If IsGadget(MyLoop) : HideGadget(MyLoop,0) : EndIf
                     Next 
-                    
-                    ;/ PJ - removed due to v1.68 update.
-;                   Case #Settings_Field_Variance_WarningValues
-;                     If Check_Manager_Mode()
-;                       ;/ Hide All Gadgets
-;                       For MyLoop = #Settings_Gad_Hide_Start To #Settings_Gad_Hide_End
-;                         If IsGadget(MyLoop) : HideGadget(MyLoop,1) : EndIf
-;                       Next
-;                       ;/ Now show relevant gadgets
-;                       For MyLoop = #Settings_Unit_Warnings_Start To #Settings_Unit_Warnings_End
-;                         If IsGadget(MyLoop) : HideGadget(MyLoop,0) : EndIf
-;                       Next
-;                       For MyLoop = #Settings_Unit_Warnings_Variance_Start To #Settings_Unit_Warnings_Variance_End
-;                         If IsGadget(MyLoop) : HideGadget(MyLoop,0) : EndIf
-;                       Next
-;                     EndIf
-;                     
-;                   Case #Settings_Field_Capacity_WarningValues
-;                     If Check_Manager_Mode()
-;                       ;/ Hide All Gadgets
-;                       For MyLoop = #Settings_Gad_Hide_Start To #Settings_Gad_Hide_End
-;                         If IsGadget(MyLoop) : HideGadget(MyLoop,1) : EndIf
-;                       Next
-;                       ;/ Now show relevant gadgets
-;                       For MyLoop = #Settings_Unit_Warnings_Start To #Settings_Unit_Warnings_End
-;                         If IsGadget(MyLoop) : HideGadget(MyLoop,0) : EndIf
-;                       Next
-;                       For MyLoop = #Settings_Unit_Warnings_Capacity_Start To #Settings_Unit_Warnings_Capacity_End
-;                         If IsGadget(MyLoop) : HideGadget(MyLoop,0) : EndIf
-;                       Next  
-;                     EndIf
                     
                   Case #Settings_Field_ManufacturerList
                     ;/ Hide All Gadgets
@@ -9583,7 +9640,7 @@ Procedure Init_Settings() ;/ Last Updated PJ 06.01.2022
           Case #Settings_Manufacturer_Edit
             If GetGadgetState(#Settings_Manufacturer_List) > -1
               DatabaseID = Get_Manufacturer_Value(GetGadgetItemText(#Settings_Manufacturer_List,GetGadgetState(#Settings_Manufacturer_List)))
-              Debug "**** Manufacturer Database ID: "+Str(DatabaseID)
+              ;Debug "**** Manufacturer Database ID: "+Str(DatabaseID)
               
               ;SelectElement(ManufacturerList(),Get_Manufacturer_Index(GetGadgetState(#Settings_Manufacturer_List)))
               ResultS = InputRequester(tTxt(#Str_Editmanufacturer),tTxt(#Str_Editmanufacturername),GetGadgetItemText(#Settings_Manufacturer_List,GetGadgetState(#Settings_Manufacturer_List)))
@@ -9602,7 +9659,7 @@ Procedure Init_Settings() ;/ Last Updated PJ 06.01.2022
             If GetGadgetState(#Settings_Manufacturer_List) > -1
               ;/ Count Roll Master where ID = 
               DatabaseID = Get_Manufacturer_Value(GetGadgetItemText(#Settings_Manufacturer_List,GetGadgetState(#Settings_Manufacturer_List)))
-              Debug "**** Manufacturer Database ID: "+Str(DatabaseID)
+              ;Debug "**** Manufacturer Database ID: "+Str(DatabaseID)
               
               Resulti = Database_CountQuery("Select Count(*) from AMS_Roll_Master Where Manufacturer = "+Str(DatabaseID),#PB_Compiler_Line) ;/DNT
               If Resulti > 0
@@ -9659,7 +9716,7 @@ Procedure Init_Settings() ;/ Last Updated PJ 06.01.2022
           Case #Settings_Suitability_Edit
             If GetGadgetState(#Settings_Suitability_List) > -1
               DatabaseID = Get_Suitability_Value(GetGadgetItemText(#Settings_Suitability_List,GetGadgetState(#Settings_Suitability_List)))
-              Debug "*** Suitability ID: "+Str(DatabaseID)
+              ;Debug "*** Suitability ID: "+Str(DatabaseID)
               ;SelectElement(SuitabilityList(),Get_Suitability_Index(GetGadgetState(#Settings_Suitability_List)))
               ResultS = InputRequester("Edit Suitability","Edit Suitability name",GetGadgetItemText(#Settings_Suitability_List,GetGadgetState(#Settings_Suitability_List))) ;/DNT
               If ResultS <> ""
@@ -9676,7 +9733,7 @@ Procedure Init_Settings() ;/ Last Updated PJ 06.01.2022
             DeleteFlag = 1
             If GetGadgetState(#Settings_Suitability_List) > -1
               DatabaseID = Get_Suitability_Value(GetGadgetItemText(#Settings_Suitability_List,GetGadgetState(#Settings_Suitability_List)))
-              Debug "*** Suitability ID: "+Str(DatabaseID)
+              ;Debug "*** Suitability ID: "+Str(DatabaseID)
               ;/ Count Roll Master where ID = 
               ;SelectElement(SuitabilityList(),Get_Suitability_Index(GetGadgetState(#Settings_Suitability_List)))
               Resulti = Database_CountQuery("Select Count(*) from AMS_Roll_Master Where Suitability = "+Str(DatabaseID),#PB_Compiler_Line) ;/DNT
@@ -9708,8 +9765,8 @@ Procedure Init_Settings() ;/ Last Updated PJ 06.01.2022
           Case #Settings_GeneralHistoryList_Edit
             If GetGadgetState(#Settings_GeneralHistoryList_List) > -1
               DatabaseID = Get_GeneralHistoryType_Value(GetGadgetItemText(#Settings_GeneralHistoryList_List,GetGadgetState(#Settings_GeneralHistoryList_List)))
-              Debug "Deleting GH name: "+ResultS              
-              Debug "*** GH ID: "+Str(DatabaseID)
+              ;Debug "Deleting GH name: "+ResultS              
+              ;Debug "*** GH ID: "+Str(DatabaseID)
               ResultS = Trim(InputRequester(tTxt(#Str_EditGeneralHistoryType),tTxt(#Str_EditGeneralHistoryTypename),GetGadgetItemText(#Settings_GeneralHistoryList_List,GetGadgetState(#Settings_GeneralHistoryList_List)))) ;/DNT
               If ResultS <> ""
                 ;/ check for existence
@@ -9857,10 +9914,10 @@ EndProcedure
 
 Procedure Init_Presets(Type.i)
   Protected Presets_Event.i, Width.i, Height.i, Exit.i, Error.i, ErrorText.S, X.i, Y.i, RedrawList.i, myLoop.i, strDateMask.s
-  Protected ResultS.S, Resulti.i, DeleteFlag.i, Txt.s, Editting.i, NoSave.i, SQL.s, Val.i, OldFilter.s, Added.i, StringCount.i
+  Protected ResultS.S, Resulti.i, DeleteFlag.i, Txt.s, editing.i, NoSave.i, SQL.s, Val.i, OldFilter.s, Added.i, StringCount.i
   Protected strEpochDate.s, index.i, result.s, strSQL.s
 
-  Width.i = 440 : Height.i = 350 : Editting = 0
+  Width.i = 440 : Height.i = 350 : editing = 0
   
   If type = 2 ;/ Edit
     If GetGadgetState(#Gad_Report_Preset_Combo) = 0
@@ -9879,11 +9936,11 @@ Procedure Init_Presets(Type.i)
     ResultI = GetGadgetState(#Gad_Report_Preset_Combo)
     If Resulti > 0
       SelectElement(Report_PresetList(),Resulti)
-      Editting = Report_PresetList()\ID
+      editing = Report_PresetList()\ID
       Txt.s = tTxt(#Str_Areyousureyouwanttodeletepreset)+":"+" '"+Report_PresetList()\Name+"'"+"?"
       
       If MessageRequester(tTxt(#Str_Deletepreset)+", "+tTxt(#Str_Areyousure)+"?",Txt,#PB_MessageRequester_YesNo) = #PB_MessageRequester_Yes
-        Database_Update(#Databases_Master,"Delete From AMS_ReportPresets where ID = "+Str(Editting)+";",#PB_Compiler_Line)
+        Database_Update(#Databases_Master,"Delete From AMS_ReportPresets where ID = "+Str(editing)+";",#PB_Compiler_Line)
         Refresh_Presets_List()
         ProcedureReturn 
       EndIf
@@ -10012,7 +10069,7 @@ Procedure Init_Presets(Type.i)
     ResultI = GetGadgetState(#Gad_Report_Preset_Combo)
     If Resulti > 0
       SelectElement(Report_PresetList(),Resulti)
-      Editting = Report_PresetList()\ID
+      editing = Report_PresetList()\ID
       SetGadgetText(#Gad_Presets_Name,Report_PresetList()\Name)
       SetGadgetText(#Gad_Presets_query,Report_PresetList()\SQL)
     EndIf
@@ -10089,9 +10146,9 @@ Procedure Init_Presets(Type.i)
   
   If Exit = 2 ;/ save 
     
-    If Editting > 0
+    If editing > 0
 ;      Database_Update(#Databases_Master,"Update AMS_ReportPresets Set Name = '"+GetGadgetText(#Gad_Presets_Name)+"', SQL = '"+GetGadgetText(#Gad_Presets_Query)+"', FieldSelection = '"+Txt+"' Where ID = "+Str(Editting),#PB_Compiler_Line)
-      Database_Update(#Databases_Master,"Update AMS_ReportPresets Set Name = '"+GetGadgetText(#Gad_Presets_Name)+"', SQL = '"+GetGadgetText(#Gad_Presets_Query)+"' Where ID = "+Str(Editting),#PB_Compiler_Line)
+      Database_Update(#Databases_Master,"Update AMS_ReportPresets Set Name = '"+GetGadgetText(#Gad_Presets_Name)+"', SQL = '"+GetGadgetText(#Gad_Presets_Query)+"' Where ID = "+Str(editing),#PB_Compiler_Line)
       Refresh_Presets_List(GetGadgetText(#Gad_Presets_Name))
     Else
       ;/ Is new entry
@@ -10107,9 +10164,9 @@ EndProcedure
 
 Procedure Init_Layout(Type.i)
   Protected Presets_Event.i, Width.i, Height.i, Exit.i, Error.i, ErrorText.S, X.i, Y.i, RedrawList.i, myLoop.i
-  Protected ResultS.S, Result.i, Resulti.i, DeleteFlag.i, Txt.s, Editting.i, NoSave.i, SQL.s, Val.i, OldFilter.s, Added.i, StringCount.i
+  Protected ResultS.S, Result.i, Resulti.i, DeleteFlag.i, Txt.s, editing.i, NoSave.i, SQL.s, Val.i, OldFilter.s, Added.i, StringCount.i
   
-  Width.i = 440 : Height.i = 384 : Editting = 0
+  Width.i = 440 : Height.i = 384 : editing = 0
   
   NewList Reportfields.ReportField();
   RedrawList = #True
@@ -10131,7 +10188,7 @@ Procedure Init_Layout(Type.i)
     
     SelectElement(Report_Layout(),GetGadgetState(#Gad_ReportLayout_Combo)) 
     If Report_Layout()\Fieldcount > 0 : ClearList(Reportfields()) : EndIf
-    Editting = Report_Layout()\ID
+    editing = Report_Layout()\ID
     For myLoop = 1 To Report_Layout()\Fieldcount
       AddElement(Reportfields()) 
       Reportfields()\Value = Report_Layout()\FieldBreakdown[myLoop]\Value
@@ -10150,11 +10207,11 @@ Procedure Init_Layout(Type.i)
     ResultI = GetGadgetState(#Gad_ReportLayout_Combo)
     If Resulti > 0
       SelectElement(Report_Layout(),Resulti)
-      Editting = Report_Layout()\ID
+      editing = Report_Layout()\ID
       Txt.s = tTxt(#Str_Areyousureyouwanttodeletelayout)+":"+" '"+Report_Layout()\Name+"'"+"?"
       
       If MessageRequester(tTxt(#Str_Deletelayout)+", "+tTxt(#Str_Areyousure)+"?",Txt,#PB_MessageRequester_YesNo) = #PB_MessageRequester_Yes
-        Database_Update(#Databases_Master,"Delete From AMS_ReportLayouts where ID = "+Str(Editting)+";",#PB_Compiler_Line)
+        Database_Update(#Databases_Master,"Delete From AMS_ReportLayouts where ID = "+Str(editing)+";",#PB_Compiler_Line)
         Refresh_Layouts()
         ProcedureReturn 
       EndIf
@@ -10323,7 +10380,7 @@ Procedure Init_Layout(Type.i)
     ResultI = GetGadgetState(#Gad_ReportLayout_Combo)
     If Resulti > 0
       SelectElement(Report_Layout(),Resulti)
-      Editting = Report_Layout()\ID
+      editing = Report_Layout()\ID
       SetGadgetText(#Gad_ReportLayout_Name,Report_Layout()\Name)
       SetGadgetState(#Gad_ReportLayout_SortBy_Combo,Report_Layout()\Sort_Field)
       SetGadgetState(#Gad_ReportLayout_SortDirection_Combo,Report_Layout()\Sort_Direction)
@@ -10470,7 +10527,7 @@ Procedure Init_Layout(Type.i)
       Txt + Str(Reportfields()\Value)+"|"+Reportfields()\GHString + "|"
     Next
     
-    If Editting > 0
+    If editing > 0
       ;Database_Update(#Databases_Master,"Update AMS_ReportLayouts Set Name = '"+GetGadgetText(#Gad_ReportLayout_Name)+"', SortField = "+Str(GetGadgetState(#Gad_ReportLayout_SortBy_Combo))+", SortDirection = "+Str(GetGadgetState(#Gad_ReportLayout_SortDirection_Combo))+", Type = "+Str(GetGadgetState(#Gad_ReportLayout_Style_Combo))+", Fields = '"+Txt+"' Where ID = "+Str(Editting),#PB_Compiler_Line)
       ;/ updated PJ20191128 - added new entries
       Database_Update(#Databases_Master,"Update AMS_ReportLayouts Set Name = '"+GetGadgetText(#Gad_ReportLayout_Name)+
@@ -10480,7 +10537,7 @@ Procedure Init_Layout(Type.i)
                                         ", Filter_GH = "+Str(GetGadgetState(#Gad_ReportLayout_Filter_General_History))+
                                         ", Filter_Comments = "+Str(GetGadgetState(#Gad_ReportLayout_Filter_Comments))+
                                         ", Fields = '"+ Txt+
-                                        "' Where ID = "+Str(Editting),#PB_Compiler_Line)
+                                        "' Where ID = "+Str(editing),#PB_Compiler_Line)
     Else
       ;/ Is new entry
       ;Database_Update(#Databases_Master,"Insert into AMS_ReportLayouts (Name, SortField, SortDirection, Type, Fields) VALUES ('"+GetGadgetText(#Gad_ReportLayout_Name)+"', "+Str(GetGadgetState(#Gad_ReportLayout_SortBy_Combo))+", "+Str(GetGadgetState(#Gad_ReportLayout_SortDirection_Combo))+", "+Str(GetGadgetState(#Gad_ReportLayout_Style_Combo))+",'"+Txt+"')",#PB_Compiler_Line)
@@ -10985,6 +11042,7 @@ Procedure Export_Rollinfo_Print()
               If MyLoop = #Gad_RollInfo_Undo       : Excluded = 1 : EndIf
               If MyLoop = #Gad_RollInfo_Import_AMS : Excluded = 1 : EndIf
               If MyLoop = #Gad_RollInfo_ExportRollName : Excluded = 1 : EndIf ;/JM20220816
+              If MyLoop = #Gad_RollInfo_SetScan : Excluded = 1 : EndIf ;/SL20231008
               If MyLoop = #Gad_RollInfo_Import_ACP : Excluded = 1 : EndIf
               If MyLoop = #Gad_RollInfo_Commit     : Excluded = 1 : EndIf
               If MyLoop = #Gad_RollInfo_Import_New : Excluded = 1 : EndIf
@@ -11640,6 +11698,7 @@ Procedure.i Export_Rollinfo_PDF()
       If MyLoop = #Gad_RollInfo_Undo : Excluded = 1 : EndIf
       If MyLoop = #Gad_RollInfo_Import_AMS : Excluded = 1 : EndIf
       If MyLoop = #Gad_RollInfo_ExportRollName : Excluded = 1 : EndIf ;/JM20220816
+      If MyLoop = #Gad_RollInfo_SetScan : Excluded = 1 : EndIf ;/SL20231008
       If MyLoop = #Gad_RollInfo_Import_ACP : Excluded = 1 : EndIf
       If MyLoop = #Gad_RollInfo_Commit : Excluded = 1 : EndIf
       If MyLoop = #Gad_RollInfo_Import_New : Excluded = 1 : EndIf
@@ -13502,6 +13561,7 @@ Procedure Init_Window_RollInformation()
     GadgetToolTip(#Gad_RollInfo_Import_New,tTxt(#Str_Insertnewreading))
     ButtonGadget(#Gad_RollInfo_Import_AMS,X + 477,Y,80,20,tTxt(#Str_Import)+Tmp) : Y + 20
     ButtonGadget(#Gad_RollInfo_ExportRollName, X + 477, Y, 80, 20, "Export to AQC") ;/JM20220816
+    ButtonGadget(#Gad_RollInfo_SetScan, X + 394, Y, 80, 20, "Setup Scan") ;/SL20231008
     ButtonImageGadget(#Gad_RollInfo_GraphIcon, x + 563,Y-20,42+8,32+8,ImageID(#Image_GraphIcon))
   ;EndIf
   
@@ -13870,13 +13930,13 @@ Procedure Init_Images()
   CopyImage(#Image_Logo,#Image_OEM_Logo)
   
   If FileSize("OEM\OEM Logo.bmp") > -1
-    Debug "************************ Loaded OEM Logo - BMP"
+    ;Debug "************************ Loaded OEM Logo - BMP"
     LoadImage(#Image_OEM_Logo,"OEM\OEM Logo.bmp")
   ElseIf FileSize("OEM\OEM Logo.jpg") > -1
-    Debug "************************ Loaded OEM Logo - JPG"
+    ;Debug "************************ Loaded OEM Logo - JPG"
     LoadImage(#Image_OEM_Logo,"OEM\OEM Logo.jpg")
   ElseIf FileSize("OEM\OEM Logo.png") > -1
-    Debug "************************ Loaded OEM Logo - PNG"
+    ;Debug "************************ Loaded OEM Logo - PNG"
     LoadImage(#Image_OEM_Logo,"OEM\OEM Logo.png")
   EndIf
   
@@ -13886,31 +13946,29 @@ Procedure Init_Images()
   
   Debug "Image Width: "+Str(ImageWidth(#Image_OEM_Logo_Scaled))+" - " + "Image Width: "+Str(ImageHeight(#Image_OEM_Logo_Scaled))
   If ImageWidth(#Image_OEM_Logo_Scaled) / 260.0 > ImageHeight(#Image_OEM_Logo_Scaled) / 94.0
-    Debug "a: "
+    ;Debug "a: "
     ResizeImage(#Image_OEM_Logo_Scaled,ImageWidth(#Image_OEM_Logo) / (ImageWidth(#Image_OEM_Logo) / 260.0),ImageHeight(#Image_OEM_Logo) / (ImageWidth(#Image_OEM_Logo) / 260.0))
   Else
-    Debug "b"
+    ;Debug "b"
     ResizeImage(#Image_OEM_Logo_Scaled,ImageWidth(#Image_OEM_Logo) / (ImageHeight(#Image_OEM_Logo) / 94.0),ImageHeight(#Image_OEM_Logo) / (ImageHeight(#Image_OEM_Logo) / 94.0))
   EndIf
   
-  Debug "***************************"
-  Debug "Image Width: "+Str(ImageWidth(#Image_OEM_Logo_Scaled))+" - " + "Image Width: "+Str(ImageHeight(#Image_OEM_Logo_Scaled))
+  ;Debug "***************************"
+  ;Debug "Image Width: "+Str(ImageWidth(#Image_OEM_Logo_Scaled))+" - " + "Image Width: "+Str(ImageHeight(#Image_OEM_Logo_Scaled))
   
   System\OEM_ImageBuffer = EncodeImage(#Image_OEM_Logo_Scaled,#PB_ImagePlugin_JPEG,10,24)
   System\OEM_ImageBufferSize = MemorySize(System\OEM_ImageBuffer)
   CatchImage(#Image_OEM_Logo_Opaque_Scaled,System\OEM_ImageBuffer)
-  Debug "Caught Image - Bits @ imagedepth: "+Str(ImageDepth(#Image_OEM_Logo_Opaque_Scaled))
-  Debug "ImageBufferSize: "+Str(System\OEM_ImageBufferSize)
+  ;Debug "Caught Image - Bits @ imagedepth: "+Str(ImageDepth(#Image_OEM_Logo_Opaque_Scaled))
+  ;Debug "ImageBufferSize: "+Str(System\OEM_ImageBufferSize)
   
   
   System\OEM_ImageBuffer = EncodeImage(#Image_OEM_Logo,#PB_ImagePlugin_JPEG,10,24)
   System\OEM_ImageBufferSize = MemorySize(System\OEM_ImageBuffer)
   CatchImage(#Image_OEM_Logo_Opaque,System\OEM_ImageBuffer)
-  Debug "Caught Image - Bits @ imagedepth: "+Str(ImageDepth(#Image_OEM_Logo_Opaque))
-  Debug "ImageBufferSize: "+Str(System\OEM_ImageBufferSize)
-  
-  
-  
+  ;Debug "Caught Image - Bits @ imagedepth: "+Str(ImageDepth(#Image_OEM_Logo_Opaque))
+  ;Debug "ImageBufferSize: "+Str(System\OEM_ImageBufferSize)
+    
   System\Weblink = "www.troika-systems.com"
   
   If FileSize("OEM\OEM Weblink.txt") > -1
@@ -14068,9 +14126,8 @@ Procedure Init_Window_Main()
   Colours\Report_Rollcount = RGB(240,230,230)
   Colours\Report_RollInfo = RGB(255,255,200)
   System\AllowSystemTray = #True
+
 EndProcedure 
-
-
 
 Procedure Init_Begin()
   Init_Fonts()
@@ -14112,7 +14169,7 @@ Procedure.s JSON_BUILD_NAVTREE(RollsOnly = 0)
     EndIf
     
     Time = ElapsedMilliseconds() - Time
-    Debug "Time to construct JSON tree: "+Str(Time)+"ms"
+    ;Debug "Time to construct JSON tree: "+Str(Time)+"ms"
     FreeJSON(0)
   EndIf
   ProcedureReturn Response
@@ -14126,13 +14183,13 @@ Procedure Thread_PipeHandler(Hpipe.l)
     fConnected = ConnectNamedPipe_(Hpipe, #Null)
     If fConnected
       ;AddGadgetItem(#Gadget, -1, "A Client is connected, reading the file")
-      Debug "A Client is connected, reading the file"
+      ;Debug "A Client is connected, reading the file"
 
       PipeMessage.s=Space(128)
       ReadFile_(Hpipe, @PipeMessage, StringByteLength(PipeMessage), @ReceivedBytes, 0)
       
       PipeMessage = Trim(PipeMessage)
-      Debug PipeMessage
+      ;Debug PipeMessage
       ;MessageRequester("F",PipeMessage)
       Response.s = "No reponse"
       
@@ -14195,7 +14252,7 @@ Procedure Thread_PipeHandler(Hpipe.l)
             ForEach Navtree()
               If NavTree()\String = ValueS And NavTree()\Type = #NavTree_Roll
                 Response = Database_BuildRollLog(Navtree()\RollID)
-                Debug "Response: " + Response
+                ;Debug "Response: " + Response
                 Break
               EndIf
             Next ;}
@@ -14219,8 +14276,8 @@ Procedure Thread_PipeHandler(Hpipe.l)
         EndSelect
       EndIf
       WriteFile_(Hpipe , @Response, StringByteLength(Response), @BytesWritten, 0)
-      Debug "String Length: "+Str(StringByteLength(Response))
-      Debug "Written Length: "+Str(BytesWritten)
+;      Debug "String Length: "+Str(StringByteLength(Response))
+;      Debug "Written Length: "+Str(BytesWritten)
       Delay(100)
       FlushFileBuffers_(Hpipe)
       
@@ -14238,7 +14295,7 @@ Procedure Init_Pipe()
   System\AMS_PipeHandle = CreateNamedPipe_(System\AMS_PipeName, #PIPE_ACCESS_DUPLEX, #PIPE_TYPE_MESSAGE | #PIPE_READMODE_MESSAGE, 1, 100, 100, 3000, #Null)
   If System\AMS_PipeHandle
     System\AMS_PipeThread = CreateThread(@Thread_PipeHandler(),System\AMS_PipeHandle)
-    Debug "System\AMS_PipeThread: "+Str(System\AMS_PipeThread)
+    ;Debug "System\AMS_PipeThread: "+Str(System\AMS_PipeThread)
   EndIf
 EndProcedure
 
@@ -14256,6 +14313,7 @@ Procedure Program_End()
   CloseDatabase(1)
   End
 EndProcedure
+
 Procedure Init_Test()
   ;/ Procedure to test for redraw times & memory leak on RollID refresh routine
   Protected Timer.i, CurrentRollID.i, RollCount.i, Text.s, TempTime.i, BestTime.i, WorstTime.i, MyLoop.i, Loops.i
@@ -14667,7 +14725,7 @@ Procedure Process_Menu_Events() ;/*CHG*
       
     Case #Menu_Popup7_Historical_Reading_Edit
       If Check_Manager_Mode()
-        Debug "Original Roll Data - Editting!!"
+        Debug "Original Roll Data - editing!!"
         SelectElement(HistoryList(),GetGadgetState(#Gad_RollInfo_History_List))
         Init_Window_Readings_Edit(System\Selected_Roll_ID,#Database_Overwrite,#Reading_Historical,HistoryList())
         ;      SelectElement(DamageList(),GetGadgetState(#Gad_RollInfo_GeneralHistory_History_List))
@@ -14727,505 +14785,509 @@ Procedure Process_Menu_Events() ;/*CHG*
       
   EndSelect
 EndProcedure
+
 Procedure Process_Window_Events()
   Protected TempL.i, RollID.i, MyLoop.i, ReadingCount.i
-  If EventType() = #PB_EventType_Focus And GadgetType(EventGadget())=#PB_GadgetType_String
-    SendMessage_(GadgetID(EventGadget()),#EM_SETSEL,0,-1)
-  EndIf
-  Select System\Window_Main_Events
-    Case #Menu_Force_Refresh
-      
-    Case #PB_Event_PIPECOMMAND
-      Debug "PIPE Command event triggered!"
-      
-    Case #PB_Event_SysTray
-      If EventType() = #PB_EventType_LeftClick
-        ShowWindow_(WindowID(#Window_Main),#SW_MINIMIZE)
-        Delay(250)
-        ShowWindow_(WindowID(#Window_Main),#SW_RESTORE)
-        System\WindowMinimized = 0
-        RemoveSysTrayIcon(0)
-      EndIf
-      
-      If EventType() = #PB_EventType_RightClick 
-        If IsIconic_(WindowID(#Window_Main))
-          DisplayPopupMenu(13, WindowID(#Window_Main))
-        EndIf 
-      EndIf
-    Case #PB_Event_GadgetDrop
-      Debug "Drag-Move Ending..."
-      If EventDropType() = #PB_Drop_Text And System\Drag_Selected > 0
-        
-        System\Drag_Target = GetGadgetState(#Gad_NavTree) 
-        
-        If System\Drag_Target > -1
-          
-          ;/ identify original RollID - Overwrite drag 
-          SelectElement(NavTree(),System\Drag_Selected)
-          System\Drag_Selected = NavTree()\RollID
-          
-          ;/ See if we've dragged over compatible Source.
-          SelectElement(NavTree(),System\Drag_Target)
-          If NavTree()\GroupID > 0 ;/ over a press, or a roll
-            Debug "Reassigning"
-            ;/ reallocating logic here
-            
-            Database_Reassign_Roll(System\Drag_Selected,NavTree()\GroupID)
-            
-          Else
-            ;/ Do nothing, other than resetting flags
-            Debug "Not Moving!"
-            System\Drag_Target = -1 : System\Drag_Selected = -1
-          EndIf
-        EndIf
-      Else
-        Debug "Move Failed :("
-        Debug "Does: "+Str(EventDropType())+" = "+Str(#PB_Drop_Private)+"?"
-        ;        Debug "Does: "+Str(EventDropText())+" = 0 ?"
-        Debug "Does: "+Str(System\Drag_Selected)+" have greater value than 0?"
-      EndIf
-      
-    Case #PB_Event_SizeWindow
-      ;SmartWindowRefresh(#Window_Main,0)
-      SendMessage_(WindowID(0),#WM_SETREDRAW,#False,0)
-      ResizeGadgets()
-      ;Flush_Events()
-      ;Form_Update_Images()
-      SendMessage_(WindowID(0),#WM_SETREDRAW,#True,0)
-      RedrawWindow_(WindowID(#Window_Main),#Null,#Null,#RDW_INVALIDATE|#RDW_UPDATENOW|#RDW_ERASE)
-      ;SmartWindowRefresh(#Window_Main,1)
-      
-    Case #PB_Event_Menu 
-      ;Message("Menu Item: "+Str(EventMenu()) +" selected")  ;/DNT
-      Process_Menu_Events()
-      
-    Case #PB_Event_Gadget
-      System\LastSelectedGadget = EventGadget()
-      Debug(System\LastSelectedGadget)
-      Select System\LastSelectedGadget
-        Case #Gad_Graph_Type_Combo
-          Redraw_Graph(System\Graph_Roll.i)
-        Case #Gad_Graph_Tolerance_Combo
-          Redraw_Graph(System\Graph_Roll.i)
-        Case #Gad_RollInfo_GraphIcon
-          If Database_CountQuery("Select Count(*) From AMS_Roll_Data where RollID = "+Str(System\Selected_Roll_ID)+";",#PB_Compiler_Line) > 0
-            Show_Window(#Panel_Graph,#PB_Compiler_Line)
-            Redraw_Graph(System\Showing_RollID)
-          EndIf
-        Case #Gad_RollInfo_Import_New
-          Init_Window_Readings_Edit(System\Selected_Roll_ID,#Database_Insert,-1)
-        Case #Gad_Icon_Manager_Mode
-          
-          If System\Manager_Mode = 1
-            System\Manager_Mode = 0
-            GadgetToolTip(#Gad_Icon_Manager_Mode,tTxt(#Str_ManagerMode)+":"+" "+tTxt(#Str_CurrentlyOff))
-            SetGadgetAttribute(#Gad_Icon_Manager_Mode,#PB_Button_Image,ImageID(#Image_Padlock_Closed))
-          Else
-            If Init_Password_Requester() = 1
-              System\Manager_Mode = 1
-              Debug "Manager Mode on"
-              GadgetToolTip(#Gad_Icon_Manager_Mode,tTxt(#Str_ManagerMode)+":"+" "+tTxt(#Str_CurrentlyOn))
-              SetGadgetAttribute(#Gad_Icon_Manager_Mode,#PB_Button_Image,ImageID(#Image_Padlock_Open))
-            Else
-              Debug "Manager mode remains off"
-              MessageRequester(tTxt(#Str_Sorry),tTxt(#Str_Incorrectpasscodeentered)+", "+tTxt(#Str_Pleasetryagain))
-              ;              SetGadgetState(#Gad_Icon_Manager_Mode,0)
-            EndIf
-          EndIf
-          
-        Case #Gad_AutoImport
-          System\LiveMonitor = GetGadgetState(#Gad_AutoImport)
-          Database_SaveSettings()
-          If System\LiveMonitor = 0
-            GadgetToolTip(#Gad_AutoImport,tTxt(#Str_Toggleautomaticimporting)+":"+tTxt(#Str_Currentlyoff))
-            ;WindowShowBalloonTip(#Window_Main,0,"AMS Message","Live Monitoring for AMS Exports is Off",3000)
-          Else
-            GadgetToolTip(#Gad_AutoImport,tTxt(#Str_Toggleautomaticimporting)+":"+tTxt(#Str_Currentlyon))
-            ;WindowShowBalloonTip(#Window_Main,0,"AMS Message","Live Monitoring for AMS Exports is ON",3000)
-          EndIf
-        Case #Gad_Icon_Export_CSV
-          If System\Showing_Panel = #Panel_Group_List : Export_CSV(0) : EndIf
-          If System\Showing_Panel = #Panel_Roll_Info  : Export_CSV(1) : EndIf
-        Case #Gad_Icon_Export_XLS
-          If System\Showing_Panel = #Panel_Group_List : Export_Excel(0) : EndIf
-          If System\Showing_Panel = #Panel_Roll_Info  : Export_Excel(1) : EndIf
-        Case #Gad_Icon_Export_PDF
-          If System\Showing_Panel = #Panel_Group_List : Export_RollReport_PDF() : EndIf
-          If System\Showing_Panel = #Panel_Roll_Info  : Export_RollInfo_PDF() : EndIf
-        Case #Gad_Icon_Export_Print
-          If System\Showing_Panel = #Panel_Group_List : Export_RollReport_Print() : EndIf
-          If System\Showing_Panel = #Panel_Roll_Info  : Export_RollInfo_Print() : EndIf
-          
-          If System\Showing_Panel = #Panel_Graph  : Export_Graph_Print() : EndIf
+  
+    If EventType() = #PB_EventType_Focus And GadgetType(EventGadget())=#PB_GadgetType_String
+        SendMessage_(GadgetID(EventGadget()),#EM_SETSEL,0,-1)
+    EndIf
 
-        Case #Gad_Icon_Export_IMG
-          ;/ Grab the image before the menu is displayed as stops any delays waiting for the menu text to fade out
-          Image_FullScreen_Grab(0)
-          DisplayPopupMenu(14,WindowID(#Window_Main))
-          
-        Case #Gad_SQL_Run
-          If GetGadgetState(#Gad_SQL_QueryUpdateCombo) = 0 ;/ query mode
-            SQLite_Process_Live_Query()
-          Else
-            SQLite_Process_Live_Update()
-          EndIf
-          
-        Case #Gad_SQL_Query_Txt
-          If Multi_Site_Mode = 0
-            If GetGadgetState(#Gad_SQL_QueryUpdateCombo) = 0 ;/ query mode
-              SQLite_Process_Live_Query()
-            EndIf
-            
-          Else
-            If GetGadgetState(#Gad_SQL_QueryUpdateCombo) = 0 ;/ query mode
-              SQLite_Process_Live_Query()
-            EndIf
-            
-          EndIf
-          
-        Case #Gad_Report_Preset_Combo
-          Database_Update(#Databases_Master,"Update AMS_Settings Set Default_Filter = '"+GetGadgetText(#Gad_Report_Preset_Combo)+"'",#PB_Compiler_Line) ;/DNT
-          Report_Generate(System\Last_Drawn_Report_SiteId,System\Last_Drawn_Report_GroupId)
-          
-        Case #Gad_ReportLayout_Combo
-          Database_Update(#Databases_Master,"Update AMS_Settings Set Default_Layout = '"+GetGadgetText(#Gad_ReportLayout_Combo)+"'",#PB_Compiler_Line) ;/DNT
-          Report_Generate(System\Last_Drawn_Report_SiteId,System\Last_Drawn_Report_GroupId)
-          
-          
-        Case #Gad_Report_ReportList
-          If EventType() = #PB_EventType_LeftDoubleClick
-            TempL = GetGadgetState(#Gad_Report_ReportList)
-            If TempL > -1
-              SelectElement(ReportLine_RollID(),TempL)
-              Debug "Selected RollID?: "+Str(ReportLine_RollID())
-              RollID = ReportLine_RollID()
-              If RollID > 0
-                ;/ identify line on Navtree that it refers to:
-                ForEach NavTree()
-                  If NavTree()\RollID = RollID
-                    Show_Window(#Panel_Roll_Info,#PB_Compiler_Line)
-                    SetGadgetState(#Gad_NavTree,ListIndex(NavTree()))
-                    Redraw_RollID(RollID)
-                    Break
-                  EndIf
-                Next
-              EndIf 
-            EndIf
-          EndIf
-        Case #Gad_Report_New
-          Init_Presets(1)
-          Report_Generate(System\Last_Drawn_Report_SiteId,System\Last_Drawn_Report_GroupId)
-        Case #Gad_Report_Edit
-          Init_Presets(2)
-          Report_Generate(System\Last_Drawn_Report_SiteId,System\Last_Drawn_Report_GroupId)
-        Case #Gad_Report_Delete
-          Init_Presets(3)
-          Report_Generate(System\Last_Drawn_Report_SiteId,System\Last_Drawn_Report_GroupId)
-          
-        Case #Gad_ReportLayout_New
-          Init_Layout(1)
-          Report_Generate(System\Last_Drawn_Report_SiteId,System\Last_Drawn_Report_GroupId)
-        Case #Gad_ReportLayout_Edit
-          Init_Layout(2)
-          Report_Generate(System\Last_Drawn_Report_SiteId,System\Last_Drawn_Report_GroupId)
-        Case #Gad_ReportLayout_Delete
-          Init_Layout(3)
-          Report_Generate(System\Last_Drawn_Report_SiteId,System\Last_Drawn_Report_GroupId)
-          
-        Case #Gad_RollInfo_Commit; #Gad_RollInfo_Start To #Gad_RollInfo_Finish
-          Database_Update_RollMaster_FromForm(System\Selected_Roll_ID)
-          System\Showing_RollID = 0
-          Redraw_RollID(System\Selected_Roll_ID)
-          RollInfo_CheckEditted()
-          
-        Case #Gad_RollInfo_Hide_Begin To #Gad_RollInfo_Comment_Box
-          RollInfo_CheckEditted()
-        Case #Gad_RollInfo_Undo
-          System\Refresh_Roll_Information = 1
-        Case #Gad_SQL_Set
-          SQL_Set_Example()
-        Case #Gad_TroikaButton
-          RunProgram(System\Weblink)  ;/DNT
-        Case #Gad_SearchBox
-          If GetGadgetTextMac(#Gad_SearchBox) <> "" ;And Len(GetGadgetTextMac(#Gad_SearchBox)) > 1
-            ForEach NavTree()
-              If FindString(UCase(NavTree()\String),UCase(GetGadgetTextMac(#Gad_SearchBox)),1) > 0
-                SetGadgetState(#Gad_NavTree,ListIndex(NavTree()))
-                If NavTree()\Type = #NavTree_Site
-                  System\Last_Drawn_Report_SiteID = NavTree()\SiteID
-                  System\Last_Drawn_Report_GroupID = -1
-                  Report_Generate(System\Last_Drawn_Report_SiteID,System\Last_Drawn_Report_GroupID)
-                  Show_Window(#Panel_Group_List,#PB_Compiler_Line)
-                EndIf
-                
-                If NavTree()\Type = #NavTree_Group
-                  System\Last_Drawn_Report_SiteID = NavTree()\SiteID
-                  System\Last_Drawn_Report_GroupID = NavTree()\GroupID
-                  Report_Generate(System\Last_Drawn_Report_SiteID,System\Last_Drawn_Report_GroupID)
-                  Show_Window(#Panel_Group_List,#PB_Compiler_Line)
-                EndIf
-                
-                If NavTree()\Type = #NavTree_Roll
-                  Redraw_RollID(NavTree()\RollID)
-                  Show_Window(#Panel_Roll_Info,#PB_Compiler_Line)
-                EndIf
-                Break
-              EndIf 
-            Next 
-          EndIf 
-        Case #Gad_SearchNext
-          System\CurrentSearchPos = GetGadgetState(#Gad_NavTree)
-          If GetGadgetTextMac(#Gad_SearchBox) <> "" ;And Len(GetGadgetTextMac(#Gad_SearchBox)) > 1
-            ForEach NavTree()
-              If FindString(UCase(NavTree()\String),UCase(GetGadgetTextMac(#Gad_SearchBox)),0) > 0 And ListIndex(NavTree()) > System\CurrentSearchPos
-                SetGadgetState(#Gad_NavTree,ListIndex(NavTree()))
-                If NavTree()\Type = #NavTree_Site
-                  System\Last_Drawn_Report_SiteID = NavTree()\SiteID
-                  System\Last_Drawn_Report_GroupID = -1
-                  Report_Generate(System\Last_Drawn_Report_SiteID,System\Last_Drawn_Report_GroupID)
-                  Show_Window(#Panel_Group_List,#PB_Compiler_Line)
-                EndIf
-                
-                If NavTree()\Type = #NavTree_Group
-                  System\Last_Drawn_Report_SiteID = NavTree()\SiteID
-                  System\Last_Drawn_Report_GroupID = NavTree()\GroupID
-                  Report_Generate(System\Last_Drawn_Report_SiteID,System\Last_Drawn_Report_GroupID)
-                  Show_Window(#Panel_Group_List,#PB_Compiler_Line)
-                EndIf
-                
-                If NavTree()\Type = #NavTree_Roll
-                  Redraw_RollID(NavTree()\RollID)
-                  Show_Window(#Panel_Roll_Info,#PB_Compiler_Line)
-                EndIf
-                Break
-              EndIf 
-            Next 
-          EndIf 
-        Case #Gad_SearchPrevious
-          System\CurrentSearchPos = GetGadgetState(#Gad_NavTree)
-          If GetGadgetTextMac(#Gad_SearchBox) <> ""
-            For MyLoop = System\CurrentSearchPos-1 To 1 Step -1
-              SelectElement(NavTree(),MyLoop)
-              If FindString(UCase(NavTree()\String),UCase(GetGadgetTextMac(#Gad_SearchBox)),0) > 0 And ListIndex(NavTree()) < System\CurrentSearchPos
-                SetGadgetState(#Gad_NavTree,ListIndex(NavTree()))
-                If NavTree()\Type = #NavTree_Site
-                  System\Last_Drawn_Report_SiteID = NavTree()\SiteID
-                  System\Last_Drawn_Report_GroupID = -1
-                  Report_Generate(System\Last_Drawn_Report_SiteID,System\Last_Drawn_Report_GroupID)
-                  Show_Window(#Panel_Group_List,#PB_Compiler_Line)
-                EndIf
-                
-                If NavTree()\Type = #NavTree_Group
-                  System\Last_Drawn_Report_SiteID = NavTree()\SiteID
-                  System\Last_Drawn_Report_GroupID = NavTree()\GroupID
-                  Report_Generate(System\Last_Drawn_Report_SiteID,System\Last_Drawn_Report_GroupID)
-                  Show_Window(#Panel_Group_List,#PB_Compiler_Line)
-                EndIf
-                
-                If NavTree()\Type = #NavTree_Roll
-                  Redraw_RollID(NavTree()\RollID)
-                  Show_Window(#Panel_Roll_Info,#PB_Compiler_Line)
-                EndIf
-                Break
-              EndIf 
-            Next 
-          EndIf 
-          
-        Case #Gad_RollInfo_Image_Reference
-          If EventType()=#PB_EventType_RightClick
-            DisplayPopupMenu(10,WindowID(#Window_Main))
-          EndIf
-          
-        Case #Gad_RollInfo_Image_Latest
-          If EventType()=#PB_EventType_RightClick
-            DisplayPopupMenu(11,WindowID(#Window_Main))
-          EndIf
-          
-        Case #Gad_RollInfo_GeneralHistory_History_List
-          Select EventType() 
-            Case #PB_EventType_LeftDoubleClick
-              If GetGadgetState(#Gad_RollInfo_GeneralHistory_History_List) > -1
-                SelectElement(DamageList(),GetGadgetState(#Gad_RollInfo_GeneralHistory_History_List))
-                Init_Window_GeneralHistory_Control(System\Selected_Roll_ID,DamageList())
-              EndIf
-            Case #PB_EventType_RightClick
-              DisableMenuItem(5,#Menu_Popup5_GeneralHistory_Delete,0)
-              DisableMenuItem(5,#Menu_Popup5_GeneralHistory_Edit,0)
-              If GetGadgetState(#Gad_RollInfo_GeneralHistory_History_List) > -1
-                SelectElement(DamageList(),GetGadgetState(#Gad_RollInfo_GeneralHistory_History_List))
-              Else
-                DisableMenuItem(5,#Menu_Popup5_GeneralHistory_Delete,1)
-                DisableMenuItem(5,#Menu_Popup5_GeneralHistory_Edit,1)
-              EndIf 
-              DisplayPopupMenu(5,WindowID(#Window_Main))
-          EndSelect
-          
-        Case #Gad_RollInfo_Original_List
-          If EventType() = #PB_EventType_LeftDoubleClick
-            If Check_Manager_Mode()
-              Init_Window_Readings_Edit(System\Selected_Roll_ID,#Database_Overwrite,#Reading_Master)
-            EndIf
-          EndIf
-          If EventType()=#PB_EventType_RightClick
-            DisableMenuItem(6,#Menu_Popup6_Original_Reading_Delete,0) ;/ enable all 3 items
-            DisableMenuItem(6,#Menu_Popup6_Original_Reading_Edit,0)
-            DisableMenuItem(6,#Menu_Popup6_Original_Reading_Insert,0)
-            
-            If GetGadgetItemText(#Gad_RollInfo_Original_List,0,0) = ""
-              DisableMenuItem(6,#Menu_Popup6_Original_Reading_Delete,1) ;/ enable all 3 items
-              DisableMenuItem(6,#Menu_Popup6_Original_Reading_Edit,1)
-            Else
-              DisableMenuItem(6,#Menu_Popup6_Original_Reading_Insert,1)
-            EndIf 
-            DisplayPopupMenu(6,WindowID(#Window_Main))
-          EndIf
-          
-        Case #Gad_RollInfo_History_List
-          
-          If EventType() = #PB_EventType_LeftClick
-            If GetGadgetState(#Gad_RollInfo_History_List) > -1
-              SelectElement(HistoryList(),GetGadgetState(#Gad_RollInfo_History_List))
-              System\Selected_HistoryID = HistoryList()
-              Image_Refresh_History(System\Selected_HistoryID)
-            EndIf
-          EndIf            
-          If EventType() = #PB_EventType_LeftDoubleClick
-            If GetGadgetState(#Gad_RollInfo_History_List) > -1
-              If Check_Manager_Mode()
-                SelectElement(HistoryList(),GetGadgetState(#Gad_RollInfo_History_List))
-                System\Selected_HistoryID = HistoryList()
-                Image_Refresh_History(System\Selected_HistoryID)
-                Init_Window_Readings_Edit(System\Selected_Roll_ID,#Database_Overwrite,#Reading_Historical,HistoryList())
-              EndIf
-              
-            EndIf
-          EndIf
-          
-          If EventType()=#PB_EventType_RightClick
-            DisableMenuItem(7,#Menu_Popup7_Historical_Reading_Delete,0)
-            DisableMenuItem(7,#Menu_Popup7_Historical_Usage_Add,0)
-            DisableMenuItem(7,#Menu_Popup7_Historical_Reading_Edit,0)
-            DisableMenuItem(7,#Menu_Popup7_Historical_Reading_Insert,0)
-            
-            If GetGadgetState(#Gad_RollInfo_History_List) > -1
-              SelectElement(HistoryList(),GetGadgetState(#Gad_RollInfo_History_List))
-              System\Selected_HistoryID = HistoryList()
-              Debug "On line: "+Str(GetGadgetState(#Gad_RollInfo_History_List))+" - HistoryID: "+Str(HistoryList())
-            Else
-              DisableMenuItem(7,#Menu_Popup7_Historical_Reading_Delete,1)
-              DisableMenuItem(7,#Menu_Popup7_Historical_Reading_Edit,1)
-              DisableMenuItem(7,#Menu_Popup7_Historical_Usage_Add,1)
-              Debug "Clicked History list whilst not over a line"
-            EndIf 
-            DisplayPopupMenu(7,WindowID(#Window_Main))
-          EndIf
-          
-        Case #Gad_Report_ExportCSV
-          Export_CSV(0)
-        Case #Gad_Report_ExportXLS
-          Export_Excel(0)
-        Case #Gad_RollInfo_Import_AMS
-          Import_AMS()
-        Case #Gad_RollInfo_ExportRollName
-          SendToAQCIni(GetGadgetText(#Gad_Rollinfo_RollID_String),System\Last_Drawn_Roll)
-        Case #Gad_Report_ExportPDF
-          Export_RollReport_PDF()
-          
-        Case #Gad_2D_Analysis_Image
-          Debug "2d Event: "+Str(EventType())
-        Case #Gad_NavTree
-          
-          If EventType() = #PB_EventType_DragStart
-            Debug "Drag-Move Initialised"
-            System\Drag_Selected = GetGadgetState(#Gad_NavTree)
-            If System\Drag_Selected > -1 ;/ actually dragged something
-              Debug "Drag Flag set"
-              SelectElement(NavTree(),System\Drag_Selected)
-              If Navtree()\RollID > 0 ;/ have dragged a roll, good!
-                dragtxt.s = GetGadgetItemText(#Gad_NavTree, GetGadgetState(#Gad_NavTree)) 
-                SetDragCallback(@DragCallBack())
-                DragText(dragtxt, #PB_Drag_Move) 
-              Else
-                Debug "Drag Cancelled"
-                System\Drag_Selected = 0
-              EndIf
-            EndIf
-          EndIf
-          
-          If EventType()=#PB_EventType_RightClick
-            SelectElement(NavTree(),GetGadgetState(#Gad_NavTree))
-            Debug "GadLine: "+Str(GetGadgetState(#Gad_NavTree))+" - Level: "+Str(NavTree()\Type)
-            If NavTree()\Type = #NavTree_Company : DisplayPopupMenu(0,WindowID(#Window_Main)) : EndIf
-            If NavTree()\Type = #NavTree_Site : DisplayPopupMenu(1,WindowID(#Window_Main)) : EndIf
-            If NavTree()\Type = #NavTree_Group : DisplayPopupMenu(2,WindowID(#Window_Main)) : EndIf
-            If NavTree()\Type = #NavTree_Roll : DisplayPopupMenu(3,WindowID(#Window_Main)) : EndIf
-          EndIf
-          
-          If EventType()=#PB_EventType_LeftClick 
-            If GetGadgetState(#Gad_NavTree) < 0 : SetGadgetState(#Gad_NavTree,0) : EndIf
-            
-            ;             Select NavTree()\Type
-            ;               Case #NavTree_Company
-            ;                 Show_Window(#Panel_HomeScreen,#PB_Compiler_Line)
-            ;               Case #NavTree_Site
-            ;                 Show_Window(#Panel_Group_List,#PB_Compiler_Line)
-            ;               Case #NavTree_Group
-            ;                 Show_Window(#Panel_Group_List,#PB_Compiler_Line)
-            ;               Case #NavTree_Roll
-            ;                 Show_Window(#Panel_Roll_Info,#PB_Compiler_Line)
-            ;             EndSelect
-            
-            SelectElement(NavTree(),GetGadgetState(#Gad_NavTree))
-            Debug "Pos: "+Str(GetGadgetState(#Gad_NavTree))+" - Site: "+Str(Navtree()\SiteID)+" - Group: "+Str(Navtree()\GroupID)+" - Roll: "+Str(Navtree()\RollID)
-            System\Selected_Site = Navtree()\SiteID
-            System\Selected_Group = Navtree()\GroupID
-            System\Selected_Roll_ID = Navtree()\RollID
-            ;Debug "NavTree Clicked : "+Str(GetGadgetState(#Gad_NavTree))
-            System\TV_Line = GetGadgetState(#Gad_NavTree)
-            If System\TV_Line = -1 : System\TV_Line = 0 : EndIf 
-            System\TV_Depth = GetGadgetItemAttribute(#Gad_NavTree,System\TV_Line,#PB_Tree_SubLevel)
-            
-            SelectElement(NavTree(),System\TV_Line)
-            
-            If NavTree()\Type = #NavTree_Company
-              Show_Window(#Panel_HomeScreen,#PB_Compiler_Line)
-              Redraw_HomeScreen()
-            EndIf
-            
-            If NavTree()\Type = #NavTree_Site
-              Show_Window(#Panel_Group_List,#PB_Compiler_Line)
-              System\Last_Drawn_Report_SiteID = NavTree()\SiteID
-              System\Last_Drawn_Report_GroupID = -1
-              Report_Generate(System\Last_Drawn_Report_SiteID,System\Last_Drawn_Report_GroupID)
-            EndIf
-            
-            If NavTree()\Type = #NavTree_Group
-              Show_Window(#Panel_Group_List,#PB_Compiler_Line)
-              System\Last_Drawn_Report_SiteID = NavTree()\SiteID
-              System\Last_Drawn_Report_GroupID = NavTree()\GroupID
-              Report_Generate(System\Last_Drawn_Report_SiteID,System\Last_Drawn_Report_GroupID)
-            EndIf
-            
-            If NavTree()\Type = #NavTree_Roll
-              Show_Window(#Panel_Roll_Info,#PB_Compiler_Line)
-              Redraw_RollID(NavTree()\RollID)
-            EndIf
-            
-            System\Selected_Roll_ID_Text = NavTree()\String
-            System\Selected_Roll_ID = NavTree()\RollID
-            
-            ;Message("Event: "+Str(System\Window_Main_Events)+" - Type: "+Str(EventType())+" - TreegadgetState: "+Str(System\TV_Line)+" - "+Str(System\TV_Depth)) ;/DNT
-            
-          EndIf 
-          
-      EndSelect
+    Select System\Window_Main_Events
+        Case #Menu_Force_Refresh
+     
+        Case #PB_Event_PIPECOMMAND
+            ;Debug "PIPE Command event triggered!"
       
-  EndSelect
+        Case #PB_Event_SysTray
+            If EventType() = #PB_EventType_LeftClick
+                ShowWindow_(WindowID(#Window_Main),#SW_MINIMIZE)
+                Delay(250)
+                ShowWindow_(WindowID(#Window_Main),#SW_RESTORE)
+                System\WindowMinimized = 0
+                RemoveSysTrayIcon(0)
+            EndIf
+      
+            If EventType() = #PB_EventType_RightClick 
+                If IsIconic_(WindowID(#Window_Main))
+                    DisplayPopupMenu(13, WindowID(#Window_Main))
+                EndIf 
+            EndIf
+
+        Case #PB_Event_GadgetDrop
+            ;Debug "Drag-Move Ending..."
+            If EventDropType() = #PB_Drop_Text And System\Drag_Selected > 0
+        
+                System\Drag_Target = GetGadgetState(#Gad_NavTree) 
+        
+                If System\Drag_Target > -1
+          
+                    ;/ identify original RollID - Overwrite drag 
+                    SelectElement(NavTree(),System\Drag_Selected)
+                    System\Drag_Selected = NavTree()\RollID
+                    
+                    ;/ See if we've dragged over compatible Source.
+                    SelectElement(NavTree(),System\Drag_Target)
+
+                    If NavTree()\GroupID > 0 ;/ over a press, or a roll
+                        ;Debug "Reassigning"
+                        ;/ reallocating logic here
+                    
+                        Database_Reassign_Roll(System\Drag_Selected,NavTree()\GroupID)
+                    
+                    Else
+                        ;/ Do nothing, other than resetting flags
+                        ;Debug "Not Moving!"
+                        System\Drag_Target = -1 : System\Drag_Selected = -1
+                    EndIf
+                EndIf
+            Else
+                ;Debug "Move Failed :("
+                ;Debug "Does: "+Str(EventDropType())+" = "+Str(#PB_Drop_Private)+"?"
+                ;Debug "Does: "+Str(EventDropText())+" = 0 ?"
+                ;Debug "Does: "+Str(System\Drag_Selected)+" have greater value than 0?"
+            EndIf
+      
+        Case #PB_Event_SizeWindow
+            ;SmartWindowRefresh(#Window_Main,0)
+            SendMessage_(WindowID(0),#WM_SETREDRAW,#False,0)
+            ResizeGadgets()
+            ;Flush_Events()
+            ;Form_Update_Images()
+            SendMessage_(WindowID(0),#WM_SETREDRAW,#True,0)
+            RedrawWindow_(WindowID(#Window_Main),#Null,#Null,#RDW_INVALIDATE|#RDW_UPDATENOW|#RDW_ERASE)
+            ;SmartWindowRefresh(#Window_Main,1)
+      
+        Case #PB_Event_Menu 
+            ;Message("Menu Item: "+Str(EventMenu()) +" selected")  ;/DNT
+            Process_Menu_Events()
+      
+        Case #PB_Event_Gadget
+            System\LastSelectedGadget = EventGadget()
+            ;Debug(System\LastSelectedGadget)
+
+            Select System\LastSelectedGadget
+                    
+                Case #Gad_Graph_Type_Combo
+                    Redraw_Graph(System\Graph_Roll.i)
+                Case #Gad_Graph_Tolerance_Combo
+                    Redraw_Graph(System\Graph_Roll.i)
+                Case #Gad_RollInfo_GraphIcon
+                    If Database_CountQuery("Select Count(*) From AMS_Roll_Data where RollID = "+Str(System\Selected_Roll_ID)+";",#PB_Compiler_Line) > 0
+                        Show_Window(#Panel_Graph,#PB_Compiler_Line)
+                        Redraw_Graph(System\Showing_RollID)
+                    EndIf
+
+                Case #Gad_RollInfo_Import_New
+                    Init_Window_Readings_Edit(System\Selected_Roll_ID,#Database_Insert,-1)
+                
+                Case #Gad_Icon_Manager_Mode
+                    If System\Manager_Mode = 1
+                        System\Manager_Mode = 0
+                        GadgetToolTip(#Gad_Icon_Manager_Mode,tTxt(#Str_ManagerMode)+":"+" "+tTxt(#Str_CurrentlyOff))
+                        SetGadgetAttribute(#Gad_Icon_Manager_Mode,#PB_Button_Image,ImageID(#Image_Padlock_Closed))
+                    Else
+                        If Init_Password_Requester() = 1
+                            System\Manager_Mode = 1
+                            ;Debug "Manager Mode on"
+                            GadgetToolTip(#Gad_Icon_Manager_Mode,tTxt(#Str_ManagerMode)+":"+" "+tTxt(#Str_CurrentlyOn))
+                            SetGadgetAttribute(#Gad_Icon_Manager_Mode,#PB_Button_Image,ImageID(#Image_Padlock_Open))
+                        Else
+                            ;Debug "Manager mode remains off"
+                            MessageRequester(tTxt(#Str_Sorry),tTxt(#Str_Incorrectpasscodeentered)+", "+tTxt(#Str_Pleasetryagain))
+                            ;SetGadgetState(#Gad_Icon_Manager_Mode,0)
+                        EndIf
+                    EndIf
+          
+                Case #Gad_AutoImport
+                    System\LiveMonitor = GetGadgetState(#Gad_AutoImport)
+                    Database_SaveSettings()
+                    If System\LiveMonitor = 0
+                        GadgetToolTip(#Gad_AutoImport,tTxt(#Str_Toggleautomaticimporting)+":"+tTxt(#Str_Currentlyoff))
+                        ;WindowShowBalloonTip(#Window_Main,0,"AMS Message","Live Monitoring for AMS Exports is Off",3000)
+                    Else
+                        GadgetToolTip(#Gad_AutoImport,tTxt(#Str_Toggleautomaticimporting)+":"+tTxt(#Str_Currentlyon))
+                        ;WindowShowBalloonTip(#Window_Main,0,"AMS Message","Live Monitoring for AMS Exports is ON",3000)
+                    EndIf
+
+                Case #Gad_Icon_Export_CSV
+                    If System\Showing_Panel = #Panel_Group_List : Export_CSV(0) : EndIf
+                    If System\Showing_Panel = #Panel_Roll_Info  : Export_CSV(1) : EndIf
+                Case #Gad_Icon_Export_XLS
+                    If System\Showing_Panel = #Panel_Group_List : Export_Excel(0) : EndIf
+                    If System\Showing_Panel = #Panel_Roll_Info  : Export_Excel(1) : EndIf
+                Case #Gad_Icon_Export_PDF
+                    If System\Showing_Panel = #Panel_Group_List : Export_RollReport_PDF() : EndIf
+                    If System\Showing_Panel = #Panel_Roll_Info  : Export_RollInfo_PDF() : EndIf
+                Case #Gad_Icon_Export_Print
+                    If System\Showing_Panel = #Panel_Group_List : Export_RollReport_Print() : EndIf
+                    If System\Showing_Panel = #Panel_Roll_Info  : Export_RollInfo_Print() : EndIf
+                
+                    If System\Showing_Panel = #Panel_Graph  : Export_Graph_Print() : EndIf
+
+                Case #Gad_Icon_Export_IMG
+                    ; Grab the image before the menu is displayed as stops any delays waiting for the menu text to fade out
+                    Image_FullScreen_Grab(0)
+                    DisplayPopupMenu(14,WindowID(#Window_Main))
+          
+                Case #Gad_SQL_Run
+                    If GetGadgetState(#Gad_SQL_QueryUpdateCombo) = 0 ;/ query mode
+                        SQLite_Process_Live_Query()
+                    Else
+                        SQLite_Process_Live_Update()
+                    EndIf
+          
+                Case #Gad_SQL_Query_Txt
+                    If Multi_Site_Mode = 0
+                        If GetGadgetState(#Gad_SQL_QueryUpdateCombo) = 0 ;/ query mode
+                            SQLite_Process_Live_Query()
+                        EndIf
+                    
+                    Else
+                        If GetGadgetState(#Gad_SQL_QueryUpdateCombo) = 0 ;/ query mode
+                            SQLite_Process_Live_Query()
+                        EndIf
+                    EndIf
+          
+                Case #Gad_Report_Preset_Combo
+                    Database_Update(#Databases_Master,"Update AMS_Settings Set Default_Filter = '"+GetGadgetText(#Gad_Report_Preset_Combo)+"'",#PB_Compiler_Line) ;/DNT
+                    Report_Generate(System\Last_Drawn_Report_SiteId,System\Last_Drawn_Report_GroupId)
+          
+                Case #Gad_ReportLayout_Combo
+                    Database_Update(#Databases_Master,"Update AMS_Settings Set Default_Layout = '"+GetGadgetText(#Gad_ReportLayout_Combo)+"'",#PB_Compiler_Line) ;/DNT
+                    Report_Generate(System\Last_Drawn_Report_SiteId,System\Last_Drawn_Report_GroupId)
+          
+          
+                Case #Gad_Report_ReportList
+                    If EventType() = #PB_EventType_LeftDoubleClick
+                        TempL = GetGadgetState(#Gad_Report_ReportList)
+                        If TempL > -1
+                            SelectElement(ReportLine_RollID(),TempL)
+                            ;Debug "Selected RollID?: "+Str(ReportLine_RollID())
+                            RollID = ReportLine_RollID()
+                            If RollID > 0
+                                ;/ identify line on Navtree that it refers to:
+                                ForEach NavTree()
+                                    If NavTree()\RollID = RollID
+                                        Show_Window(#Panel_Roll_Info,#PB_Compiler_Line)
+                                        SetGadgetState(#Gad_NavTree,ListIndex(NavTree()))
+                                        Redraw_RollID(RollID)
+                                        Break
+                                    EndIf
+                                Next
+                            EndIf 
+                        EndIf
+                    EndIf
+
+                Case #Gad_Report_New
+                    Init_Presets(1)
+                    Report_Generate(System\Last_Drawn_Report_SiteId,System\Last_Drawn_Report_GroupId)
+                Case #Gad_Report_Edit
+                    Init_Presets(2)
+                    Report_Generate(System\Last_Drawn_Report_SiteId,System\Last_Drawn_Report_GroupId)
+                Case #Gad_Report_Delete
+                    Init_Presets(3)
+                    Report_Generate(System\Last_Drawn_Report_SiteId,System\Last_Drawn_Report_GroupId)
+          
+                Case #Gad_ReportLayout_New
+                    Init_Layout(1)
+                    Report_Generate(System\Last_Drawn_Report_SiteId,System\Last_Drawn_Report_GroupId)
+                Case #Gad_ReportLayout_Edit
+                    Init_Layout(2)
+                    Report_Generate(System\Last_Drawn_Report_SiteId,System\Last_Drawn_Report_GroupId)
+                Case #Gad_ReportLayout_Delete
+                    Init_Layout(3)
+                    Report_Generate(System\Last_Drawn_Report_SiteId,System\Last_Drawn_Report_GroupId)
+                
+                Case #Gad_RollInfo_Commit; #Gad_RollInfo_Start To #Gad_RollInfo_Finish
+                    Database_Update_RollMaster_FromForm(System\Selected_Roll_ID)
+                    System\Showing_RollID = 0
+                    Redraw_RollID(System\Selected_Roll_ID)
+                    RollInfo_CheckEditted()
+                
+                Case #Gad_RollInfo_Hide_Begin To #Gad_RollInfo_Comment_Box
+                    RollInfo_CheckEditted()
+
+                Case #Gad_RollInfo_Undo
+                    System\Refresh_Roll_Information = 1
+                Case #Gad_SQL_Set
+                    SQL_Set_Example()
+                Case #Gad_TroikaButton
+                    RunProgram(System\Weblink)  ;/DNT
+
+                Case #Gad_SearchBox
+                    If GetGadgetTextMac(#Gad_SearchBox) <> "" ;And Len(GetGadgetTextMac(#Gad_SearchBox)) > 1
+                        ForEach NavTree()
+                            If FindString(UCase(NavTree()\String),UCase(GetGadgetTextMac(#Gad_SearchBox)),1) > 0
+                                SetGadgetState(#Gad_NavTree,ListIndex(NavTree()))
+                                If NavTree()\Type = #NavTree_Site
+                                    System\Last_Drawn_Report_SiteID = NavTree()\SiteID
+                                    System\Last_Drawn_Report_GroupID = -1
+                                    Report_Generate(System\Last_Drawn_Report_SiteID,System\Last_Drawn_Report_GroupID)
+                                    Show_Window(#Panel_Group_List,#PB_Compiler_Line)
+                                EndIf
+                
+                                If NavTree()\Type = #NavTree_Group
+                                    System\Last_Drawn_Report_SiteID = NavTree()\SiteID
+                                    System\Last_Drawn_Report_GroupID = NavTree()\GroupID
+                                    Report_Generate(System\Last_Drawn_Report_SiteID,System\Last_Drawn_Report_GroupID)
+                                    Show_Window(#Panel_Group_List,#PB_Compiler_Line)
+                                EndIf
+                    
+                                If NavTree()\Type = #NavTree_Roll
+                                    Redraw_RollID(NavTree()\RollID)
+                                    Show_Window(#Panel_Roll_Info,#PB_Compiler_Line)
+                                EndIf
+                                Break
+                            EndIf 
+                        Next 
+                    EndIf 
+
+                Case #Gad_SearchNext
+                    System\CurrentSearchPos = GetGadgetState(#Gad_NavTree)
+                    If GetGadgetTextMac(#Gad_SearchBox) <> "" ;And Len(GetGadgetTextMac(#Gad_SearchBox)) > 1
+                        ForEach NavTree()
+                            If FindString(UCase(NavTree()\String),UCase(GetGadgetTextMac(#Gad_SearchBox)),0) > 0 And ListIndex(NavTree()) > System\CurrentSearchPos
+                                SetGadgetState(#Gad_NavTree,ListIndex(NavTree()))
+                                If NavTree()\Type = #NavTree_Site
+                                    System\Last_Drawn_Report_SiteID = NavTree()\SiteID
+                                    System\Last_Drawn_Report_GroupID = -1
+                                    Report_Generate(System\Last_Drawn_Report_SiteID,System\Last_Drawn_Report_GroupID)
+                                    Show_Window(#Panel_Group_List,#PB_Compiler_Line)
+                                EndIf
+            
+                                If NavTree()\Type = #NavTree_Group
+                                    System\Last_Drawn_Report_SiteID = NavTree()\SiteID
+                                    System\Last_Drawn_Report_GroupID = NavTree()\GroupID
+                                    Report_Generate(System\Last_Drawn_Report_SiteID,System\Last_Drawn_Report_GroupID)
+                                    Show_Window(#Panel_Group_List,#PB_Compiler_Line)
+                                EndIf
+            
+                                If NavTree()\Type = #NavTree_Roll
+                                    Redraw_RollID(NavTree()\RollID)
+                                    Show_Window(#Panel_Roll_Info,#PB_Compiler_Line)
+                                EndIf
+                                Break
+                            EndIf 
+                        Next 
+                    EndIf 
+
+                Case #Gad_SearchPrevious
+                    System\CurrentSearchPos = GetGadgetState(#Gad_NavTree)
+                    If GetGadgetTextMac(#Gad_SearchBox) <> ""
+                        For MyLoop = System\CurrentSearchPos-1 To 1 Step -1
+                            SelectElement(NavTree(),MyLoop)
+                            
+                            If FindString(UCase(NavTree()\String),UCase(GetGadgetTextMac(#Gad_SearchBox)),0) > 0 And ListIndex(NavTree()) < System\CurrentSearchPos
+                                SetGadgetState(#Gad_NavTree,ListIndex(NavTree()))
+                                If NavTree()\Type = #NavTree_Site
+                                    System\Last_Drawn_Report_SiteID = NavTree()\SiteID
+                                    System\Last_Drawn_Report_GroupID = -1
+                                    Report_Generate(System\Last_Drawn_Report_SiteID,System\Last_Drawn_Report_GroupID)
+                                    Show_Window(#Panel_Group_List,#PB_Compiler_Line)
+                                EndIf
+                            
+                                If NavTree()\Type = #NavTree_Group
+                                    System\Last_Drawn_Report_SiteID = NavTree()\SiteID
+                                    System\Last_Drawn_Report_GroupID = NavTree()\GroupID
+                                    Report_Generate(System\Last_Drawn_Report_SiteID,System\Last_Drawn_Report_GroupID)
+                                    Show_Window(#Panel_Group_List,#PB_Compiler_Line)
+                                EndIf
+                            
+                                If NavTree()\Type = #NavTree_Roll
+                                    Redraw_RollID(NavTree()\RollID)
+                                    Show_Window(#Panel_Roll_Info,#PB_Compiler_Line)
+                                EndIf
+                                Break
+                            EndIf 
+                        Next 
+                    EndIf 
+          
+                Case #Gad_RollInfo_Image_Reference
+                    If EventType()=#PB_EventType_RightClick
+                        DisplayPopupMenu(10,WindowID(#Window_Main))
+                    EndIf
+                
+                Case #Gad_RollInfo_Image_Latest
+                    If EventType()=#PB_EventType_RightClick
+                        DisplayPopupMenu(11,WindowID(#Window_Main))
+                    EndIf
+                  
+                Case #Gad_RollInfo_GeneralHistory_History_List
+                    Select EventType() 
+                        Case #PB_EventType_LeftDoubleClick
+                            If GetGadgetState(#Gad_RollInfo_GeneralHistory_History_List) > -1
+                                SelectElement(DamageList(),GetGadgetState(#Gad_RollInfo_GeneralHistory_History_List))
+                                Init_Window_GeneralHistory_Control(System\Selected_Roll_ID,DamageList())
+                            EndIf
+                        Case #PB_EventType_RightClick
+                            DisableMenuItem(5,#Menu_Popup5_GeneralHistory_Delete,0)
+                            DisableMenuItem(5,#Menu_Popup5_GeneralHistory_Edit,0)
+                            If GetGadgetState(#Gad_RollInfo_GeneralHistory_History_List) > -1
+                                SelectElement(DamageList(),GetGadgetState(#Gad_RollInfo_GeneralHistory_History_List))
+                            Else
+                                DisableMenuItem(5,#Menu_Popup5_GeneralHistory_Delete,1)
+                                DisableMenuItem(5,#Menu_Popup5_GeneralHistory_Edit,1)
+                            EndIf 
+                                DisplayPopupMenu(5,WindowID(#Window_Main))
+                    EndSelect
+          
+                Case #Gad_RollInfo_Original_List
+                    If EventType() = #PB_EventType_LeftDoubleClick
+                        If Check_Manager_Mode()
+                            Init_Window_Readings_Edit(System\Selected_Roll_ID,#Database_Overwrite,#Reading_Master)
+                        EndIf
+                    EndIf
+                    If EventType()=#PB_EventType_RightClick
+                        DisableMenuItem(6,#Menu_Popup6_Original_Reading_Delete,0) ;/ enable all 3 items
+                        DisableMenuItem(6,#Menu_Popup6_Original_Reading_Edit,0)
+                        DisableMenuItem(6,#Menu_Popup6_Original_Reading_Insert,0)
+                
+                        If GetGadgetItemText(#Gad_RollInfo_Original_List,0,0) = ""
+                            DisableMenuItem(6,#Menu_Popup6_Original_Reading_Delete,1) ;/ enable all 3 items
+                            DisableMenuItem(6,#Menu_Popup6_Original_Reading_Edit,1)
+                        Else
+                            DisableMenuItem(6,#Menu_Popup6_Original_Reading_Insert,1)
+                        EndIf 
+                        DisplayPopupMenu(6,WindowID(#Window_Main))
+                    EndIf
+          
+                Case #Gad_RollInfo_History_List
+          
+                    If EventType() = #PB_EventType_LeftClick
+                        If GetGadgetState(#Gad_RollInfo_History_List) > -1
+                            SelectElement(HistoryList(),GetGadgetState(#Gad_RollInfo_History_List))
+                            System\Selected_HistoryID = HistoryList()
+                            Image_Refresh_History(System\Selected_HistoryID)
+                        EndIf
+                    EndIf            
+                    If EventType() = #PB_EventType_LeftDoubleClick
+                        If GetGadgetState(#Gad_RollInfo_History_List) > -1
+                            If Check_Manager_Mode()
+                                SelectElement(HistoryList(),GetGadgetState(#Gad_RollInfo_History_List))
+                                System\Selected_HistoryID = HistoryList()
+                                Image_Refresh_History(System\Selected_HistoryID)
+                                Init_Window_Readings_Edit(System\Selected_Roll_ID,#Database_Overwrite,#Reading_Historical,HistoryList())
+                            EndIf
+                    
+                        EndIf
+                    EndIf
+                    
+                    If EventType()=#PB_EventType_RightClick
+                        DisableMenuItem(7,#Menu_Popup7_Historical_Reading_Delete,0)
+                        DisableMenuItem(7,#Menu_Popup7_Historical_Usage_Add,0)
+                        DisableMenuItem(7,#Menu_Popup7_Historical_Reading_Edit,0)
+                        DisableMenuItem(7,#Menu_Popup7_Historical_Reading_Insert,0)
+                    
+                        If GetGadgetState(#Gad_RollInfo_History_List) > -1
+                            SelectElement(HistoryList(),GetGadgetState(#Gad_RollInfo_History_List))
+                            System\Selected_HistoryID = HistoryList()
+                        ;Debug "On line: "+Str(GetGadgetState(#Gad_RollInfo_History_List))+" - HistoryID: "+Str(HistoryList())
+                        Else
+                            DisableMenuItem(7,#Menu_Popup7_Historical_Reading_Delete,1)
+                            DisableMenuItem(7,#Menu_Popup7_Historical_Reading_Edit,1)
+                            DisableMenuItem(7,#Menu_Popup7_Historical_Usage_Add,1)
+                            ;Debug "Clicked History list whilst not over a line"
+                        EndIf 
+                        DisplayPopupMenu(7,WindowID(#Window_Main))
+                    EndIf
+          
+                Case #Gad_Report_ExportCSV
+                    Export_CSV(0)
+                Case #Gad_Report_ExportXLS
+                    Export_Excel(0)
+                Case #Gad_RollInfo_Import_AMS
+                    Import_AMS()
+                Case #Gad_RollInfo_ExportRollName
+                    SendToAQCIni(GetGadgetText(#Gad_Rollinfo_RollID_String),System\Last_Drawn_Roll)
+                Case #Gad_Report_ExportPDF
+                    Export_RollReport_PDF()
+                Case #Gad_RollInfo_SetScan
+                    CameraSetAVGMode(GetGadgetText(#Gad_Rollinfo_RollID_String))
+                Case #Gad_2D_Analysis_Image
+                    ;Debug "2d Event: "+Str(EventType())
+                Case #Gad_NavTree
+          
+                    If EventType() = #PB_EventType_DragStart
+                        ;Debug "Drag-Move Initialised"
+                        System\Drag_Selected = GetGadgetState(#Gad_NavTree)
+                        If System\Drag_Selected > -1 ;/ actually dragged something
+                            ;Debug "Drag Flag set"
+                            SelectElement(NavTree(),System\Drag_Selected)
+                            If Navtree()\RollID > 0 ;/ have dragged a roll, good!
+                                dragtxt.s = GetGadgetItemText(#Gad_NavTree, GetGadgetState(#Gad_NavTree)) 
+                                SetDragCallback(@DragCallBack())
+                                DragText(dragtxt, #PB_Drag_Move) 
+                            Else
+                                ;Debug "Drag Cancelled"
+                                System\Drag_Selected = 0
+                            EndIf
+                        EndIf
+                    EndIf
+          
+                    If EventType()=#PB_EventType_RightClick
+                        SelectElement(NavTree(),GetGadgetState(#Gad_NavTree))
+                        ;Debug "GadLine: "+Str(GetGadgetState(#Gad_NavTree))+" - Level: "+Str(NavTree()\Type)
+                        If NavTree()\Type = #NavTree_Company : DisplayPopupMenu(0,WindowID(#Window_Main)) : EndIf
+                        If NavTree()\Type = #NavTree_Site : DisplayPopupMenu(1,WindowID(#Window_Main)) : EndIf
+                        If NavTree()\Type = #NavTree_Group : DisplayPopupMenu(2,WindowID(#Window_Main)) : EndIf
+                        If NavTree()\Type = #NavTree_Roll : DisplayPopupMenu(3,WindowID(#Window_Main)) : EndIf
+                    EndIf
+          
+                    If EventType()=#PB_EventType_LeftClick 
+                        If GetGadgetState(#Gad_NavTree) < 0 : SetGadgetState(#Gad_NavTree,0) : EndIf
+                        
+                        SelectElement(NavTree(),GetGadgetState(#Gad_NavTree))
+                            ;Debug "Pos: "+Str(GetGadgetState(#Gad_NavTree))+" - Site: "+Str(Navtree()\SiteID)+" - Group: "+Str(Navtree()\GroupID)+" - Roll: "+Str(Navtree()\RollID)
+                            System\Selected_Site = Navtree()\SiteID
+                            System\Selected_Group = Navtree()\GroupID
+                            System\Selected_Roll_ID = Navtree()\RollID
+                            ;Debug "NavTree Clicked : "+Str(GetGadgetState(#Gad_NavTree))
+                            System\TV_Line = GetGadgetState(#Gad_NavTree)
+                            If System\TV_Line = -1 : System\TV_Line = 0 : EndIf 
+                                System\TV_Depth = GetGadgetItemAttribute(#Gad_NavTree,System\TV_Line,#PB_Tree_SubLevel)
+                        
+                                SelectElement(NavTree(),System\TV_Line)
+                        
+                                If NavTree()\Type = #NavTree_Company
+                                    Show_Window(#Panel_HomeScreen,#PB_Compiler_Line)
+                                    Redraw_HomeScreen()
+                                EndIf
+                        
+                                If NavTree()\Type = #NavTree_Site
+                                    Show_Window(#Panel_Group_List,#PB_Compiler_Line)
+                                    System\Last_Drawn_Report_SiteID = NavTree()\SiteID
+                                    System\Last_Drawn_Report_GroupID = -1
+                                    Report_Generate(System\Last_Drawn_Report_SiteID,System\Last_Drawn_Report_GroupID)
+                                EndIf
+                        
+                                If NavTree()\Type = #NavTree_Group
+                                    Show_Window(#Panel_Group_List,#PB_Compiler_Line)
+                                    System\Last_Drawn_Report_SiteID = NavTree()\SiteID
+                                    System\Last_Drawn_Report_GroupID = NavTree()\GroupID
+                                    Report_Generate(System\Last_Drawn_Report_SiteID,System\Last_Drawn_Report_GroupID)
+                                EndIf
+                        
+                                If NavTree()\Type = #NavTree_Roll
+                                    Show_Window(#Panel_Roll_Info,#PB_Compiler_Line)
+                                    Redraw_RollID(NavTree()\RollID)
+                                EndIf
+                        
+                                System\Selected_Roll_ID_Text = NavTree()\String
+                                System\Selected_Roll_ID = NavTree()\RollID
+                        
+                                ;Message("Event: "+Str(System\Window_Main_Events)+" - Type: "+Str(EventType())+" - TreegadgetState: "+Str(System\TV_Line)+" - "+Str(System\TV_Depth)) ;/DNT
+                        
+                    EndIf 
+        
+            EndSelect
+      
+    EndSelect
 EndProcedure
 
 ;/ initiate the database environment
 If UseSQLiteDatabase() = 0
-  MessageRequester("Error","Unable to initialise the database environment, Exitting",#PB_MessageRequester_Ok)
+  MessageRequester("Error","Unable to initialise the database environment, Exiting",#PB_MessageRequester_Ok)
   End
 EndIf
 
@@ -15249,10 +15311,10 @@ Procedure Database_CreateLocalSettingsDB()
   SQL + "[VarianceGood] Int, [VarianceBad] Int,  [CapacityGood] Int, [CapacityBad] Int, [Monitor] Int, [ImportPath] Char, [Import_Delete] Int, "
   SQL + "[Database_Path] Char, [Default_Site] Int, [Polling_Interval] Int, [DefaultOnly] Int, [Show_Depth] Int);"
   
-  Result = Database_Update(#Databases_LocalSettings,SQL,#PB_Compiler_Line)
+  Result = Database_Update(#Databases_LocalSettings, SQL, #PB_Compiler_Line)
   
   If Result = 0
-    MessageRequester("Error","Unable to generate local settings database, exitting")
+    MessageRequester("Error","Unable to generate local settings database, exiting")
     End
   EndIf
   
@@ -15281,7 +15343,7 @@ If OpenDatabase(#Databases_LocalSettings,LocalSettingsDB,"","",#PB_Database_SQLi
   DatabaseFile = System\Database_Path+"\AMS_SS.db" 
   ;CloseDatabase(#Databases_LocalSettings)
 Else
-  MessageRequester("Error","Unable to open the AMS settings database, Exitting"+Chr(10)+Chr(10)+"("+LocalSettingsDB+")",#PB_MessageRequester_Ok)
+  MessageRequester("Error","Unable to open the AMS settings database, exiting"+Chr(10)+Chr(10)+"("+LocalSettingsDB+")",#PB_MessageRequester_Ok)
   End
 EndIf
 ;EndIf
@@ -15583,11 +15645,11 @@ DataSection
 EndDataSection
 ;}
 
-; IDE Options = PureBasic 6.00 LTS (Windows - x64)
-; CursorPosition = 3174
-; FirstLine = 3151
-; Folding = ---------------------------------
-; Markers = 9935
+; IDE Options = PureBasic 6.02 LTS (Windows - x64)
+; CursorPosition = 8403
+; FirstLine = 8371
+; Folding = ----------------------------------
+; Markers = 9992
 ; EnableThread
 ; EnableXP
 ; EnableUser
@@ -15597,7 +15659,7 @@ EndDataSection
 ; CompileSourceDirectory
 ; Warnings = Display
 ; EnablePurifier
-; EnableCompileCount = 1252
+; EnableCompileCount = 1259
 ; EnableBuildCount = 22
 ; Watchlist = System\Settings_Volume_UnitMask
 ; EnableUnicode
