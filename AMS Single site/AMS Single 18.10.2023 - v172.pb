@@ -15438,8 +15438,8 @@ EndDataSection
 ;}
 
 ; IDE Options = PureBasic 6.03 LTS (Windows - x64)
-; CursorPosition = 8454
-; FirstLine = 8421
+; CursorPosition = 8444
+; FirstLine = 8406
 ; Folding = ----------------------------------
 ; Markers = 9983
 ; EnableThread

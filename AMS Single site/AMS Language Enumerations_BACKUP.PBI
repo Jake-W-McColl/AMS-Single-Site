@@ -405,6 +405,7 @@ Enumeration
   #Str_EditPrintDistance
   #Str_Selectfield
   #Str_SelectGeneralInformationvalue
-  #Str_CameraType
+  #Str_EngravingPercentage
+  #Str_Ref
   #Str_LastComment
 EndEnumeration
