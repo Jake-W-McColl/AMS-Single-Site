@@ -7,9 +7,17 @@
   <section name="data">
     <explorer view="..\Single Site to Multisite\" pattern="0"/>
     <log show="1"/>
-    <lastopen date="2023-10-18 15:55" user="sean.little" host="DEVELOPMENT-SL"/>
+    <lastopen date="2023-11-20 16:42" user="sean.little" host="DEVELOPMENT-SL"/>
   </section>
   <section name="files">
+    <file name="AMS Single site\AMS Single 18.10.2023 - v172.pb">
+      <config load="0" scan="1" panel="1" warn="1" lastopen="1" sortindex="1" panelstate="++"/>
+      <fingerprint md5="4161d234eb2c6f234e2c7d17590844c8"/>
+    </file>
+    <file name="AMS Single site\AMS Language Enumerations.PBI">
+      <config load="0" scan="1" panel="1" warn="1" lastopen="0" sortindex="999" panelstate="++"/>
+      <fingerprint md5="6b850e88234f01ff486e182dfff2bce0"/>
+    </file>
     <file name="AMS Single site\Camera Control\CameraControl.pbf">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" sortindex="999" panelstate="+++"/>
       <fingerprint md5="387a58ccf9449d825e9b22f7488396b7"/>
@@ -26,20 +34,17 @@
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" sortindex="999" panelstate="++"/>
       <fingerprint md5="93b810d635d49bb429c9b5f510287991"/>
     </file>
-    <file name="AMS Single site\AMS Language Enumerations.PBI">
-      <config load="0" scan="1" panel="1" warn="1" lastopen="0" sortindex="999" panelstate="++"/>
-      <fingerprint md5="6b850e88234f01ff486e182dfff2bce0"/>
-    </file>
-    <file name="AMS Single site\AMS Single 18.10.2023 - v172.pb">
-      <config load="0" scan="1" panel="1" warn="1" lastopen="1" sortindex="1" panelstate="++"/>
-      <fingerprint md5="5ed5c48d18f1c8f01b5da630837e8445"/>
-    </file>
   </section>
   <section name="targets">
     <target name="Default Target" enabled="1" default="1">
-      <inputfile value="AMS Single site\AMS Single 13.01.2023 - v171d - Updates to Export to AQC.pb"/>
+      <inputfile value="AMS Single site\AMS Single 18.10.2023 - v172.pb"/>
       <outputfile value=""/>
+      <compiler version="PureBasic 6.03 LTS (Windows - x64)"/>
+      <executable value="Q:\Dotmeters\Pre - Release\For Testing by Jon\Anilox Management System\Anilox Management System v1.72.exe"/>
       <options xpskin="1" dpiaware="1" debug="1" optimizer="0"/>
+      <icon enable="1">AMS Single site\Images\AniCAM_Mini_T.ico</icon>
+      <debugger custom="1" type="ide"/>
+      <warnings custom="1" type="ignore"/>
     </target>
   </section>
 </project>

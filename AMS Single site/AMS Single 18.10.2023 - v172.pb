@@ -798,8 +798,8 @@ EndIf
 UseJPEGImageDecoder() : UseJPEGImageEncoder() 
 UsePNGImageDecoder() : UsePNGImageEncoder()
 UseMD5Fingerprint()
-;/ Initiate Network environment - Required for downloading update text file.
-InitNetwork()
+;/ Initiate Network environment - Required for downloading update text file. NO LONGER REQUIRED
+;/InitNetwork()
 
 Debug GetHomeDirectory()
 Debug GetTemporaryDirectory()
@@ -8382,24 +8382,89 @@ Procedure ListWindows(hWnd,Param)
 
 EndProcedure
 
-;/SL20231005 
+Procedure.s Get_Exe(strDirectory.s, strExecutable.s)
+    Protected strDir.s, strFilePath.s
+    
+    NewList strVersion.s()
+    
+    Select strExecutable
+        Case "Anilox QC.exe"
+            If ExamineDirectory(0, strDirectory, "*AniCAM Applications*")
+                While NextDirectoryEntry(0)
+                    AddElement(strVersion())
+                    strVersion() = DirectoryEntryName(0)
+                Wend
+                strDirectory = strDirectory + "\" + DirectoryEntryName(0) + "\"
+                If ExamineDirectory(0, strDirectory, strExecutable)
+                    While NextDirectoryEntry(0)
+                        strFilePath = DirectoryEntryName(0)
+                    Wend
+                    strFilePath = strDirectory + strFilePath
+                EndIf
+            EndIf            
+        Case "Anilox QC_HD.exe"
+            If ExamineDirectory(0, strDirectory, "*AniCAM HD Applications*")
+                While NextDirectoryEntry(0)
+                    AddElement(strVersion())
+                    strVersion() = DirectoryEntryName(0)
+                Wend
+                SortList(strVersion(), #PB_Sort_Ascending)
+            
+                strDirectory = strDirectory + "\" + DirectoryEntryName(0) + "\"
+            
+                If ExamineDirectory(0, strDirectory, strExecutable)
+                    While NextDirectoryEntry(0)
+                        strFilePath = DirectoryEntryName(0)
+                    Wend
+                    strFilePath = strDirectory + strExecutable
+                EndIf
+            ElseIf ExamineDirectory(0, strDirectory, "*Troika*")
+                While NextDirectoryEntry(0)
+                    AddElement(strVersion())
+                    strVersion() = DirectoryEntryName(0)
+                Wend
+                SortList(strVersion(), #PB_Sort_Ascending)
+            
+                strDirectory = strDirectory + "\" + DirectoryEntryName(0) + "\"
+            
+                If ExamineDirectory(0, strDirectory, strExecutable)
+                    While NextDirectoryEntry(0)
+                        strFilePath = DirectoryEntryName(0)
+                    Wend
+                    strFilePath = strDirectory + strExecutable
+                EndIf
+            EndIf  
+        Case "Low Screen Anilox QC.exe"
+            ;/Not implemented
+        Default
+            strFilePath = ""     
+    EndSelect
+    
+    ProcedureReturn strFilePath
+    
+EndProcedure
+
+;/SL20231005 Opens the installed version on AQC and sets the Sections to the same as the roll reference ones
 Procedure CameraSetAVGMode(strRollID.s)
     Protected strFilePath.s, strExecutable.s, result.i, strSQL.s, Vol1.f, Vol2.f, Vol3.f, Vol4.f, Vol5.f, SectionCount.i
-
-    strFilePath = GetSpecialFolder(#CSIDL_PROGRAM_FILES) + "Troika Systems LTD\"
+    Protected strDir.s
     
     Select System\Settings_CameraType
         Case 0 ;/7.3
             strExecutable = "Anilox QC.exe"
+            strDir = "C:\Program Files (x86)"
         Case 1 ;/HD and HD+
             strExecutable = "Anilox QC_HD.exe"
+            strDir = "C:\Program Files"
         Case 2 ;/Low Screen
             strExecutable = "Low Screen Anilox QC.exe"
+            strDir = "C:\Program Files (x86)"
         Default
     EndSelect
-
+    
+    strFilePath = Get_Exe(strDir, strExecutable)
+    
     strSQL = "SELECT Vol1, Vol2, Vol3, Vol4, Vol5 FROM ams_roll_master WHERE Name = '" + strRollID + "'"
-    ;Debug strSQL
     DatabaseQuery(#Databases_Master, strSQL)
 
     SectionCount = 1    
@@ -8427,40 +8492,37 @@ Procedure CameraSetAVGMode(strRollID.s)
             SectionCount = SectionCount + 1
         EndIf
     EndIf
+    
     HW\PipeName = ""
 
     PopulateNamedPipes()
-
+    
     If HW\PipeName_DeviceOnly = ""
-        If RunProgram(strFilePath + strExecutable) = 0
-            MessageRequester("Anilox Error", ReplaceString(strExecutable, ".exe", "") + " not found, please make sure it is installed", #PB_MessageRequester_Error)
+        If strFilePath = "" Or RunProgram(strFilePath) = 0
+            MessageRequester("AMS Error", ReplaceString(strExecutable, ".exe", "") + " not found, please make sure it is installed", #PB_MessageRequester_Error)
             ProcedureReturn
+        Else
+            PopulateNamedPipes()
+
+            Repeat
+                If Len(HW\PipeName) = 0 
+                    Delay(500)
+                EndIf
+            Until Len(HW\PipeName) > 1
+
+            If Command_SendToAniCAMPipe("?$VIEWVIDEO") = "0"
+                Command_SendToAniCAMPipe("$VIEWVIDEO=1")
+                Delay(6000)
+            EndIf   
+        
+            Command_SendToAniCAMPipe("$AVGMODERESET=1")    
+            Command_SendToAniCAMPipe("$AVGMODESETCUSTOMER=" + System\Database_Company)
+            Command_SendToAniCAMPipe("$AVGMODESETROLLID=" + strRollID)
+            Command_SendToAniCAMPipe("$AVGMODESECTIONCOUNT=" + SectionCount) 
+            Command_SendToAniCAMPipe("$AVGMODESECTIONINDEX=0")
+            Command_SendToAniCAMPipe("$VIEWAVGMODE=1")
         EndIf
-        Delay(5000)
     EndIf
-
-    PopulateNamedPipes()
-
-    Repeat
-        If Len(HW\PipeName) = 0 
-            Delay(500)
-        EndIf
-    Until Len(HW\PipeName) > 1
-
-    ;Debug Command_SendToAniCAMPipe("?$VIEWVIDEO")
-
-    If Command_SendToAniCAMPipe("?$VIEWVIDEO") = "0"
-        Command_SendToAniCAMPipe("$VIEWVIDEO=1")
-        Delay(6000)
-    EndIf   
-
-    Command_SendToAniCAMPipe("$AVGMODERESET=1")    
-    Command_SendToAniCAMPipe("$AVGMODESETCUSTOMER=" + System\Database_Company)
-    Command_SendToAniCAMPipe("$AVGMODESETROLLID=" + strRollID)
-    Command_SendToAniCAMPipe("$AVGMODESECTIONCOUNT=" + SectionCount) 
-    Command_SendToAniCAMPipe("$AVGMODESECTIONINDEX=0")
-    Command_SendToAniCAMPipe("$VIEWAVGMODE=1")
-
 EndProcedure
 
 Procedure Init_Window_Readings_Edit(RollID.i, EditType.i = 0, DataType.i = 0, ReadingID.i=-1) ;/ Manages the manual creation & editing of readings
@@ -9468,9 +9530,9 @@ Procedure Init_Settings() ;/ Last Updated PJ 06.01.2022
         
             AddGadgetItem(#Settings_CamType_Combo, 1, "Anicam HD / HD+")
             SetGadgetItemData(#Settings_CamType_Combo, 1, 1)
-        
-            AddGadgetItem(#Settings_CamType_Combo, 2, "SurfaceCAM")
-            SetGadgetItemData(#Settings_CamType_Combo, 2, 2)
+        ;/SL 06/11/2023 Uncomment when ready for Low Screen to be added
+            ;AddGadgetItem(#Settings_CamType_Combo, 2, "SurfaceCAM")
+            ;SetGadgetItemData(#Settings_CamType_Combo, 2, 2)
     
     SetGadgetState(#Settings_CamType_Combo, System\Settings_CameraType)
 
@@ -15438,10 +15500,10 @@ EndDataSection
 ;}
 
 ; IDE Options = PureBasic 6.03 LTS (Windows - x64)
-; CursorPosition = 8444
-; FirstLine = 8406
+; CursorPosition = 9532
+; FirstLine = 9521
 ; Folding = ----------------------------------
-; Markers = 9983
+; Markers = 10045
 ; EnableThread
 ; EnableXP
 ; EnableUser
