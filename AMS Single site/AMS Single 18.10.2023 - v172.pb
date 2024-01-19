@@ -670,6 +670,11 @@
 ;/                       - Added a check to see if RollID is in the ini file and to inform the user it needs setting before using Export to AQC
 
 ;/ v1.71d 02/2023 - (SL) - Added word wrapping to reports for Group, Cell Opening and Width as they were clipping through each other on separate languages
+;/ v1.71d 02/2023 - (SL) - Fixed word wrapping of group name, as it had gone to the left a little and merged with the border.
+
+;/ v1.71d 05/2023 - (SL) - Changed report layout
+
+;/ v1.72 10/2023 - (SL) - Added New set up scan button, which shows in each roll, allowing the user to click the camera button, which opens AQC, AQC_HD or LS_AQC with the customer, roll name and sections set for them
 
 ;/  ************ Change Requirements: Additions to the settings window? ***********
 ;/ If an addition to the settings is required, changes are needed in:
@@ -714,9 +719,9 @@ EndIf
 XIncludeFile("AMS Language Enumerations.PBI") ;/ controls the text translations
 
 If Multi_Site_Mode = 0
-  Program_Version.s = " V1.71d - Single-Site"  ;/DNT
+  Program_Version.s = " V1.72 - Single-Site"  ;/DNT
 Else
-  Program_Version.s = " V1.71d - Multi-Site" ;/DNT
+  Program_Version.s = " V1.72 - Multi-Site" ;/DNT
 EndIf
 
 ;/ ** Includes **
@@ -742,8 +747,6 @@ Procedure CheckIni()
   EndIf
 EndProcedure
 CheckIni()
-
-
 
 Procedure AlreadyRunning() ;/ Procedure to prevent more than a single instance of AMS running
   Protected hwnd
@@ -795,8 +798,8 @@ EndIf
 UseJPEGImageDecoder() : UseJPEGImageEncoder() 
 UsePNGImageDecoder() : UsePNGImageEncoder()
 UseMD5Fingerprint()
-;/ Initiate Network environment - Required for downloading update text file.
-InitNetwork()
+;/ Initiate Network environment - Required for downloading update text file. NO LONGER REQUIRED
+;/InitNetwork()
 
 Debug GetHomeDirectory()
 Debug GetTemporaryDirectory()
@@ -867,7 +870,7 @@ Enumeration ;/Menu Items
   #Menu_Help_Input_Code
   #Menu_Help_Input_Code_Export
   #Menu_Help_Input_Code_Import
-  #Menu_Help_CheckForUpdates
+  ;#Menu_Help_CheckForUpdates
   #Menu_Help_ViewEULA
   
   #Menu_Popup0_Company_Rename
@@ -969,13 +972,22 @@ Enumeration ;/Images
   #Image_GraphIcon
   
   #Image_AniCAM
+  #Image_AniCAMSmall
   #Image_AniCAM_Opaque
   #Image_Factory
   #Image_Treeview_Factory
   #Image_Star
   
   #Image_Troika_Large_Logo
-  
+    ;/ SL- 04/10/2023 For the initiation 
+    #CAMERACONTROL
+    #BTN_HOMEHEAD
+    #BTN_3DSCAN
+    #SPIN_SECTIONS
+    #SPIN_SAMPLES
+    #TXT_SECTIONNAME
+
+
   #Image_Anilox_Opening
   #Image_Anilox_Screen
   #Image_Anilox_Roll
@@ -1040,6 +1052,8 @@ Enumeration ;/Images
   #Image_Padlock_Open
   #Image_Padlock_Closed
   
+  #Image_Launcher
+  
   #Image_Graph
   #Image_Graph_Scaled
   
@@ -1091,6 +1105,8 @@ Enumeration ;/Gadgets
   #Gad_Icon_Export_IMG
   #Gad_Icon_Export_Print
   #Gad_Icon_Manager_Mode
+  
+  #Gad_Icon_Launcher
   
   #Gad_AutoImport
   
@@ -1288,6 +1304,7 @@ Enumeration ;/Gadgets
   #Gad_RollInfo_Import_Frame
   #Gad_RollInfo_Import_AMS
   #Gad_RollInfo_ExportRollName ;/JM20220816
+  #Gad_RollInfo_SetScan ;/SL20231005
   #Gad_RollInfo_Import_ACP
   #Gad_RollInfo_Import_New ;/Manually input values
   #Gad_RollInfo_Delete 
@@ -1337,134 +1354,130 @@ Enumeration ;/Gadgets
   
   #Settings_Gad_SectionList
   #Settings_Gad_SectionList_Frame
-  #Settings_Gad_SectionList_FrameText
   
   #Settings_Setting_Frame
   #Settings_Gad_Cancel
   #Settings_Gad_Okay
   
-  #Settings_Gad_Hide_Start
-  
-  #Settings_Gad_Connection_Start
-  #Settings_Gad_Connection_Frame
-  #Settings_Gad_Connection_Name
-  #Settings_Gad_Connection_Password
-  #Settings_Gad_Connection_IP_Address
-  #Settings_Gad_Connection_Required
-  
-  #Settings_Gad_Connection_Name_Text
-  #Settings_Gad_Connection_Password_Text
-  #Settings_Gad_Connection_IP_Address_Text
-  #Settings_Gad_Connection_Required_Text
-  #Settings_Gad_Connection_End
-  ;/ Language & volume measurements (LPI / LPCM - CM3/M2 / BCM - 
-  
-  #Settings_Gad_Language_Start
-  #Settings_Gad_Language_Frame
-  #Settings_Gad_Language_Combo
-  #Settings_Gad_Language_Combo_Text
-  #Settings_Gad_Language_CSVDelimiter
-  #Settings_Gad_Language_CSVDelimiter_Text
-  #Settings_Gad_Language_DecimalNotation
-  #Settings_Gad_Language_DecimalNotation_Text
-  #Settings_Gad_Language_End
-  
-  #Settings_Gad_Import_Start
-  #Settings_Gad_Import_AutoToggle
-  #Settings_Gad_Import_Directory
-  #Settings_Gad_Import_Directory_Text
-  
-  #Settings_Gad_Import_Database_Directory_Text
-  #Settings_Gad_Import_Database_Directory
-  
-  ;#Settings_Gad_Import_DeleteAfter
-  ;#Settings_Gad_Import_ShowReadingDepth
-  #Settings_Gad_Import_End
-  
-  #Settings_Gad_Unit_Start
-  #Settings_Gad_Unit_Frame
-  #Settings_Gad_Unit_Screen_Combo
-  #Settings_Gad_Unit_Length_Combo
-  #Settings_Gad_Unit_Volume_Combo
-  #Settings_Gad_Unit_Screen_Text
-  #Settings_Gad_Unit_Length_Text
-  #Settings_Gad_Unit_Volume_Text
-  #Settings_Gad_Unit_End
-  
-  #Settings_Gad_DateFormat_Start
-  #Settings_Gad_DateFormat_Frame
-  #Settings_Gad_DateFormat_Text
-  #Settings_Gad_DateFormat_Combo
-  #Settings_Gad_DateFormat_End
-  
-  #Settings_Unit_Warnings_Start
-  ;#Settings_Unit_Warnings_Frame
-  #Settings_Unit_Warnings_End
-  
-  #Settings_Unit_Warnings_Capacity_Start
-  #Settings_Unit_Warnings_Capacity_End
-  
-  #Settings_Unit_Warnings_Variance_Start
-  #Settings_Unit_Warnings_Variance_End
-  
-  #Settings_Manufacturer_Start
-  #Settings_Manufacturer_Frame
-  #Settings_Manufacturer_List
-  #Settings_Manufacturer_New
-  #Settings_Manufacturer_Edit
-  #Settings_Manufacturer_Delete
-  #Settings_Manufacturer_End
-  
-  #Settings_Suitability_Start
-  #Settings_Suitability_Frame
-  #Settings_Suitability_List
-  #Settings_Suitability_Save
-  #Settings_Suitability_New
-  #Settings_Suitability_Edit
-  #Settings_Suitability_Delete
-  
-  #Settings_Unit_Warnings_Good_Text
-  #Settings_Unit_Warnings_Okay_Text
-  #Settings_Unit_Warnings_Bad_Text
+    #Settings_Gad_Hide_Start
+        
+        #Settings_Gad_Connection_Start
+            #Settings_Gad_Connection_Frame
+            #Settings_Gad_Connection_Name
+            #Settings_Gad_Connection_Password
+            #Settings_Gad_Connection_IP_Address
+            #Settings_Gad_Connection_Required
+            
+            #Settings_Gad_Connection_Name_Text
+            #Settings_Gad_Connection_Password_Text
+            #Settings_Gad_Connection_IP_Address_Text
+            #Settings_Gad_Connection_Required_Text
+        #Settings_Gad_Connection_End
 
+        ;/ Language & volume measurements (LPI / LPCM - CM3/M2 / BCM - 
+        #Settings_Gad_Language_Start
+            #Settings_Gad_Language_Frame
+            #Settings_Gad_Language_Combo
+            #Settings_Gad_Language_Combo_Text
+            #Settings_Gad_Language_CSVDelimiter
+            #Settings_Gad_Language_CSVDelimiter_Text
+            #Settings_Gad_Language_DecimalNotation
+            #Settings_Gad_Language_DecimalNotation_Text
+        #Settings_Gad_Language_End
+        
+        #Settings_Gad_Import_Start
+            #Settings_Gad_Import_AutoToggle
+            #Settings_Gad_Import_Directory
+            #Settings_Gad_Import_Directory_Text
+            #Settings_Gad_Import_Database_Directory_Text
+            #Settings_Gad_Import_Database_Directory
+            ;#Settings_Gad_Import_DeleteAfter
+            ;#Settings_Gad_Import_ShowReadingDepth
+        #Settings_Gad_Import_End
+        
+        #Settings_Gad_Unit_Start
+            #Settings_Gad_Unit_Frame
+            #Settings_Gad_Unit_Screen_Combo
+            #Settings_Gad_Unit_Length_Combo
+            #Settings_Gad_Unit_Volume_Combo
+            #Settings_Gad_Unit_Screen_Text
+            #Settings_Gad_Unit_Length_Text
+            #Settings_Gad_Unit_Volume_Text
+        #Settings_Gad_Unit_End
+        
+        #Settings_Gad_DateFormat_Start
+            #Settings_Gad_DateFormat_Frame
+            #Settings_Gad_DateFormat_Text
+            #Settings_Gad_DateFormat_Combo
+        #Settings_Gad_DateFormat_End
+        
+        #Settings_Unit_Warnings_Start
+            ;#Settings_Unit_Warnings_Frame
+            #Settings_Unit_Warnings_End
+            #Settings_Unit_Warnings_Capacity_Start
+            #Settings_Unit_Warnings_Capacity_End
+            #Settings_Unit_Warnings_Variance_Start
+        #Settings_Unit_Warnings_Variance_End
+        
+        #Settings_Manufacturer_Start
+            #Settings_Manufacturer_Frame
+            #Settings_Manufacturer_List
+            #Settings_Manufacturer_New
+            #Settings_Manufacturer_Edit
+            #Settings_Manufacturer_Delete
+        #Settings_Manufacturer_End
+        
+        #Settings_Suitability_Start
+            #Settings_Suitability_Frame
+            #Settings_Suitability_List
+            #Settings_Suitability_Save
+            #Settings_Suitability_New
+            #Settings_Suitability_Edit
+            #Settings_Suitability_Delete
+            #Settings_Unit_Warnings_Good_Text
+            #Settings_Unit_Warnings_Okay_Text
+            #Settings_Unit_Warnings_Bad_Text
+        
+            ;#Settings_Unit_Warnings_Capacity_Frame
+            #Settings_Unit_Warnings_Capacity_Text
+            #Settings_Unit_Warnings_Capacity_Good
+            #Settings_Unit_Warnings_Capacity_Okay
+            #Settings_Unit_Warnings_Capacity_Bad
+        
+            ;#Settings_Unit_Warnings_Variance_Frame
+            #Settings_Unit_Warnings_Variance_Text
+            #Settings_Unit_Warnings_Variance_Good
+            #Settings_Unit_Warnings_Variance_Okay
+            #Settings_Unit_Warnings_Variance_Bad
+        #Settings_Suitability_End
+        
+        #Settings_GeneralHistoryList_Start
+            #Settings_GeneralHistoryList_Frame
+            #Settings_GeneralHistoryList_List
+            #Settings_GeneralHistoryList_New
+            #Settings_GeneralHistoryList_Edit
+            #Settings_GeneralHistoryList_Delete
+        #Settings_GeneralHistoryList_End
+        
+        ;/ SL20231018
+        #Settings_CamType_Start 
+            #Settings_CamType_Frame
+            #Settings_CamType_Combo
+        #Settings_CamType_End
+
+        #Settings_MultiSite_Start
+            #Settings_MultiSite_Frame
+            #Settings_MultiSite_DatabasePath_Text
+            #Settings_MultiSite_DatabasePath
+            #Settings_MultiSite_DefaultSite
+            #Settings_MultiSite_DefaultSite_Text
+            #Settings_MultiSite_ShowDefaultOnly
+            #Settings_MultiSite_PollingInterval
+            #Settings_MultiSite_PollingInterval_Text
+            #Settings_MultiSite_Seconds_Text
+        #Settings_MultiSite_End
   
-  ;#Settings_Unit_Warnings_Capacity_Frame
-  #Settings_Unit_Warnings_Capacity_Text
-  #Settings_Unit_Warnings_Capacity_Good
-  #Settings_Unit_Warnings_Capacity_Okay
-  #Settings_Unit_Warnings_Capacity_Bad
-  
-  ;#Settings_Unit_Warnings_Variance_Frame
-  #Settings_Unit_Warnings_Variance_Text
-  #Settings_Unit_Warnings_Variance_Good
-  #Settings_Unit_Warnings_Variance_Okay
-  #Settings_Unit_Warnings_Variance_Bad
-  
-  
-  #Settings_Suitability_End
-  
-  #Settings_GeneralHistoryList_Start
-  #Settings_GeneralHistoryList_Frame
-  #Settings_GeneralHistoryList_List
-  #Settings_GeneralHistoryList_New
-  #Settings_GeneralHistoryList_Edit
-  #Settings_GeneralHistoryList_Delete
-  #Settings_GeneralHistoryList_End
-  
-  #Settings_MultiSite_Start
-  #Settings_MultiSite_Frame
-  #Settings_MultiSite_DatabasePath_Text
-  #Settings_MultiSite_DatabasePath
-  #Settings_MultiSite_DefaultSite
-  #Settings_MultiSite_DefaultSite_Text
-  #Settings_MultiSite_ShowDefaultOnly
-  #Settings_MultiSite_PollingInterval
-  #Settings_MultiSite_PollingInterval_Text
-  #Settings_MultiSite_Seconds_Text
-  
-  #Settings_MultiSite_End
-  
-  #Settings_Gad_Hide_End
+    #Settings_Gad_Hide_End
   
   #Gad_SiteInfo_Editor
   #Gad_SiteInfo_Okay
@@ -1536,6 +1549,8 @@ Enumeration ;/Gadgets
   #Gad_Presets_Name
   #Gad_Presets_Name_Text
   #Gad_Presets_Query
+  #Gad_Date_From
+  #Gad_Date_To
   #Gad_Presets_QueryCount
   #Gad_Presets_Query_Text
   #Gad_Presets_Save
@@ -1654,8 +1669,13 @@ Enumeration ;/Settings - Fields
   #Settings_Field_ManufacturerList
   #Settings_Field_SuitabilityTypes
   #Settings_Field_GeneralHistoryList
+
+  #Settings_Group_CameraType
+  #Settings_Field_CameraType
+
   #Settings_Group_MultiSiteSettings
   #Settings_Field_MultiSiteSettings
+
 EndEnumeration
 Enumeration ;/Settings - DateFormat 
   #Settings_DateUnit_DDMMYYYY
@@ -1824,6 +1844,10 @@ EndEnumeration
 
 ;/ Define structures
 
+Structure ListOpenWindows
+    WindowName.s
+EndStructure
+
 Structure pjGraph
   Width.i
   Height.i
@@ -1887,6 +1911,7 @@ Structure Database_Company_Data
   Company_ExpansionS5.S
   
 EndStructure
+
 Structure Database_User_Data
   User_Name.S
   User_Password.S
@@ -2013,6 +2038,8 @@ Structure SystemVariables
   Settings_Capacity_Good.i
   Settings_Capacity_Bad.i
   
+  Settings_CameraType.i ;/SL20231018
+
   SQL_Previous_Text.S
   
   User_Name.S
@@ -2320,20 +2347,22 @@ Global NewList ReportData.ReportData()
 
 Global NewList My_SQL_Queries.SQL_Queries()
 Global NewList NavTree.Tree()
-Global NewList DamageList.i() ;/ Holds the Damage listview to Database DamageID reference (For editting & Deleting)
-Global NewList HistoryList.i();/ Holds the historical listview readings to Database Roll_Data ID (For editting and deleting)
-Global NewList GeneralHistoryList.ID_Name() ;/ Holds the list of General History texts (read from database)
+Global NewList DamageList.i()                    ;/ Holds the Damage listview to Database DamageID reference (For editting & Deleting)
+Global NewList HistoryList.i()                   ;/ Holds the historical listview readings to Database Roll_Data ID (For editting and deleting)
+Global NewList GeneralHistoryList.ID_Name()      ;/ Holds the list of General History texts (read from database)
 Global NewList SuitabilityList.SuitabilityType() ;/ Holds the list of suitability texts (read from database) ;/ PJ 27.12.2021
-Global NewList ManufacturerList.ID_Name();/ Holds the list of Manufacturers texts (read from database)
-Global NewList LanguageList.ID_Name()    ;/ Holds the list of Languages (read from database)
-Global NewList SiteList.ID_Name()        ;/ Holds the sitelist
+Global NewList ManufacturerList.ID_Name()        ;/ Holds the list of Manufacturers texts (read from database)
+Global NewList LanguageList.ID_Name()            ;/ Holds the list of Languages (read from database)
+Global NewList SiteList.ID_Name()                ;/ Holds the sitelist
 
-Global NewList Database_GroupList.ID_Name() ;/ Holds the database groups, used during Roll Information windows
+Global NewList Database_GroupList.ID_Name()      ;/ Holds the database groups, used during Roll Information windows
 Global NewList ReportLine_RollID.i()
 Global NewList Report_PresetList.Report_Preset()  
 Global NewList Report_Layout.Report_Layout()
 Global NewList Report_FlatList.s()
 Global NewList LangMaster.Languagemaster()
+
+Global NewList ListOpenWindows.ListOpenWindows() ;/SL20231009 List to store currently running windows processes
 
 Global NewMap GeneralHistoryLookup.s()
 
@@ -2847,27 +2876,29 @@ Procedure.f Database_FloatQuery(SQL.S,LineNum.i)
 EndProcedure
 Procedure.i Database_SetMainTimeStamp()
   
-  Debug "*******************************************"
-  Debug "*** Updating Main timestamp ***"
-  Debug "*******************************************"
+;   Debug "*******************************************"
+;   Debug "*** Updating Main timestamp ***"
+;   Debug "*******************************************"
   
   Database_Update(#Databases_Master,"Update AMS_Settings Set TimeStamp = "+Str(Date()),#PB_Compiler_Line)
 EndProcedure
+
 Procedure.i Database_SetSiteTimeStamp(Site.i)
   If Site > 0
-    Debug "*******************************************"
-    Debug "*** Updating Site timestamp ***"
-    Debug "*******************************************"
+;     Debug "*******************************************"
+;     Debug "*** Updating Site timestamp ***"
+;     Debug "*******************************************"
     Database_Update(#Databases_Master,"Update AMS_Sites Set TimeStamp = "+Str(Date())+" where ID = "+Str(Site)+";",#PB_Compiler_Line)
     Database_SetMainTimeStamp()
   EndIf
 EndProcedure
+
 Procedure.i Database_SetGroupTimeStamp(Group.i)
   Protected SiteID.i
   If Group > 0
-    Debug "*******************************************"
-    Debug "*** Updating Group timestamp ***"
-    Debug "*******************************************"
+;     Debug "*******************************************"
+;     Debug "*** Updating Group timestamp ***"
+;     Debug "*******************************************"
     SiteID = Database_IntQuery("Select SiteID From AMS_groups Where ID = "+Str(Group)+";",#Databases_Master,#PB_Compiler_Line)
     Database_Update(#Databases_Master,"Update AMS_Groups Set TimeStamp = "+Str(Date())+" where ID = "+Str(Group)+";",#PB_Compiler_Line)
     If SiteID > 0
@@ -2879,9 +2910,9 @@ Procedure.i Database_SetRollTimeStamp(Roll.i)
   Protected GroupID.i
   
   If Roll > 0
-    Debug "*******************************************"
-    Debug "*** Updating Roll timestamp ***"
-    Debug "*******************************************"
+;     Debug "*******************************************"
+;     Debug "*** Updating Roll timestamp ***"
+;     Debug "*******************************************"
     GroupID = Database_IntQuery("Select GroupID From AMS_Roll_Master Where ID = "+Str(Roll)+";",#Databases_Master,#PB_Compiler_Line)
     Database_Update(#Databases_Master,"Update AMS_Roll_Master Set TimeStamp = "+Str(Date())+" where ID = "+Str(Roll)+";",#PB_Compiler_Line)
     If GroupID > 0
@@ -2889,18 +2920,23 @@ Procedure.i Database_SetRollTimeStamp(Roll.i)
     EndIf
   EndIf
 EndProcedure
+
 Procedure.i Database_GetMainTimeStamp()
   ProcedureReturn Database_IntQuery("Select TimeStamp from AMS_Settings",#Databases_Master,#PB_Compiler_Line)
 EndProcedure
+
 Procedure.i Database_GetSiteTimeStamp(Site.i)
   ProcedureReturn Database_IntQuery("Select TimeStamp from AMS_Sites Where ID = "+Str(Site)+";",#Databases_Master,#PB_Compiler_Line)
 EndProcedure
+
 Procedure.i Database_GetGroupTimeStamp(Group.i)
   ProcedureReturn Database_IntQuery("Select TimeStamp from AMS_Groups Where ID = "+Str(Group)+";",#Databases_Master,#PB_Compiler_Line)
 EndProcedure
+
 Procedure.i Database_GetRollTimeStamp(Roll.i)
   ProcedureReturn Database_IntQuery("Select TimeStamp from AMS_Roll_Master Where ID = "+Str(Roll)+";",#Databases_Master,#PB_Compiler_Line)
 EndProcedure
+
 Procedure SQLite_Process_Live_Update()
   Protected MyLoop.i, MyDBLoop.i, SQL.S, Txt.S, Add_Txt.S, Columns.i, Difference.i
   Debug "Running live UPDATE"
@@ -3997,12 +4033,12 @@ Procedure.l RollInfo_CheckEditted()
     
     ;/ if not Editted, show buttons, else hide
     If Editted > 0
-      HideGadget(#Gad_RollInfo_Commit,0)  
-      HideGadget(#Gad_RollInfo_Undo,0) 
+      DisableGadget(#Gad_RollInfo_Commit, 0)
+      DisableGadget(#Gad_RollInfo_Undo, 0)
       System\Editted = System\Selected_Roll_ID
     Else
-      HideGadget(#Gad_RollInfo_Commit,1)  
-      HideGadget(#Gad_RollInfo_Undo,1) 
+      DisableGadget(#Gad_RollInfo_Commit, 1)
+      DisableGadget(#Gad_RollInfo_Undo, 1)
       System\Editted = #False
     EndIf
   EndIf
@@ -5846,7 +5882,7 @@ Procedure Language_Set(Language.s="English")
   Protected MyLoop.i, LanguageNum.i
   
   If ListSize(Langmaster()) = 0
-    MessageRequester("Error","No Language Files loaded, but still trying to set - Exitting.")
+    MessageRequester("Error","No Language Files loaded, but still trying to set - exiting.")
     End
   EndIf
   
@@ -5897,7 +5933,7 @@ Procedure Language_Parse_Files()
   
   ;/ If no Language files are found, show error and end
   If ListSize(LangMaster()) = 0
-    MessageRequester("Error", "Language files are missing, exitting.")
+    MessageRequester("Error", "Language files are missing, exiting.")
     End
   EndIf
   
@@ -6151,6 +6187,17 @@ Procedure.i Database_LoadSettings() ;/ Loads settings from database + Load suita
     System\Settings_Volume_Unit = Database_IntQuery("Select VolumeUnit from AMS_Settings;",#Databases_Master,#PB_Compiler_Line)
     System\Settings_Date_Format = Database_IntQuery("Select DateFormat from AMS_Settings;",#Databases_Master,#PB_Compiler_Line)
     System\Settings_Language.s  = Database_StringQuery("Select Language from AMS_Settings;")
+
+    DatabaseQuery(#Databases_LocalSettings, "SELECT CAM_TYPE FROM AMS_Localsettings")
+
+    If Right(DatabaseError(), 8) = "CAM_TYPE"
+        DatabaseUpdate(#Databases_LocalSettings, "ALTER TABLE AMS_LocalSettings ADD COLUMN [CAM_TYPE] INT")
+        DatabaseUpdate(#Databases_LocalSettings, "UPDATE AMS_LocalSettings SET CAM_TYPE = 0")        
+    Else
+        System\Settings_CameraType.i  = Database_IntQuery("Select CAM_TYPE from AMS_LocalSettings;", #Databases_LocalSettings, #PB_Compiler_Line)
+    EndIf
+
+
     
 ;     System\Settings_Capacity_Good = Database_IntQuery("Select CapacityGood from AMS_Settings;",#Databases_Master,#PB_Compiler_Line)
 ;     System\Settings_Capacity_Bad = Database_IntQuery("Select CapacityBad from AMS_Settings;",#Databases_Master,#PB_Compiler_Line)
@@ -6289,7 +6336,6 @@ Procedure.i Database_SaveSettings()
     Database_Update(#Databases_LocalSettings,SQL,#PB_Compiler_Line)
     
   EndIf
-  
   If System\Language_Update = 1
     Language_Set(System\Settings_Language)
   EndIf
@@ -6402,7 +6448,7 @@ Procedure.i MS_CheckDatabaseLocation(Reassign.i=0)
     
     Path = GetPathPart(Path)
     If FileSize(Path+"AMS_SS.DB") = 0
-      MessageRequester("Error","The AMS database was not found in the specified directory"+","+" exitting") ;/TD
+      MessageRequester("Error","The AMS database was not found in the specified directory"+","+" exiting") ;/TD
       If Reassign = 0
         End
       Else
@@ -6442,7 +6488,7 @@ Procedure.i MS_CheckDatabaseLocation(Reassign.i=0)
     
     Path = GetPathPart(Path)
     If FileSize(Path+"AMS_SS.DB") = 0
-      MessageRequester("Error","The AMS database was not found in the specified directory"+","+" exitting") ;/TD
+      MessageRequester("Error","The AMS database was not found in the specified directory"+","+" exiting") ;/TD
       End
     EndIf
     
@@ -7447,8 +7493,8 @@ Procedure Show_Window(Panel.i, LineNumber.i)
       For MyLoop = #Gad_RollInfo_Hide_Begin To #Gad_RollInfo_Hide_End
         If IsGadget(MyLoop) : HideGadget(MyLoop,0) : EndIf 
       Next
-      HideGadget(#Gad_RollInfo_Commit,1)  
-      HideGadget(#Gad_RollInfo_Undo,1) 
+      HideGadget(#Gad_RollInfo_Commit,0)  
+      HideGadget(#Gad_RollInfo_Undo,0) 
       SetWindowColor(#Window_Main,#WinCol_RollInfo)
       System\Showing_Panel = #Panel_Roll_Info
       Debug "Showing Roll Window"
@@ -7837,7 +7883,7 @@ Procedure.i Import_AMS(NoLoad.i = 0) ;/ NoLoad for Master Import, to prevent rel
         Txt.S + Str(System\Selected_Roll_ID)+","+Str(AMS_Import\DateNum)+",'"+AMS_Import\Operator+"',"+AMS_Import\Sample1+","+AMS_Import\Sample2+","+AMS_Import\Sample3+","+AMS_Import\Sample4
         
       Case "5"
-        Txt.S + "ReadingDate, Operator, Vol1, Vol2, Vol3, Vol4, Vol5, AniCAM_Config, Depth, Usage, Wall, Opening,  , OpeningNew, HistTopSnapImage) VALUES ("
+        Txt.S + "ReadingDate, Operator, Vol1, Vol2, Vol3, Vol4, Vol5, AniCAM_Config, Depth, Usage, Wall, Opening, WallNew, OpeningNew, HistTopSnapImage) VALUES ("
         Txt.S + Str(System\Selected_Roll_ID)+","+Str(AMS_Import\DateNum)+",'"+AMS_Import\Operator+"',"+AMS_Import\Sample1+","+AMS_Import\Sample2+","+AMS_Import\Sample3+","+AMS_Import\Sample4+","+AMS_Import\Sample5
     EndSelect
     
@@ -8319,13 +8365,179 @@ Procedure Init_Window_GeneralHistory_Control(RollID.i,HistoryID.l = -1)
     Redraw_RollID(RollID)
     
   EndIf
-  ;   
+   
   CloseWindow(#Window_GeneralHistory)
   SetActiveWindow(#Window_Main)
   
 EndProcedure
 
-Procedure Init_Window_Readings_Edit(RollID.i, EditType.i = 0, DataType.i = 0, ReadingID.i=-1) ;/ Manages the manual creation & editting of readings
+Procedure ListWindows(hWnd,Param)
+    Protected strWindow.s
+
+    If GetWindowLong_(hWnd,#GWL_EXSTYLE) ! #WS_EX_TOOLWINDOW And GetWindowLong_(hwnd,#GWL_STYLE) & #WS_VISIBLE
+        strWindow = Space(250)
+        GetWindowText_(hWnd, strWindow, 250)
+        If Not strWindow = ""
+            AddElement(ListOpenWindows())
+            ListOpenWindows()\WindowName = strWindow
+        EndIf
+    EndIf
+
+    ProcedureReturn #True
+
+EndProcedure
+
+Procedure.s Get_Exe(strDirectory.s, strExecutable.s)
+    Protected strDir.s, strFilePath.s
+    
+    NewList strVersion.s()
+    
+    Select strExecutable
+        Case "Anilox QC.exe"
+            If ExamineDirectory(0, strDirectory, "*AniCAM Applications*")
+                While NextDirectoryEntry(0)
+                    AddElement(strVersion())
+                    strVersion() = DirectoryEntryName(0)
+                Wend
+                strDirectory = strDirectory + "\" + DirectoryEntryName(0) + "\"
+                If ExamineDirectory(0, strDirectory, strExecutable)
+                    While NextDirectoryEntry(0)
+                        strFilePath = DirectoryEntryName(0)
+                    Wend
+                    strFilePath = strDirectory + strFilePath
+                EndIf
+            EndIf            
+        Case "Anilox QC_HD.exe"
+            If ExamineDirectory(0, strDirectory, "*AniCAM HD Applications*")
+                While NextDirectoryEntry(0)
+                    AddElement(strVersion())
+                    strVersion() = DirectoryEntryName(0)
+                Wend
+                SortList(strVersion(), #PB_Sort_Ascending)
+            
+                strDirectory = strDirectory + "\" + DirectoryEntryName(0) + "\"
+            
+                If ExamineDirectory(0, strDirectory, strExecutable)
+                    While NextDirectoryEntry(0)
+                        strFilePath = DirectoryEntryName(0)
+                    Wend
+                    strFilePath = strDirectory + strExecutable
+                EndIf
+            ElseIf ExamineDirectory(0, strDirectory, "*Troika*")
+                While NextDirectoryEntry(0)
+                    AddElement(strVersion())
+                    strVersion() = DirectoryEntryName(0)
+                Wend
+                SortList(strVersion(), #PB_Sort_Ascending)
+            
+                strDirectory = strDirectory + "\" + DirectoryEntryName(0) + "\"
+            
+                If ExamineDirectory(0, strDirectory, strExecutable)
+                    While NextDirectoryEntry(0)
+                        strFilePath = DirectoryEntryName(0)
+                    Wend
+                    strFilePath = strDirectory + strExecutable
+                EndIf
+            EndIf  
+        Case "Low Screen Anilox QC.exe"
+            ;/Not implemented
+        Default
+            strFilePath = ""     
+    EndSelect
+    
+    ProcedureReturn strFilePath
+    
+EndProcedure
+
+;/SL20231005 Opens the installed version on AQC and sets the Sections to the same as the roll reference ones
+Procedure CameraSetAVGMode(strRollID.s)
+    Protected strFilePath.s, strExecutable.s, result.i, strSQL.s, Vol1.f, Vol2.f, Vol3.f, Vol4.f, Vol5.f, SectionCount.i
+    Protected strDir.s, intTime.i
+    
+    intTime = 500
+    
+    Select System\Settings_CameraType
+        Case 0 ;/7.3
+            strExecutable = "Anilox QC.exe"
+            strDir = "C:\Program Files (x86)"
+        Case 1 ;/HD and HD+
+            strExecutable = "Anilox QC_HD.exe"
+            strDir = "C:\Program Files"
+        Case 2 ;/Low Screen
+            strExecutable = "Low Screen Anilox QC.exe"
+            strDir = "C:\Program Files (x86)"
+        Default
+    EndSelect
+    
+    strFilePath = Get_Exe(strDir, strExecutable)
+    
+    strSQL = "SELECT Vol1, Vol2, Vol3, Vol4, Vol5 FROM ams_roll_master WHERE Name = '" + strRollID + "'"
+    DatabaseQuery(#Databases_Master, strSQL)
+
+    SectionCount = 1    
+
+    If NextDatabaseRow(#Databases_Master) > 0
+        Vol1.f = GetDatabaseFloat(#Databases_Master, 1)
+        Vol2.f = GetDatabaseFloat(#Databases_Master, 2)
+        Vol3.f = GetDatabaseFloat(#Databases_Master, 3)
+        Vol4.f = GetDatabaseFloat(#Databases_Master, 4)
+        Vol5.f = GetDatabaseFloat(#Databases_Master, 5)
+        
+        If Vol1 > 0
+            SectionCount = SectionCount + 1
+        EndIf
+        If Vol2 > 0
+            SectionCount = SectionCount + 1
+        EndIf
+        If Vol3 > 0
+            SectionCount = SectionCount + 1
+        EndIf
+        If Vol4 > 0
+            SectionCount = SectionCount + 1
+        EndIf
+        If Vol5 > 0
+            SectionCount = SectionCount + 1
+        EndIf
+    EndIf
+    
+    HW\PipeName = ""
+
+    PopulateNamedPipes()
+    
+    If HW\PipeName_DeviceOnly = ""
+        If strFilePath = "" Or RunProgram(strFilePath) = 0
+            MessageRequester("AMS Error", ReplaceString(strExecutable, ".exe", "") + " not found, please make sure it is installed", #PB_MessageRequester_Error)
+            ProcedureReturn
+        Else
+            PopulateNamedPipes()
+
+            Repeat
+                If Len(HW\PipeName) = 0 
+                    Delay(500)
+                    intTime + 500
+                EndIf
+            Until Len(HW\PipeName) > 1 Or intTime > 9000
+            
+            If Command_SendToAniCAMPipe("?$VIEWVIDEO") = "0"
+                Command_SendToAniCAMPipe("$VIEWVIDEO=1")
+                Delay(6000)
+                If Command_SendToAniCAMPipe("?$VIEWVIDEO") = "0"
+                    MessageRequester("No Camera", "No Camera Detected, please check the connection and try again.", #PB_MessageRequester_Warning)
+                ProcedureReturn
+            EndIf    
+            EndIf   
+        
+            Command_SendToAniCAMPipe("$AVGMODERESET=1")    
+            Command_SendToAniCAMPipe("$AVGMODESETCUSTOMER=" + System\Database_Company)
+            Command_SendToAniCAMPipe("$AVGMODESETROLLID=" + strRollID)
+            Command_SendToAniCAMPipe("$AVGMODESECTIONCOUNT=" + SectionCount) 
+            Command_SendToAniCAMPipe("$AVGMODESECTIONINDEX=0")
+            Command_SendToAniCAMPipe("$VIEWAVGMODE=1")
+        EndIf
+    EndIf
+EndProcedure
+
+Procedure Init_Window_Readings_Edit(RollID.i, EditType.i = 0, DataType.i = 0, ReadingID.i=-1) ;/ Manages the manual creation & editing of readings
 
   Protected Settings_Event.i, Exit.i, SQL.S, Result.S, Date.i, Operator.S, Vol1.f, Vol2.f, Vol3.f, Vol4.f, Vol5.f, MyLoop.i, Reading.f, Average.f, Depth.i, Usage.i
   Protected ReadingCount.i, Database.S, Error.i, Txt.S, Count.i, Zerocheck.f
@@ -8400,7 +8612,7 @@ Procedure Init_Window_Readings_Edit(RollID.i, EditType.i = 0, DataType.i = 0, Re
   
   SetActiveWindow(#Window_Readings)
   
-  ;/ If editting an existing entry, populate fields
+  ;/ If editing an existing entry, populate fields
   
   ;/ Identify Count of active *Set to master* , need to flip between master and history
   ClearList(ReadingCountList())
@@ -8580,28 +8792,28 @@ Procedure Init_Window_Readings_Edit(RollID.i, EditType.i = 0, DataType.i = 0, Re
     Operator = GetGadgetTextMac(#Gad_Reading_Examiner)
     System\Last_Keyed_Operator = GetGadgetText(#Gad_Reading_Examiner)
     ;    ReadingCount = GetGadgetState(#Gad_Reading_Quantity_Combo) + 1
-    ;Protected Dim Vol.f(5)
+    Protected Dim VolReadings.f(5)
     ReadingCount = 0
     
     If ValFs(GetGadgetTextMac(#Gad_Reading_Vol1)) > 0
       ReadingCount + 1
-      Vol(ReadingCount) = ValFs(GetGadgetTextMac(#Gad_Reading_Vol1))  
+      VolReadings(ReadingCount) = ValFs(GetGadgetTextMac(#Gad_Reading_Vol1))  
     EndIf
     If ValFs(GetGadgetTextMac(#Gad_Reading_Vol2)) > 0
       ReadingCount + 1
-      Vol(ReadingCount) = ValFs(GetGadgetTextMac(#Gad_Reading_Vol2))  
+      VolReadings(ReadingCount) = ValFs(GetGadgetTextMac(#Gad_Reading_Vol2))  
     EndIf
     If ValFs(GetGadgetTextMac(#Gad_Reading_Vol3)) > 0
       ReadingCount + 1
-      Vol(ReadingCount) = ValFs(GetGadgetTextMac(#Gad_Reading_Vol3))  
+      VolReadings(ReadingCount) = ValFs(GetGadgetTextMac(#Gad_Reading_Vol3))  
     EndIf
     If ValFs(GetGadgetTextMac(#Gad_Reading_Vol4)) > 0
       ReadingCount + 1
-      Vol(ReadingCount) = ValFs(GetGadgetTextMac(#Gad_Reading_Vol4))  
+      VolReadings(ReadingCount) = ValFs(GetGadgetTextMac(#Gad_Reading_Vol4))  
     EndIf
     If ValFs(GetGadgetTextMac(#Gad_Reading_Vol5)) > 0
       ReadingCount + 1
-      Vol(ReadingCount) = ValFs(GetGadgetTextMac(#Gad_Reading_Vol5))  
+      VolReadings(ReadingCount) = ValFs(GetGadgetTextMac(#Gad_Reading_Vol5))  
     EndIf
     Depth = Val(GetGadgetTextMac(#Gad_Reading_Depth))  
     Usage = TxttoValI(GetGadgetTextMac(#Gad_Reading_Usage))
@@ -8610,19 +8822,19 @@ Procedure Init_Window_Readings_Edit(RollID.i, EditType.i = 0, DataType.i = 0, Re
     If DataType = #Reading_Master ;/ Master Data - No insert, only overwrite
                                   ;/ remove current master data
       Database_Update(#Databases_Master,"Update AMS_Roll_Master SET Vol1 = 0, Vol2 = 0, Vol3 = 0, Vol4 = 0, Vol5 = 0 Where ID = "+Str(System\Selected_Roll_ID)+";",#PB_Compiler_Line)
-      Debug "ReadingCount: "+Str(ReadingCount)
+      ;Debug "ReadingCount: "+Str(ReadingCount)
       Txt.S = "Update AMS_Roll_Master SET "  ;/DNT
       Select ReadingCount
         Case 1
-          Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol3 = "+StrF(Vol(1),2) ;/DNT
+          Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol3 = "+StrF(VolReadings(1),2) ;/DNT
         Case 2
-          Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol2 = "+StrF(Vol(1),2)+", Vol4 = "+StrF(Vol(2),2) ;/DNT
+          Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol2 = "+StrF(VolReadings(1),2)+", Vol4 = "+StrF(VolReadings(2),2) ;/DNT
         Case 3
-          Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol1 = "+StrF(Vol(1),2)+", Vol3 = "+StrF(Vol(2),2)+", Vol5 = "+StrF(Vol(3),2) ;/DNT
+          Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol1 = "+StrF(VolReadings(1),2)+", Vol3 = "+StrF(VolReadings(2),2)+", Vol5 = "+StrF(VolReadings(3),2) ;/DNT
         Case 4
-          Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol1 = "+StrF(Vol(1),2)+", Vol2 = "+StrF(Vol(2),2)+", Vol4 = "+StrF(Vol(3),2)+", Vol5 = "+StrF(Vol(4),2) ;/DNT
+          Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol1 = "+StrF(VolReadings(1),2)+", Vol2 = "+StrF(VolReadings(2),2)+", Vol4 = "+StrF(VolReadings(3),2)+", Vol5 = "+StrF(VolReadings(4),2) ;/DNT
         Case 5
-          Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol1 = "+StrF(Vol(1),2)+", Vol2 = "+StrF(Vol(2),2)+", Vol3 = "+StrF(Vol(3),2)+", Vol4 = "+StrF(Vol(4),2)+", Vol5 = "+StrF(Vol(5),2) ;/DNT
+          Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol1 = "+StrF(VolReadings(1),2)+", Vol2 = "+StrF(VolReadings(2),2)+", Vol3 = "+StrF(VolReadings(3),2)+", Vol4 = "+StrF(VolReadings(4),2)+", Vol5 = "+StrF(VolReadings(5),2) ;/DNT
       EndSelect
       
       Txt.S + ", Depth = "+Str(Depth)+ ", Usage = "+Str(Usage)+" Where ID = "+Str(System\Selected_Roll_ID)+";" ;/DNT
@@ -8637,18 +8849,18 @@ Procedure Init_Window_Readings_Edit(RollID.i, EditType.i = 0, DataType.i = 0, Re
         Select ReadingCount
           Case 1
             ;Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol3 = "+StrF(Vol(1),2) ;/DNT
-            Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol1 = 0, Vol2 = 0, Vol3 = "+StrF(Vol(1),2)+", Vol4 = 0, Vol5 = 0" ;/DNT
+            Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol1 = 0, Vol2 = 0, Vol3 = "+StrF(VolReadings(1),2)+", Vol4 = 0, Vol5 = 0" ;/DNT
           Case 2
             ;           Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol2 = "+StrF(Vol(1),2)+", Vol4 = "+StrF(Vol(2),2) ;/DNT
-            Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol1 = 0, Vol2 = "+StrF(Vol(1),2)+", Vol3 = 0, Vol4 = "+StrF(Vol(2),2)+", Vol5 = 0" ;/DNT
+            Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol1 = 0, Vol2 = "+StrF(VolReadings(1),2)+", Vol3 = 0, Vol4 = "+StrF(VolReadings(2),2)+", Vol5 = 0" ;/DNT
           Case 3
             ;            Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol1 = "+StrF(Vol(1),2)+", Vol3 = "+StrF(Vol(2),2)+", Vol5 = "+StrF(Vol(3),2) ;/DNT
-            Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol1 = "+StrF(Vol(1),2)+", Vol2 = 0, Vol3 = "+StrF(Vol(2),2)+", Vol4 = 0, Vol5 = "+StrF(Vol(3),2) ;/DNT
+            Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol1 = "+StrF(VolReadings(1),2)+", Vol2 = 0, Vol3 = "+StrF(VolReadings(2),2)+", Vol4 = 0, Vol5 = "+StrF(VolReadings(3),2) ;/DNT
           Case 4
             ;            Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol1 = "+StrF(Vol(1),2)+", Vol2 = "+StrF(Vol(2),2)+", Vol4 = "+StrF(Vol(3),2)+", Vol5 = "+StrF(Vol(4),2) ;/DNT
-            Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol1 = "+StrF(Vol(1),2)+", Vol2 = "+StrF(Vol(2),2)+", Vol3 = 0, Vol4 = "+StrF(Vol(3),2)+", Vol5 = "+StrF(Vol(4),2) ;/DNT
+            Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol1 = "+StrF(VolReadings(1),2)+", Vol2 = "+StrF(VolReadings(2),2)+", Vol3 = 0, Vol4 = "+StrF(VolReadings(3),2)+", Vol5 = "+StrF(VolReadings(4),2) ;/DNT
           Case 5
-            Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol1 = "+StrF(Vol(1),2)+", Vol2 = "+StrF(Vol(2),2)+", Vol3 = "+StrF(Vol(3),2)+", Vol4 = "+StrF(Vol(4),2)+", Vol5 = "+StrF(Vol(5),2) ;/DNT
+            Txt.S + "ReadingDate = "+Str(Date)+", Operator = '"+Operator+"', Vol1 = "+StrF(VolReadings(1),2)+", Vol2 = "+StrF(VolReadings(2),2)+", Vol3 = "+StrF(VolReadings(3),2)+", Vol4 = "+StrF(VolReadings(4),2)+", Vol5 = "+StrF(VolReadings(5),2) ;/DNT
         EndSelect
         
         Txt.S + ", Depth = "+Str(Depth)+ ", Usage = "+Str(Usage)+" Where ID = "+Str(ReadingID)+";" ;/DNT
@@ -8670,15 +8882,15 @@ Procedure Init_Window_Readings_Edit(RollID.i, EditType.i = 0, DataType.i = 0, Re
         
         Select ReadingCount
           Case 1
-            Txt.S + Str(System\Selected_Roll_ID)+", " + Str(Date)+", '"+Operator+"', "+StrF(Vol(1),2)+", "+Str(Depth)+", "+Str(Usage) ;/DNT
+            Txt.S + Str(System\Selected_Roll_ID)+", " + Str(Date)+", '"+Operator+"', "+StrF(VolReadings(1),2)+", "+Str(Depth)+", "+Str(Usage) ;/DNT
           Case 2
-            Txt.S + Str(System\Selected_Roll_ID)+", " + Str(Date)+", '"+Operator+"', "+StrF(Vol(1),2)+", "+StrF(Vol(2),2)+", "+Str(Depth) +", "+Str(Usage) ;/DNT
+            Txt.S + Str(System\Selected_Roll_ID)+", " + Str(Date)+", '"+Operator+"', "+StrF(VolReadings(1),2)+", "+StrF(VolReadings(2),2)+", "+Str(Depth) +", "+Str(Usage) ;/DNT
           Case 3
-            Txt.S + Str(System\Selected_Roll_ID)+", " + Str(Date)+", '"+Operator+"', "+StrF(Vol(1),2)+", "+StrF(Vol(2),2)+", "+StrF(Vol(3),2)+", "+Str(Depth) +", "+Str(Usage) ;/DNT
+            Txt.S + Str(System\Selected_Roll_ID)+", " + Str(Date)+", '"+Operator+"', "+StrF(VolReadings(1),2)+", "+StrF(VolReadings(2),2)+", "+StrF(VolReadings(3),2)+", "+Str(Depth) +", "+Str(Usage) ;/DNT
           Case 4
-            Txt.S + Str(System\Selected_Roll_ID)+", " + Str(Date)+", '"+Operator+"', "+StrF(Vol(1),2)+", "+StrF(Vol(2),2)+", "+StrF(Vol(3),2)+", "+StrF(Vol(4),2)+", "+Str(Depth) +", "+Str(Usage) ;/DNT
+            Txt.S + Str(System\Selected_Roll_ID)+", " + Str(Date)+", '"+Operator+"', "+StrF(VolReadings(1),2)+", "+StrF(VolReadings(2),2)+", "+StrF(VolReadings(3),2)+", "+StrF(VolReadings(4),2)+", "+Str(Depth) +", "+Str(Usage) ;/DNT
           Case 5
-            Txt.S + Str(System\Selected_Roll_ID)+", " + Str(Date)+", '"+Operator+"', "+StrF(Vol(1),2)+", "+StrF(Vol(2),2)+", "+StrF(Vol(3),2)+", "+StrF(Vol(4),2)+", "+StrF(Vol(5),2)+", "+Str(Depth)+", "+Str(Usage) ;/DNT
+            Txt.S + Str(System\Selected_Roll_ID)+", " + Str(Date)+", '"+Operator+"', "+StrF(VolReadings(1),2)+", "+StrF(VolReadings(2),2)+", "+StrF(VolReadings(3),2)+", "+StrF(VolReadings(4),2)+", "+StrF(VolReadings(5),2)+", "+Str(Depth)+", "+Str(Usage) ;/DNT
         EndSelect
         
         Txt.S + ")"+";"
@@ -8722,7 +8934,7 @@ Procedure Init_Roll_GroupAssign(RollID.i, Site.i)
       Result.S = GetDatabaseString(#Databases_Master,0) 
       GroupList()\Name = Result
       GroupList()\ID = GetDatabaseLong(#Databases_Master,1)
-      Debug "Adding: "+Result+" To Grouplist ("+Str(GroupList()\ID)+")"
+      ;Debug "Adding: "+Result+" To Grouplist ("+Str(GroupList()\ID)+")"
     Wend 
   Else
     MessageRequester(tTxt(#Str_ErrorwithSQL)+"?"+" "+SQL, DatabaseError())
@@ -8735,7 +8947,7 @@ Procedure Init_Roll_GroupAssign(RollID.i, Site.i)
   ComboBoxGadget(#AssignGroup_Combo,76,4,120,20)
   
   ForEach GroupList()
-    Debug "Adding Group: "+ GroupList()\Name
+    ;Debug "Adding Group: "+ GroupList()\Name
     AddGadgetItem(#AssignGroup_Combo,-1,GroupList()\Name)  
   Next
   SetGadgetState(#AssignGroup_Combo,0)
@@ -8879,12 +9091,12 @@ Procedure Init_Code_Input(Type.i) ;/ shows current code, and allows input of oth
                 Else ;/ Checksum is Read
                   Codestring(7) = ReplaceString(Codestring(7),Chr(10),"")
                   Codestring(7) = ReplaceString(Codestring(7),Chr(13),"")
-                  Debug "RHS: "+Str(Asc(Right(Codestring(7),1)))
+                  ;Debug "RHS: "+Str(Asc(Right(Codestring(7),1)))
                 EndIf
                 Debug CodeString(CheckLoop)
                 ;  Debug "Len: "+Str(Len(ChecksumString)
               Next
-              Debug "Len: "+Str(Len(ChecksumString))
+              ;Debug "Len: "+Str(Len(ChecksumString))
               
               ;/ Check Checksum string
               Debug "Checksum: "+Fingerprint(@ChecksumString, Len(ChecksumString),#PB_Cipher_MD5)
@@ -9040,10 +9252,10 @@ Procedure Init_CS_Editor(SiteID.i) ;/ 0 = company, >0 = Site
   Height = 170
   
   If SiteID = 0
-    Debug "Editting Company details"
+    ;Debug "Editing Company details"
     OpenWindow(#Window_CompanySiteEditor,0,0,Width,Height,tTxt(#Str_Editcompanydetails),#PB_Window_ScreenCentered|#PB_Window_SystemMenu)
   Else
-    Debug "Editting Site Details: "+Str(siteID)
+    ;Debug "Editing Site Details: "+Str(siteID)
     OpenWindow(#Window_CompanySiteEditor,0,0,Width,Height,tTxt(#Str_Editsitedetails),#PB_Window_ScreenCentered|#PB_Window_SystemMenu)
   EndIf
   SetGadgetFont(#PB_Default,FontID(#Font_List_Dialogs))
@@ -9153,707 +9365,624 @@ Procedure Init_CS_Editor(SiteID.i) ;/ 0 = company, >0 = Site
 EndProcedure
 
 Procedure Init_Settings() ;/ Last Updated PJ 06.01.2022
-  ;/ Code to be changed so that options are set from database *!*
-  Protected Settings_Event.i, Width.i, Height.i, Exit.i, Error.i, ErrorText.S, X.i, Y.i, DatabaseID.i
-  Protected ResultS.S, Resulti.i, DeleteFlag.i, MyLoop.i, SelectedLanguage.i, LanguageChange.i
+    ;/ Code to be changed so that options are set from database *!*
+    Protected Settings_Event.i, Width.i, Height.i, Exit.i, Error.i, ErrorText.S, X.i, Y.i, DatabaseID.i
+    Protected ResultS.S, Resulti.i, DeleteFlag.i, MyLoop.i, SelectedLanguage.i, LanguageChange.i, intSelectedCamera.i, strSQL.s
   
-  Width.i = 580 : Height.i = 220
+    Width.i = 580 : Height.i = 220
   
-  OpenWindow(#Window_Settings,0,0,Width,Height,tTxt(#Str_AMS)+" - "+tTxt(#Str_Settings),#PB_Window_WindowCentered|#PB_Window_SystemMenu|#PB_Window_Invisible,WindowID(#Window_Main))
-  DisableWindow(#Window_Main,1) : System\AllowSystemTray = #False
-  StickyWindow(#Window_Settings,1)
-  SetGadgetFont(#PB_Default,FontID(#Font_List_Dialogs))
-  FrameGadget(#Settings_Gad_SectionList_Frame,4,4,Width-8,Height-30,"")
-  TreeGadget(#Settings_Gad_SectionList,8,16,192,height-50)
-  
-  AddGadgetItem(#Settings_Gad_SectionList,-1,tTxt(#Str_General),0,0)
-  AddGadgetItem(#Settings_Gad_SectionList,-1,tTxt(#Str_Language),0,1)
-  AddGadgetItem(#Settings_Gad_SectionList,-1,tTxt(#Str_Dateformat),0,1)
-  AddGadgetItem(#Settings_Gad_SectionList,-1,tTxt(#Str_Measurementunits),0,1)
-  AddGadgetItem(#Settings_Gad_SectionList,-1,tTxt(#Str_Importoptions),0,1)
-  ;AddGadgetItem(#Settings_Gad_SectionList,-1,tTxt(#Str_Warningtriggers),0,0)
-  ;AddGadgetItem(#Settings_Gad_SectionList,-1,tTxt(#Str_Variancewarningvalues),0,1)
-  ;AddGadgetItem(#Settings_Gad_SectionList,-1,tTxt(#Str_Capacitywarningvalues),0,1)
-  
-  AddGadgetItem(#Settings_Gad_SectionList,-1,tTxt(#Str_Databaselists),0,0)
-  AddGadgetItem(#Settings_Gad_SectionList,-1,tTxt(#Str_Manufacturerlist),0,1)
-  AddGadgetItem(#Settings_Gad_SectionList,-1,tTxt(#Str_Suitabilitytypes),0,1)
-  AddGadgetItem(#Settings_Gad_SectionList,-1,tTxt(#Str_GeneralHistoryList),0,1)
-  
-  If Multi_Site_Mode = 1
-    ;/ add multi site options to settings window
-    AddGadgetItem(#Settings_Gad_SectionList,-1,tTxt(#Str_MultiSite),0,0)
-    AddGadgetItem(#Settings_Gad_SectionList,-1,tTxt(#Str_MultiSiteSettings),0,1)
-    x = 210  : y = 30
-    ;Framegadget(#Settings_MultiSite_Frame,X-4,4,Width-8,30,"",#PB_Frame3D_Single)
+    OpenWindow(#Window_Settings,0,0,Width,Height,tTxt(#Str_AMS)+" - "+tTxt(#Str_Settings),#PB_Window_WindowCentered|#PB_Window_SystemMenu|#PB_Window_Invisible,WindowID(#Window_Main))
+    DisableWindow(#Window_Main,1) : System\AllowSystemTray = #False
+    StickyWindow(#Window_Settings,1)
+    SetGadgetFont(#PB_Default,FontID(#Font_List_Dialogs))
+    FrameGadget(#Settings_Gad_SectionList_Frame,4,4,Width-8,Height-30,"")
+    TreeGadget(#Settings_Gad_SectionList,8,16,192,height-50)
+
+    AddGadgetItem(#Settings_Gad_SectionList,-1,tTxt(#Str_General),0,0)
+    AddGadgetItem(#Settings_Gad_SectionList,-1,tTxt(#Str_Language),0,1)
+    AddGadgetItem(#Settings_Gad_SectionList,-1,tTxt(#Str_Dateformat),0,1)
+    AddGadgetItem(#Settings_Gad_SectionList,-1,tTxt(#Str_Measurementunits),0,1)
+    AddGadgetItem(#Settings_Gad_SectionList,-1,tTxt(#Str_Importoptions),0,1)
     
-    ;     TextGadget(#Settings_MultiSite_DatabasePath_Text,x+14,y,120,20,tTxt(#STR_DatabasePath)+":") : y + 20
-    ;     ButtonGadget(#Settings_MultiSite_DatabasePath,x+14,Y,240,20,System\Database_Path) : Y + 30
+    AddGadgetItem(#Settings_Gad_SectionList,-1,tTxt(#Str_Databaselists),0,0)
+    AddGadgetItem(#Settings_Gad_SectionList,-1,tTxt(#Str_Manufacturerlist),0,1)
+    AddGadgetItem(#Settings_Gad_SectionList,-1,tTxt(#Str_Suitabilitytypes),0,1)
+    AddGadgetItem(#Settings_Gad_SectionList,-1,tTxt(#Str_GeneralHistoryList),0,1)
     
-    Refresh_Site_List()
+    AddGadgetItem(#Settings_Gad_SectionList,-1, tTxt(#Str_CameraType),0,0)  
+    AddGadgetItem(#Settings_Gad_SectionList,-1, tTxt(#Str_CameraType),0,1)  
+
+    If Multi_Site_Mode = 1
+        ;/ add multi site options to settings window
+        AddGadgetItem(#Settings_Gad_SectionList,-1,tTxt(#Str_MultiSite),0,0)
+        AddGadgetItem(#Settings_Gad_SectionList,-1,tTxt(#Str_MultiSiteSettings),0,1)
+
+        x = 210  : y = 30
     
-    TextGadget(#Settings_MultiSite_DefaultSite_Text,x+14,y,100,20,tTxt(#STR_DefaultSite)+":")
-    ComboBoxGadget(#Settings_MultiSite_DefaultSite,x+120,y,120,20) : Y + 30
+        Refresh_Site_List()
     
-    ForEach SiteList()
-      AddGadgetItem(#Settings_MultiSite_DefaultSite,-1,SiteList()\Text)
-      If SiteList()\ID = System\Default_Site
-        SetGadgetState(#Settings_MultiSite_DefaultSite,ListIndex(SiteList()))
-      EndIf
+        TextGadget(#Settings_MultiSite_DefaultSite_Text,x+14,y,100,20,tTxt(#STR_DefaultSite)+":")
+        ComboBoxGadget(#Settings_MultiSite_DefaultSite,x+120,y,120,20) : Y + 30
+    
+        ForEach SiteList()
+            AddGadgetItem(#Settings_MultiSite_DefaultSite,-1,SiteList()\Text)
+            If SiteList()\ID = System\Default_Site
+                SetGadgetState(#Settings_MultiSite_DefaultSite,ListIndex(SiteList()))
+            EndIf
+        Next
+    
+        CheckBoxGadget(#Settings_MultiSite_ShowDefaultOnly,X+14,y,200,20,tTxt(#STR_ShowSelectedSiteOnly)+"?") : Y + 30
+        SetGadgetState(#Settings_MultiSite_ShowDefaultOnly,System\DefaultOnly)
+        
+        TextGadget(#Settings_MultiSite_PollingInterval_Text,x+14,y,70,20,tTxt(#STR_Pollinterval)+":") 
+        SpinGadget(#Settings_MultiSite_PollingInterval,x+90,y-2,40,20,5,60,#PB_Spin_Numeric)
+        SetGadgetState(#Settings_MultiSite_PollingInterval,System\PollingInterval)
+        TextGadget(#Settings_MultiSite_Seconds_Text,x+130,y,70,20,":"+tTxt(#Str_Seconds)) ;/TD set to seconds text
+    EndIf
+
+
+    x = 210
+    TextGadget(#Settings_Gad_Language_Combo_Text,x+14,24,60,20,tTxt(#Str_Language)+":")
+    ComboBoxGadget(#Settings_Gad_Language_Combo,x+90,22,140,20)
+
+    ForEach LangMaster()
+        AddGadgetItem(#Settings_Gad_Language_Combo,-1,LangMaster()\Language)
+    Next
+
+    ForEach LangMaster()
+        If LangMaster()\Language = System\Settings_Language
+            SetGadgetState(#Settings_Gad_Language_Combo,ListIndex(LangMaster()))
+            SelectedLanguage = ListIndex(Langmaster())
+            Break
+        EndIf
+    Next
+
+    TextGadget(#Settings_Gad_Language_CSVDelimiter_Text,x+14,58,120,40,tTxt(#Str_CSVExportDelimiter)+":")
+    ComboBoxGadget(#Settings_Gad_Language_CSVDelimiter,x+14+122,56,90,20)
+    AddGadgetItem(#Settings_Gad_Language_CSVDelimiter,-1,tTxt(#STR_Comma))
+    AddGadgetItem(#Settings_Gad_Language_CSVDelimiter,-1,tTxt(#STR_Tab))
+    SetGadgetState(#Settings_Gad_Language_CSVDelimiter,System\CSVDelimiter)
+    
+    TextGadget(#Settings_Gad_Language_DecimalNotation_Text,x+14,102,120,20,tTxt(#Str_NotationCharacter)+":")
+    ComboBoxGadget(#Settings_Gad_Language_DecimalNotation,x+14+122,100,90,20)
+    AddGadgetItem(#Settings_Gad_Language_DecimalNotation,-1,tTxt(#STR_DecimalPoint))
+    AddGadgetItem(#Settings_Gad_Language_DecimalNotation,-1,tTxt(#STR_Comma))
+    SetGadgetState(#Settings_Gad_Language_DecimalNotation,System\DecimalNotation)
+    
+    FrameGadget(#Settings_Gad_Unit_Frame,x,24,236,100,tTxt(#Str_Measurementunits))
+    TextGadget(#Settings_Gad_Unit_Screen_Text,x+14,44,110,20,tTxt(#Str_Screenunits)+":")
+    ComboBoxGadget(#Settings_Gad_Unit_Screen_Combo,x+138,42,80,20)
+    AddGadgetItem(#Settings_Gad_Unit_Screen_Combo,-1,"LPI") ;/DNT
+    AddGadgetItem(#Settings_Gad_Unit_Screen_Combo,-1,"LPCM");/DNT
+    
+    TextGadget(#Settings_Gad_Unit_Volume_Text,x+14,70,110,20,tTxt(#Str_Volumeunits)+":")
+    ComboBoxGadget(#Settings_Gad_Unit_Volume_Combo,x+138,68,80,20)
+    AddGadgetItem(#Settings_Gad_Unit_Volume_Combo,-1,"cm3/m2") ;/DNT
+    AddGadgetItem(#Settings_Gad_Unit_Volume_Combo,-1,"BCM")    ;/DNT
+    
+    TextGadget(#Settings_Gad_Unit_Length_Text,x+14,96,110,20,tTxt(#Str_Lengthunits)+":")
+    ComboBoxGadget(#Settings_Gad_Unit_Length_Combo,x+138,94,80,20)
+    AddGadgetItem(#Settings_Gad_Unit_Length_Combo,-1,tTxt(#Str_Metric))
+    AddGadgetItem(#Settings_Gad_Unit_Length_Combo,-1,tTxt(#Str_Imperial))
+    
+    ;Framegadget(#Settings_Gad_DateFormat_Frame,x,4,236,30,"",2)
+    TextGadget(#Settings_Gad_DateFormat_Text,x+14,24,80,20,tTxt(#Str_Dateformat)+":")
+    ComboBoxGadget(#Settings_Gad_DateFormat_Combo,x+100,22,100,20)
+    AddGadgetItem(#Settings_Gad_DateFormat_Combo,-1,tTxt(#Str_DDMMYYYY))
+    AddGadgetItem(#Settings_Gad_DateFormat_Combo,-1,tTxt(#Str_MMDDYYYY))
+    
+    X = 210 : Y = 30
+    
+    TextGadget(#Settings_Gad_Import_Directory_Text,X,Y,80,20,tTxt(#Str_Importpath)+":"); : Y + 20
+    ButtonGadget(#Settings_Gad_Import_Directory,X+80,Y,170,20,System\ImportPath) : Y + 24
+    
+    CheckBoxGadget(#Settings_Gad_Import_AutoToggle,x+6,y,250,20,tTxt(#Str_Enableautomaticimport)+"?") : Y + 24
+    
+    X = 210 :  Y = 24
+    FrameGadget(#Settings_Manufacturer_Frame,X,Y,236,126,tTxt(#Str_Manufacturerlist))
+        ListViewGadget(#Settings_Manufacturer_List,X+4,Y+16,140,104)
+        
+        ClearGadgetItems(#Settings_Manufacturer_List)
+    
+        ForEach ManufacturerList()
+            If ListIndex(ManufacturerList()) > 0
+                AddGadgetItem(#Settings_Manufacturer_List,-1,ManufacturerList()\Text)  
+            EndIf
+        Next
+    
+        ButtonGadget(#Settings_Manufacturer_New,X+150,Y+16,80,20,tTxt(#Str_New))
+        ButtonGadget(#Settings_Manufacturer_Edit,X+150,Y+38,80,20,tTxt(#Str_Edit))
+        ButtonGadget(#Settings_Manufacturer_Delete,X+150,Y+60,80,20,tTxt(#Str_Delete))
+    
+    X = 210 :  Y = 24
+    FrameGadget(#Settings_Suitability_Frame,X,Y,400,160,tTxt(#Str_Suitabilitytypes))
+        ListViewGadget(#Settings_Suitability_List,X+4,Y+16,130,104)
+        
+        TextGadget(#Settings_Unit_Warnings_Good_Text,X+136,Y+36,70,20,tTxt(#Str_Good)+":",#PB_Text_Right)
+        TextGadget(#Settings_Unit_Warnings_Okay_Text,X+136,Y+56,70,20,tTxt(#Str_OK)+":",#PB_Text_Right)
+        TextGadget(#Settings_Unit_Warnings_Bad_Text,X+136,Y+76,70,20,tTxt(#Str_Bad)+":",#PB_Text_Right)
+        
+        TextGadget(#Settings_Unit_Warnings_Variance_Text,X+210,Y+16,70,20,tTxt(#Str_Variance)+":")
+        TextGadget(#Settings_Unit_Warnings_Capacity_Text,X+274,Y+16,90,20,tTxt(#Str_Capacity)+":")
+        
+        StringGadget(#Settings_Unit_Warnings_Variance_Good,X+220,Y+34,40,20,"",#PB_String_Numeric) : SetGadgetColor(#Settings_Unit_Warnings_Variance_Good,#PB_Gadget_FrontColor,#Database_Colour_Good)
+        StringGadget(#Settings_Unit_Warnings_Variance_Bad,X+220,Y+74,40,20,"",#PB_String_Numeric) : SetGadgetColor(#Settings_Unit_Warnings_Variance_Bad,#PB_Gadget_FrontColor,#Database_Colour_Bad)
+        StringGadget(#Settings_Unit_Warnings_Capacity_Good,X+304,Y+34,40,20,"",#PB_String_Numeric) : SetGadgetColor(#Settings_Unit_Warnings_Capacity_Good,#PB_Gadget_FrontColor,#Database_Colour_Good)
+        StringGadget(#Settings_Unit_Warnings_Capacity_Bad,X+304,Y+74,40,20,"",#PB_String_Numeric) : SetGadgetColor(#Settings_Unit_Warnings_Capacity_Bad,#PB_Gadget_FrontColor,#Database_Colour_Bad)
+
+        ForEach SuitabilityList()
+            If ListIndex(SuitabilityList()) > 0
+                AddGadgetItem(#Settings_Suitability_List,-1,SuitabilityList()\Text)  
+            EndIf
+        Next
+    
+        ;/ New PJ 04.01.2022
+        SetGadgetState(#Settings_Suitability_List,0)
+        DatabaseID = Get_Suitability_Value(GetGadgetItemText(#Settings_Suitability_List,0))
+        SelectElement(SuitabilityList(),Get_Suitability_Index(DatabaseID))
+        SetGadgetText(#Settings_Unit_Warnings_Variance_Good,Str(SuitabilityList()\VarianceGood)) 
+        SetGadgetText(#Settings_Unit_Warnings_Variance_Bad,Str(SuitabilityList()\VarianceBad)) 
+        SetGadgetText(#Settings_Unit_Warnings_Capacity_Good,Str(SuitabilityList()\CapacityGood)) 
+        SetGadgetText(#Settings_Unit_Warnings_Capacity_Bad,Str(SuitabilityList()\CapacityBad))
+        
+        ButtonGadget(#Settings_Suitability_Save,X+146,Y+104,200,20,tTxt(#Str_Save))
+        
+        ButtonGadget(#Settings_Suitability_New,X+4,Y+140,80,20,tTxt(#Str_New))
+        ButtonGadget(#Settings_Suitability_Edit,X+88,Y+140,80,20,tTxt(#Str_Edit))
+        ButtonGadget(#Settings_Suitability_Delete,X+172,Y+140,80,20,tTxt(#Str_Delete))
+    
+    X = 210 :  Y = 24
+    FrameGadget(#Settings_GeneralHistoryList_Frame,X,Y,236,160,tTxt(#Str_GeneralHistoryList))
+    ListViewGadget(#Settings_GeneralHistoryList_List,X+4,Y+16,140,140)
+
+    FrameGadget(#Settings_CamType_Frame,X,Y,236,126, tTxt(#Str_CameraType))
+    ComboBoxGadget(#Settings_CamType_Combo, X+10, Y+20, 120, 20)
+    AddGadgetItem(#Settings_CamType_Combo, 0, "Anicam V7.3")
+    SetGadgetItemData(#Settings_CamType_Combo, 0, 0)
+        
+    AddGadgetItem(#Settings_CamType_Combo, 1, "Anicam HD / HD+")
+    SetGadgetItemData(#Settings_CamType_Combo, 1, 1)
+    ;/SL 06/11/2023 Uncomment when ready for Low Screen to be added
+    ;AddGadgetItem(#Settings_CamType_Combo, 2, "SurfaceCAM")
+    ;SetGadgetItemData(#Settings_CamType_Combo, 2, 2)
+    
+    SetGadgetState(#Settings_CamType_Combo, System\Settings_CameraType)
+
+
+    ForEach GeneralHistoryList()
+        AddGadgetItem(#Settings_GeneralHistoryList_List,-1,GeneralHistoryList()\Text)  
+    Next
+
+    ButtonGadget(#Settings_GeneralHistoryList_New,X+150,Y+16,80,20,tTxt(#Str_New))
+    ButtonGadget(#Settings_GeneralHistoryList_Edit,X+150,Y+38,80,20,tTxt(#Str_Edit))
+    ButtonGadget(#Settings_GeneralHistoryList_Delete,X+150,Y+60,80,20,tTxt(#Str_Delete))
+    
+    SetGadgetState(#Settings_Gad_Unit_Screen_Combo,System\Settings_Screen_Unit)  
+    SetGadgetState(#Settings_Gad_Unit_Volume_Combo,System\Settings_Volume_Unit)  
+    SetGadgetState(#Settings_Gad_Unit_Length_Combo,System\Settings_Length_Unit)
+    SetGadgetState(#Settings_Gad_DateFormat_Combo,System\Settings_Date_Format)
+    
+    SetGadgetText(#Settings_Unit_Warnings_Variance_Good,Str(System\Settings_Variance_Good))
+    SetGadgetText(#Settings_Unit_Warnings_Variance_Bad,Str(System\Settings_Variance_Bad))
+    SetGadgetText(#Settings_Unit_Warnings_Capacity_Good,Str(System\Settings_Capacity_Good))
+    SetGadgetText(#Settings_Unit_Warnings_Capacity_Bad,Str(System\Settings_Capacity_Bad))
+    
+    SetGadgetState(#Settings_Gad_Import_AutoToggle,System\LiveMonitor)
+    SetGadgetText(#Settings_Gad_Import_Directory,System\ImportPath)
+
+    If System\LiveMonitor = 1 ;/ Force deletion on?
+        ;SetGadgetState(#Settings_Gad_Import_DeleteAfter,1)
+    EndIf
+    
+    ButtonGadget(#Settings_Gad_Okay,Width-80, Height - 24,70,20,tTxt(#Str_OK))
+
+    ;/ Hide All Gadgets
+    For MyLoop = #Settings_Gad_Hide_Start To #Settings_Gad_Hide_End
+        If IsGadget(MyLoop) : HideGadget(MyLoop,1) : EndIf
     Next
     
-    CheckBoxGadget(#Settings_MultiSite_ShowDefaultOnly,X+14,y,200,20,tTxt(#STR_ShowSelectedSiteOnly)+"?") : Y + 30
-    SetGadgetState(#Settings_MultiSite_ShowDefaultOnly,System\DefaultOnly)
+    HideWindow(#Window_Settings,0)
+    SetActiveWindow(#Window_Settings)
+
+    Repeat
+        Settings_Event = WaitWindowEvent()
     
-    TextGadget(#Settings_MultiSite_PollingInterval_Text,x+14,y,70,20,tTxt(#STR_Pollinterval)+":") 
-    SpinGadget(#Settings_MultiSite_PollingInterval,x+90,y-2,40,20,5,60,#PB_Spin_Numeric)
-    SetGadgetState(#Settings_MultiSite_PollingInterval,System\PollingInterval)
-    TextGadget(#Settings_MultiSite_Seconds_Text,x+130,y,70,20,":"+tTxt(#Str_Seconds)) ;/TD set to seconds text
-  EndIf
-  
-  ;  AddGadgetItem(#Settings_Gad_SectionList,-1,tTxt(#Str_Serversettings),0,0)
-  
-  x = 210
-  ;Framegadget(#Settings_Gad_Language_Frame,X-4,4,Width-8,30,"",#PB_Frame3D_Single)
-  TextGadget(#Settings_Gad_Language_Combo_Text,x+14,24,60,20,tTxt(#Str_Language)+":")
-  ComboBoxGadget(#Settings_Gad_Language_Combo,x+90,22,140,20)
-  
-  ForEach LangMaster()
-    AddGadgetItem(#Settings_Gad_Language_Combo,-1,LangMaster()\Language)
-  Next
-  
-  ForEach LangMaster()
-    If LangMaster()\Language = System\Settings_Language
-      SetGadgetState(#Settings_Gad_Language_Combo,ListIndex(LangMaster()))
-      SelectedLanguage = ListIndex(Langmaster())
-      Break
-    EndIf
-  Next
-  
-  TextGadget(#Settings_Gad_Language_CSVDelimiter_Text,x+14,58,120,40,tTxt(#Str_CSVExportDelimiter)+":")
-  ComboBoxGadget(#Settings_Gad_Language_CSVDelimiter,x+14+122,56,90,20)
-  AddGadgetItem(#Settings_Gad_Language_CSVDelimiter,-1,tTxt(#STR_Comma))
-  AddGadgetItem(#Settings_Gad_Language_CSVDelimiter,-1,tTxt(#STR_Tab))
-  SetGadgetState(#Settings_Gad_Language_CSVDelimiter,System\CSVDelimiter)
-  
-  TextGadget(#Settings_Gad_Language_DecimalNotation_Text,x+14,102,120,20,tTxt(#Str_NotationCharacter)+":")
-  ComboBoxGadget(#Settings_Gad_Language_DecimalNotation,x+14+122,100,90,20)
-  AddGadgetItem(#Settings_Gad_Language_DecimalNotation,-1,tTxt(#STR_DecimalPoint))
-  AddGadgetItem(#Settings_Gad_Language_DecimalNotation,-1,tTxt(#STR_Comma))
-  SetGadgetState(#Settings_Gad_Language_DecimalNotation,System\DecimalNotation)
-  
-  FrameGadget(#Settings_Gad_Unit_Frame,x,24,236,100,tTxt(#Str_Measurementunits))
-  TextGadget(#Settings_Gad_Unit_Screen_Text,x+14,44,110,20,tTxt(#Str_Screenunits)+":")
-  ComboBoxGadget(#Settings_Gad_Unit_Screen_Combo,x+138,42,80,20)
-  AddGadgetItem(#Settings_Gad_Unit_Screen_Combo,-1,"LPI") ;/DNT
-  AddGadgetItem(#Settings_Gad_Unit_Screen_Combo,-1,"LPCM");/DNT
-  
-  TextGadget(#Settings_Gad_Unit_Volume_Text,x+14,70,110,20,tTxt(#Str_Volumeunits)+":")
-  ComboBoxGadget(#Settings_Gad_Unit_Volume_Combo,x+138,68,80,20)
-  AddGadgetItem(#Settings_Gad_Unit_Volume_Combo,-1,"cm3/m2") ;/DNT
-  AddGadgetItem(#Settings_Gad_Unit_Volume_Combo,-1,"BCM")    ;/DNT
-  
-  TextGadget(#Settings_Gad_Unit_Length_Text,x+14,96,110,20,tTxt(#Str_Lengthunits)+":")
-  ComboBoxGadget(#Settings_Gad_Unit_Length_Combo,x+138,94,80,20)
-  AddGadgetItem(#Settings_Gad_Unit_Length_Combo,-1,tTxt(#Str_Metric))
-  AddGadgetItem(#Settings_Gad_Unit_Length_Combo,-1,tTxt(#Str_Imperial))
-  
-  ;Framegadget(#Settings_Gad_DateFormat_Frame,x,4,236,30,"",2)
-  TextGadget(#Settings_Gad_DateFormat_Text,x+14,24,80,20,tTxt(#Str_Dateformat)+":")
-  ComboBoxGadget(#Settings_Gad_DateFormat_Combo,x+100,22,100,20)
-  AddGadgetItem(#Settings_Gad_DateFormat_Combo,-1,tTxt(#Str_DDMMYYYY))
-  AddGadgetItem(#Settings_Gad_DateFormat_Combo,-1,tTxt(#Str_MMDDYYYY))
-  
-  X = 210 : Y = 30
-  
-  TextGadget(#Settings_Gad_Import_Directory_Text,X,Y,80,20,tTxt(#Str_Importpath)+":"); : Y + 20
-  ButtonGadget(#Settings_Gad_Import_Directory,X+80,Y,170,20,System\ImportPath) : Y + 24
-  ;  TextGadget(#Settings_Gad_Import_Database_Directory_Text,X,Y,100,20,tTxt(#Str_DatabasePath)+":") : Y + 20
-  ;  ButtonGadget(#Settings_Gad_Import_Database_Directory,X+10,Y,260,20,System\Database_Path) : Y + 24
-  
-  CheckBoxGadget(#Settings_Gad_Import_AutoToggle,x+6,y,250,20,tTxt(#Str_Enableautomaticimport)+"?") : Y + 24
-  ;CheckBoxGadget(#Settings_Gad_Import_DeleteAfter,x+6,y,250,20,tTxt(#Str_Deleteafterimport)+"?") : Y + 24
-  ;CheckBoxGadget(#Settings_Gad_Import_ShowReadingDepth,x+6,y,250,20,tTxt(#Str_ShowReadingDepths)+"?") : Y + 24
-  
-  X = 210 : Y = 24
-  ;/ PJ - removed as part of v1.68 update
-  ;FrameGadget(#Settings_Unit_Warnings_Frame,X,Y,Width-248,100,tTxt(#Str_Warningvalues)+"("+"%"+")")
-  
-  X = 210 :  Y = 24
-  FrameGadget(#Settings_Manufacturer_Frame,X,Y,236,126,tTxt(#Str_Manufacturerlist))
-  ListViewGadget(#Settings_Manufacturer_List,X+4,Y+16,140,104)
-  
-  ClearGadgetItems(#Settings_Manufacturer_List)
-  ForEach ManufacturerList()
-    If ListIndex(ManufacturerList()) > 0
-      AddGadgetItem(#Settings_Manufacturer_List,-1,ManufacturerList()\Text)  
-    EndIf
-  Next
-  
-  ButtonGadget(#Settings_Manufacturer_New,X+150,Y+16,80,20,tTxt(#Str_New))
-  ButtonGadget(#Settings_Manufacturer_Edit,X+150,Y+38,80,20,tTxt(#Str_Edit))
-  ButtonGadget(#Settings_Manufacturer_Delete,X+150,Y+60,80,20,tTxt(#Str_Delete))
-  
-  X = 210 :  Y = 24
-  FrameGadget(#Settings_Suitability_Frame,X,Y,400,160,tTxt(#Str_Suitabilitytypes))
-  ListViewGadget(#Settings_Suitability_List,X+4,Y+16,130,104)
-  ;StringGadget(#Settings_Unit_Warnings_Capacity_Bad,X+80,Y+74,40,20,"",#PB_String_Numeric) : SetGadgetColor(#Settings_Unit_Warnings_Capacity_Bad,#PB_Gadget_FrontColor,#Database_Colour_Bad)
-  
-  TextGadget(#Settings_Unit_Warnings_Good_Text,X+136,Y+36,70,20,tTxt(#Str_Good)+":",#PB_Text_Right)
-  TextGadget(#Settings_Unit_Warnings_Okay_Text,X+136,Y+56,70,20,tTxt(#Str_OK)+":",#PB_Text_Right)
-  TextGadget(#Settings_Unit_Warnings_Bad_Text,X+136,Y+76,70,20,tTxt(#Str_Bad)+":",#PB_Text_Right)
-  
-  TextGadget(#Settings_Unit_Warnings_Variance_Text,X+210,Y+16,70,20,tTxt(#Str_Variance)+":")
-  TextGadget(#Settings_Unit_Warnings_Capacity_Text,X+274,Y+16,90,20,tTxt(#Str_Capacity)+":")
-  
-  StringGadget(#Settings_Unit_Warnings_Variance_Good,X+220,Y+34,40,20,"",#PB_String_Numeric) : SetGadgetColor(#Settings_Unit_Warnings_Variance_Good,#PB_Gadget_FrontColor,#Database_Colour_Good)
-  ;TextGadget(#Settings_Unit_Warnings_Variance_Okay,X+82,Y+56,40,20,tTxt(#Str_OK)) : SetGadgetColor(#Settings_Unit_Warnings_Variance_Okay,#PB_Gadget_FrontColor,#Database_Colour_Okay)
-  StringGadget(#Settings_Unit_Warnings_Variance_Bad,X+220,Y+74,40,20,"",#PB_String_Numeric) : SetGadgetColor(#Settings_Unit_Warnings_Variance_Bad,#PB_Gadget_FrontColor,#Database_Colour_Bad)
-  StringGadget(#Settings_Unit_Warnings_Capacity_Good,X+304,Y+34,40,20,"",#PB_String_Numeric) : SetGadgetColor(#Settings_Unit_Warnings_Capacity_Good,#PB_Gadget_FrontColor,#Database_Colour_Good)
-  StringGadget(#Settings_Unit_Warnings_Capacity_Bad,X+304,Y+74,40,20,"",#PB_String_Numeric) : SetGadgetColor(#Settings_Unit_Warnings_Capacity_Bad,#PB_Gadget_FrontColor,#Database_Colour_Bad)
-  ;TextGadget(#Settings_Unit_Warnings_Capacity_Okay,X+82,Y+56,40,20,tTxt(#Str_OK)) : SetGadgetColor(#Settings_Unit_Warnings_Capacity_Okay,#PB_Gadget_FrontColor,#Database_Colour_Okay)
+        Select Settings_Event
+            Case #PB_Event_CloseWindow
+                Exit = 1
+        
+            Case #PB_Event_Gadget
+                Select EventGadget()
+                    Case #Settings_Gad_Language_Combo
+                        If GetGadgetState(#Settings_Gad_Language_Combo) <> SelectedLanguage
+                            LanguageChange = 1
+                            SelectedLanguage = GetGadgetState(#Settings_Gad_Language_Combo)
+                            
+                            ForEach LangMaster()
+                                If LangMaster()\Language = GetGadgetText(#Settings_Gad_Language_Combo)
+                                    Break
+                                EndIf
+                            Next
+                            System\Language_Current_File = LanguagesDirectory+LangMaster()\FileName
+                            System\Language_Current_Element = ListIndex(LangMaster())            
+        
+                        EndIf
+        
+                    Case #Settings_Gad_Language_CSVDelimiter
+                        If OpenDatabase(#Databases_Language,System\Language_Current_File,"","",#PB_Database_SQLite)
+                            Database_Update(#Databases_Language,"Update AMS_Language_Master SET CSVDelimiter = "+Str(GetGadgetState(#Settings_Gad_Language_CSVDelimiter))+";",#PB_Compiler_Line)
+                            System\CSVDelimiter = GetGadgetState(#Settings_Gad_Language_CSVDelimiter)
+                            CloseDatabase(#Databases_Language)
+                        Else
+                            Debug "Error: "+DatabaseError()
+                        EndIf
+        
+                    Case #Settings_Gad_Language_DecimalNotation
+                        If OpenDatabase(#Databases_Language,System\Language_Current_File,"","",#PB_Database_SQLite)
+                            Database_Update(#Databases_Language,"Update AMS_Language_Master SET DecimalNotation = "+Str(GetGadgetState(#Settings_Gad_Language_DecimalNotation))+";",#PB_Compiler_Line)
+                            System\DecimalNotation = GetGadgetState(#Settings_Gad_Language_DecimalNotation)
+                            CloseDatabase(#Databases_Language)
+                        Else
+                            Debug "Error: "+DatabaseError()
+                        EndIf
+        
+                    Case #Settings_Gad_SectionList
+                        If EventType() = #PB_EventType_LeftClick
+                            If GetGadgetState(#Settings_Gad_SectionList) > -1
+                                For MyLoop = #Settings_Gad_Hide_Start To #Settings_Gad_Hide_End
+                                    If IsGadget(MyLoop) : HideGadget(MyLoop,1) : EndIf
+                                Next
 
-  ForEach SuitabilityList()
-    If ListIndex(SuitabilityList()) > 0
-      AddGadgetItem(#Settings_Suitability_List,-1,SuitabilityList()\Text)  
-    EndIf
-  Next
-  ;/ New PJ 04.01.2022
-  Debug 1
-  SetGadgetState(#Settings_Suitability_List,0)
-  Debug 2
-  DatabaseID = Get_Suitability_Value(GetGadgetItemText(#Settings_Suitability_List,0))
-  Debug 3
-  SelectElement(SuitabilityList(),Get_Suitability_Index(DatabaseID))
-  Debug 4
-  SetGadgetText(#Settings_Unit_Warnings_Variance_Good,Str(SuitabilityList()\VarianceGood)) 
-  SetGadgetText(#Settings_Unit_Warnings_Variance_Bad,Str(SuitabilityList()\VarianceBad)) 
-  SetGadgetText(#Settings_Unit_Warnings_Capacity_Good,Str(SuitabilityList()\CapacityGood)) 
-  SetGadgetText(#Settings_Unit_Warnings_Capacity_Bad,Str(SuitabilityList()\CapacityBad))
-  
-  
-  
-  ButtonGadget(#Settings_Suitability_Save,X+146,Y+104,200,20,tTxt(#Str_Save))
-  
-  ButtonGadget(#Settings_Suitability_New,X+4,Y+140,80,20,tTxt(#Str_New))
-  ButtonGadget(#Settings_Suitability_Edit,X+88,Y+140,80,20,tTxt(#Str_Edit))
-  ButtonGadget(#Settings_Suitability_Delete,X+172,Y+140,80,20,tTxt(#Str_Delete))
-
-
-  X = 210 :  Y = 24
-  FrameGadget(#Settings_GeneralHistoryList_Frame,X,Y,236,160,tTxt(#Str_GeneralHistoryList))
-  ListViewGadget(#Settings_GeneralHistoryList_List,X+4,Y+16,140,140)
-  
-  ForEach GeneralHistoryList()
-    AddGadgetItem(#Settings_GeneralHistoryList_List,-1,GeneralHistoryList()\Text)  
-  Next
-  
-  ButtonGadget(#Settings_GeneralHistoryList_New,X+150,Y+16,80,20,tTxt(#Str_New))
-  ButtonGadget(#Settings_GeneralHistoryList_Edit,X+150,Y+38,80,20,tTxt(#Str_Edit))
-  ButtonGadget(#Settings_GeneralHistoryList_Delete,X+150,Y+60,80,20,tTxt(#Str_Delete))
-  
-  SetGadgetState(#Settings_Gad_Unit_Screen_Combo,System\Settings_Screen_Unit)  
-  SetGadgetState(#Settings_Gad_Unit_Volume_Combo,System\Settings_Volume_Unit)  
-  SetGadgetState(#Settings_Gad_Unit_Length_Combo,System\Settings_Length_Unit)
-  SetGadgetState(#Settings_Gad_DateFormat_Combo,System\Settings_Date_Format)
-  
-  SetGadgetText(#Settings_Unit_Warnings_Variance_Good,Str(System\Settings_Variance_Good))
-  SetGadgetText(#Settings_Unit_Warnings_Variance_Bad,Str(System\Settings_Variance_Bad))
-  SetGadgetText(#Settings_Unit_Warnings_Capacity_Good,Str(System\Settings_Capacity_Good))
-  SetGadgetText(#Settings_Unit_Warnings_Capacity_Bad,Str(System\Settings_Capacity_Bad))
-  
-  SetGadgetState(#Settings_Gad_Import_AutoToggle,System\LiveMonitor)
-  SetGadgetText(#Settings_Gad_Import_Directory,System\ImportPath)
-  ;SetGadgetState(#Settings_Gad_Import_DeleteAfter,System\DeleteAfterImport)
-  ;SetGadgetState(#Settings_Gad_Import_ShowReadingDepth,System\Show_Depth)
-  
-  If System\LiveMonitor = 1 ;/ Force deletion on?
-    ;SetGadgetState(#Settings_Gad_Import_DeleteAfter,1)
-  EndIf
-  
-  ;  Framegadget(#Settings_Gad_Connection_Frame,4,x,Width-8,90,"Network Connection [Multi-Site only]")
-  
-  ButtonGadget(#Settings_Gad_Okay,Width-80, Height - 24,70,20,tTxt(#Str_OK))
-  ;  ButtonGadget(#Settings_Gad_Cancel,Width-80,Height - 25,70,20,"Cancel")
-  
-  ;/ Hide All Gadgets
-  For MyLoop = #Settings_Gad_Hide_Start To #Settings_Gad_Hide_End
-    If IsGadget(MyLoop) : HideGadget(MyLoop,1) : EndIf
-  Next
-  ;   ;/ Now show relevant gadgets
-  ;   For MyLoop = #Settings_Gad_Language_Start To #Settings_Gad_Language_End
-  ;     If IsGadget(MyLoop) : HideGadget(MyLoop,0) : EndIf
-  ;   Next
-  
-  HideWindow(#Window_Settings,0)
-  SetActiveWindow(#Window_Settings)
-  
-  Repeat
-    Settings_Event = WaitWindowEvent()
+                                Select GetGadgetState(#Settings_Gad_SectionList)
+            
+                                    Case #Settings_Field_Language
+                                        ;/ Now show relevant gadgets
+                                        For MyLoop = #Settings_Gad_Language_Start To #Settings_Gad_Language_End
+                                            If IsGadget(MyLoop) : HideGadget(MyLoop,0) : EndIf
+                                        Next
+                                    
+                                    Case #Settings_Field_DateFormat
+                                        For MyLoop = #Settings_Gad_DateFormat_Start To #Settings_Gad_DateFormat_End
+                                            If IsGadget(MyLoop) : HideGadget(MyLoop,0) : EndIf
+                                        Next
+                                    
+                                    Case #Settings_Field_MeasurementsUnits
+                                        For MyLoop = #Settings_Gad_Unit_Start To #Settings_Gad_Unit_End
+                                            If IsGadget(MyLoop) : HideGadget(MyLoop,0) : EndIf
+                                        Next 
+                                    
+                                    Case #Settings_Field_ManufacturerList
+                                        For MyLoop = #Settings_Manufacturer_Start To #Settings_Manufacturer_End
+                                            If IsGadget(MyLoop) : HideGadget(MyLoop,0) : EndIf
+                                        Next  
+                                    
+                                    Case #Settings_Field_SuitabilityTypes ;/ PJ 03.01.2022 - added managers mode check
+                                        ;If Check_Manager_Mode()
+                                        For MyLoop = #Settings_Suitability_Start To #Settings_Suitability_End
+                                            If IsGadget(MyLoop) : HideGadget(MyLoop,0) : EndIf
+                                        Next 
+                                        ;EndIf
+                                    
+                                    Case #Settings_Field_GeneralHistoryList
+                                        For MyLoop = #Settings_GeneralHistoryList_Start To #Settings_GeneralHistoryList_End
+                                            If IsGadget(MyLoop) : HideGadget(MyLoop,0) : EndIf
+                                        Next 
+                                    
+                                    Case #Settings_Field_CameraType
+                                        For MyLoop = #Settings_CamType_Start To #Settings_CamType_End
+                                            If IsGadget(MyLoop) : HideGadget(MyLoop,0) : EndIf
+                                        Next 
+                                    
+                                    Case #Settings_Field_LiveMonitoring
+                                        For MyLoop = #Settings_Gad_Import_Start To #Settings_Gad_Import_End
+                                            If IsGadget(MyLoop) : HideGadget(MyLoop,0) : EndIf
+                                        Next 
+                                    
+                                    Case #Settings_Field_MultiSiteSettings
+                                        If Check_Manager_Mode()
+                                            For MyLoop = #Settings_MultiSite_Start To #Settings_MultiSite_End
+                                                If IsGadget(MyLoop) : HideGadget(MyLoop,0) : EndIf
+                                            Next 
+                                        EndIf
+                                        Default
+                                        For MyLoop = #Settings_Gad_Hide_Start To #Settings_Gad_Hide_End
+                                            If IsGadget(MyLoop) : HideGadget(MyLoop,1) : EndIf
+                                        Next
+            
+                                EndSelect
+                            EndIf
+                        EndIf
     
-    Select Settings_Event
-      Case #PB_Event_CloseWindow
-        Exit = 1
-      Case #PB_Event_Gadget
-        Select EventGadget()
-          Case #Settings_Gad_Language_Combo
-            If GetGadgetState(#Settings_Gad_Language_Combo) <> SelectedLanguage
-              LanguageChange = 1
-              SelectedLanguage = GetGadgetState(#Settings_Gad_Language_Combo)
-              
-              ForEach LangMaster()
-                If LangMaster()\Language = GetGadgetText(#Settings_Gad_Language_Combo)
-                  Break
-                EndIf
-              Next
-              System\Language_Current_File = LanguagesDirectory+LangMaster()\FileName
-              System\Language_Current_Element = ListIndex(LangMaster())            
-              
-              ;              CloseDatabase(#Databases_Language)
-            EndIf
-            
-          Case #Settings_Gad_Language_CSVDelimiter
-            Debug "CSV update: "+Str(GetGadgetState(#Settings_Gad_Language_CSVDelimiter))
-            Debug System\Language_Current_File
-            If OpenDatabase(#Databases_Language,System\Language_Current_File,"","",#PB_Database_SQLite)
-              Database_Update(#Databases_Language,"Update AMS_Language_Master SET CSVDelimiter = "+Str(GetGadgetState(#Settings_Gad_Language_CSVDelimiter))+";",#PB_Compiler_Line)
-              System\CSVDelimiter = GetGadgetState(#Settings_Gad_Language_CSVDelimiter)
-              CloseDatabase(#Databases_Language)
-            Else
-              Debug "Error: "+DatabaseError()
-            EndIf
-            
-          Case #Settings_Gad_Language_DecimalNotation
-            Debug "Decimal notation update: "+Str(GetGadgetState(#Settings_Gad_Language_DecimalNotation))
-            Debug System\Language_Current_File
-            If OpenDatabase(#Databases_Language,System\Language_Current_File,"","",#PB_Database_SQLite)
-              Database_Update(#Databases_Language,"Update AMS_Language_Master SET DecimalNotation = "+Str(GetGadgetState(#Settings_Gad_Language_DecimalNotation))+";",#PB_Compiler_Line)
-              System\DecimalNotation = GetGadgetState(#Settings_Gad_Language_DecimalNotation)
-              CloseDatabase(#Databases_Language)
-            Else
-              Debug "Error: "+DatabaseError()
-            EndIf
-          Case #Settings_Gad_SectionList
-            If EventType() = #PB_EventType_LeftClick
-              If GetGadgetState(#Settings_Gad_SectionList) > -1
-                Select GetGadgetState(#Settings_Gad_SectionList)
+                    Case #Settings_Gad_Import_Directory
+                        ResultS = PathRequester(tTxt(#Str_Selectimportpath), System\ImportPath)    
+                        If ResultS <> ""
+                            SetGadgetText(#Settings_Gad_Import_Directory, ResultS)
+                        EndIf
+    
+                    Case #Settings_Manufacturer_New
+                        ResultS = InputRequester(tTxt(#Str_Newmanufacturer),tTxt(#Str_Enternewmanufacturername),"")
+                        If ResultS <> ""
+                            ;/ check for existence
+                            Resulti = Database_CheckForDuplicate("Select Name from AMS_Manufacturers",ResultS) ;/DNT
+                                                                                 ;/ if it doesn't exist
+                            If Resulti = 0
+                                Database_Update(#Databases_Master,"INSERT INTO AMS_Manufacturers (Name) VALUES ('"+ResultS+"')",#PB_Compiler_Line) ;/DNT
+                                Refresh_Manufacturer_List()
+                           EndIf
+                        EndIf
+
+                    Case #Settings_Manufacturer_Edit
+                        If GetGadgetState(#Settings_Manufacturer_List) > -1
+                            DatabaseID = Get_Manufacturer_Value(GetGadgetItemText(#Settings_Manufacturer_List,GetGadgetState(#Settings_Manufacturer_List)))
+                            ResultS = InputRequester(tTxt(#Str_Editmanufacturer),tTxt(#Str_Editmanufacturername),GetGadgetItemText(#Settings_Manufacturer_List,GetGadgetState(#Settings_Manufacturer_List)))
+                            If ResultS <> ""
+                                ;/ check for existence
+                                Resulti = Database_CheckForDuplicate("Select Name from AMS_Manufacturers",ResultS) ;/DNT
+                                                                                   ;/ if it doesn't exist
+                                If Resulti = 0
+                                    Database_Update(#Databases_Master,"Update AMS_Manufacturers SET Name = '"+ResultS+"' Where ID = "+Str(DatabaseID)+";",#PB_Compiler_Line) ;/DNT
+                                    Refresh_Manufacturer_List()
+                                EndIf
+                            EndIf
+                        EndIf
+                    Case #Settings_Manufacturer_Delete
+                        DeleteFlag = 1
+                        If GetGadgetState(#Settings_Manufacturer_List) > -1
+                        ;/ Count Roll Master where ID = 
+                            DatabaseID = Get_Manufacturer_Value(GetGadgetItemText(#Settings_Manufacturer_List,GetGadgetState(#Settings_Manufacturer_List)))
                     
-                  Case #Settings_Field_Language
-                    ;/ Hide All Gadgets
-                    For MyLoop = #Settings_Gad_Hide_Start To #Settings_Gad_Hide_End
-                      If IsGadget(MyLoop) : HideGadget(MyLoop,1) : EndIf
-                    Next
-                    ;/ Now show relevant gadgets
-                    For MyLoop = #Settings_Gad_Language_Start To #Settings_Gad_Language_End
-                      If IsGadget(MyLoop) : HideGadget(MyLoop,0) : EndIf
-                    Next
+                            Resulti = Database_CountQuery("Select Count(*) from AMS_Roll_Master Where Manufacturer = "+Str(DatabaseID),#PB_Compiler_Line) ;/DNT
+                            If Resulti > 0
+                                If MessageRequester("Warning","There are "+Str(Resulti)+" Rolls assigned to this manufacturer, Are you Sure?",#PB_MessageRequester_YesNo) = #PB_MessageRequester_No ;/DNT
+                                    DeleteFlag = 0
+                                EndIf
+                            EndIf
                     
-                  Case #Settings_Field_DateFormat
-                    ;/ Hide All Gadgets
-                    For MyLoop = #Settings_Gad_Hide_Start To #Settings_Gad_Hide_End
-                      If IsGadget(MyLoop) : HideGadget(MyLoop,1) : EndIf
-                    Next
-                    ;/ Now show relevant gadgets
-                    For MyLoop = #Settings_Gad_DateFormat_Start To #Settings_Gad_DateFormat_End
-                      If IsGadget(MyLoop) : HideGadget(MyLoop,0) : EndIf
-                    Next
+                            If DeleteFlag = 1
+                        
+                                If Resulti > 0 ;/ reassign to zero
+                                    Database_Update(#Databases_Master,"Update AMS_Roll_Master Set Manufacturer = 0 Where Manufacturer = "+Str(DatabaseID)+";",#PB_Compiler_Line) ;/DNT
+                                EndIf
+                        
+                                Database_Update(#Databases_Master,"Delete from AMS_Manufacturers where ID = "+Str(DatabaseID)+";",#PB_Compiler_Line) ;/DNT
+                                Refresh_Manufacturer_List()
+                        
+                            EndIf
+                        EndIf
+
+                    Case #Settings_Gad_Import_Database_Directory
+                        MS_CheckDatabaseLocation(1)
+    
+                    Case #Settings_Suitability_New
+                        ResultS = Trim(InputRequester("New Suitability type","Enter new Suitability type","")) ;/DNT
+                        If ResultS <> ""
+                            ;/ check for existence
+                            Resulti = Database_CheckForDuplicate("Select Description from AMS_Suitability",ResultS) ;/DNT
+                                                                                      ;/ if it doesn't exist
+                            If Resulti = 0
+                                Database_Update(#Databases_Master,"INSERT INTO AMS_Suitability (RollType, Description) VALUES ('1', '"+ResultS+"')",#PB_Compiler_Line) ;/DNT
+                                Refresh_Suitability_List()
+                                DatabaseID = Get_Suitability_Value(ResultS)
+                                Database_Update(#Databases_Master,"Update AMS_Suitability Set VarianceGood = '5' Where ID = "+Str(DatabaseID),#PB_Compiler_Line)
+                                Database_Update(#Databases_Master,"Update AMS_Suitability Set VarianceBad = '10' Where ID = "+Str(DatabaseID),#PB_Compiler_Line)
+                                Database_Update(#Databases_Master,"Update AMS_Suitability Set CapacityGood = '91' Where ID = "+Str(DatabaseID),#PB_Compiler_Line)
+                                Database_Update(#Databases_Master,"Update AMS_Suitability Set CapacityBad = '86' Where ID = "+Str(DatabaseID),#PB_Compiler_Line)
+                                Refresh_Suitability_List()
+                            EndIf
+                        EndIf
+
+                    Case #Settings_Suitability_List ;/ new PJ 05.01.2022
+                        If GetGadgetState(#Settings_Suitability_List) > -1
+                            ;/ update variance and capacity fields
+                            DatabaseID = Get_Suitability_Value(GetGadgetItemText(#Settings_Suitability_List,GetGadgetState(#Settings_Suitability_List)))
+                            SetGadgetText(#Settings_Unit_Warnings_Variance_Good,Str(SuitabilityList()\VarianceGood)) 
+                            SetGadgetText(#Settings_Unit_Warnings_Variance_Bad,Str(SuitabilityList()\VarianceBad)) 
+                            SetGadgetText(#Settings_Unit_Warnings_Capacity_Good,Str(SuitabilityList()\CapacityGood)) 
+                            SetGadgetText(#Settings_Unit_Warnings_Capacity_Bad,Str(SuitabilityList()\CapacityBad))
+                        EndIf
+    
+                    Case #Settings_Suitability_Edit
+                        If GetGadgetState(#Settings_Suitability_List) > -1
+                            DatabaseID = Get_Suitability_Value(GetGadgetItemText(#Settings_Suitability_List,GetGadgetState(#Settings_Suitability_List)))
+                            ResultS = InputRequester("Edit Suitability","Edit Suitability name",GetGadgetItemText(#Settings_Suitability_List,GetGadgetState(#Settings_Suitability_List))) ;/DNT
+                            If ResultS <> ""
+                                ;/ check for existence
+                                Resulti = Database_CheckForDuplicate("Select Description from AMS_Suitability",ResultS) ;/DNT
+                                                                                                ;/ if it doesn't exist
+                                If Resulti = 0
+                                    Database_Update(#Databases_Master,"Update AMS_Suitability SET Description = '"+ResultS+"' Where ID = "+Str(DatabaseID)+";",#PB_Compiler_Line) ;/DNT
+                                    Refresh_Suitability_List()
+                                EndIf
+                            EndIf
+                        EndIf
+
+                    Case #Settings_Suitability_Delete
+                        DeleteFlag = 1
+                        If GetGadgetState(#Settings_Suitability_List) > -1
+                            DatabaseID = Get_Suitability_Value(GetGadgetItemText(#Settings_Suitability_List,GetGadgetState(#Settings_Suitability_List)))
+                            Resulti = Database_CountQuery("Select Count(*) from AMS_Roll_Master Where Suitability = "+Str(DatabaseID),#PB_Compiler_Line) ;/DNT
+                            If Resulti > 0
+                                If MessageRequester(tTxt(#Str_Warning),tTxt(#Str_Thereare)+Str(Resulti)+" "+"Roll"+"("+"s"+")"+" "+tTxt(#Str_AssignedToThisSuitabilityType)+","+" "+tTxt(#Str_AreyouSure)+"?",#PB_MessageRequester_YesNo) = #PB_MessageRequester_No
+                                    DeleteFlag = 0
+                                EndIf
+                            EndIf
+                            If DeleteFlag = 1
+                                If Resulti > 0 ;/ reassign to zero
+                                    Database_Update(#Databases_Master,"Update AMS_Roll_Master Set Suitability = 0 Where Suitability = "+Str(DatabaseID)+";",#PB_Compiler_Line)
+                                EndIf
+                                Database_Update(#Databases_Master,"Delete from AMS_Suitability where ID = "+Str(DatabaseID)+";",#PB_Compiler_Line)
+                                Refresh_Suitability_List()
+                            EndIf
+                        EndIf       
+    
+                    Case #Settings_GeneralHistoryList_New
+                        ResultS = Trim(InputRequester(tTxt(#Str_NewGeneralHistoryType),tTxt(#Str_EnternewGeneralHistoryTypename),"")) ;/DNT
+                        If ResultS <> ""
+                            ;/ check for existence
+                            Resulti = Database_CheckForDuplicate("Select Name from AMS_General_History_Types",ResultS) ;/DNT
+                                                                                      ;/ if it doesn't exist
+                            If Resulti = 0
+                                Database_Update(#Databases_Master,"INSERT INTO AMS_General_History_Types (Name) VALUES ('"+ResultS+"')",#PB_Compiler_Line) ;/DNT
+                            EndIf
+                            Refresh_GeneralHistory_List()
+                        EndIf
+
+                    Case #Settings_GeneralHistoryList_Edit
+                        If GetGadgetState(#Settings_GeneralHistoryList_List) > -1
+                            DatabaseID = Get_GeneralHistoryType_Value(GetGadgetItemText(#Settings_GeneralHistoryList_List,GetGadgetState(#Settings_GeneralHistoryList_List)))
+                            ResultS = Trim(InputRequester(tTxt(#Str_EditGeneralHistoryType),tTxt(#Str_EditGeneralHistoryTypename),GetGadgetItemText(#Settings_GeneralHistoryList_List,GetGadgetState(#Settings_GeneralHistoryList_List)))) ;/DNT
+                            If ResultS <> ""
+                                ;/ check for existence
+                                Resulti = Database_CheckForDuplicate("Select Name from AMS_General_History_Types",ResultS) ;/DNT
+                                If Resulti = 0                                                                             ;/ if it doesn't exist, edit it
+                                    Database_Update(#Databases_Master,"Update AMS_General_History_Types SET Name = '"+ResultS+"' Where ID = "+Str(DatabaseID)+";",#PB_Compiler_Line) ;/DNT
+                                    Database_Update(#Databases_Master,"Update AMS_General_History SET Type = '"+ResultS+"' Where Type = '"+GetGadgetItemText(#Settings_GeneralHistoryList_List,GetGadgetState(#Settings_GeneralHistoryList_List))+"';",#PB_Compiler_Line) ;/DNT
+                                    Refresh_GeneralHistory_List()
+                                EndIf
+                            EndIf
+                        EndIf
+
+                    Case #Settings_GeneralHistoryList_Delete
+                        If GetGadgetState(#Settings_GeneralHistoryList_List) > -1
+                            ResultS = GetGadgetItemText(#Settings_GeneralHistoryList_List,GetGadgetState(#Settings_GeneralHistoryList_List))
+                            If MessageRequester(tTxt(#Str_Warning),tTxt(#Str_DeleteSelectedHistoryEntry)+": ["+ResultS+"] - "+tTxt(#Str_areyousure)+"?",#PB_MessageRequester_YesNo) = #PB_MessageRequester_Yes
+                                Database_Update(#Databases_Master,"Delete from AMS_General_History_Types where Name = '"+ResultS+"';",#PB_Compiler_Line)
+                                Refresh_GeneralHistory_List()
+                            EndIf
+                        EndIf
+    
+                    Case #Settings_Gad_Cancel
+                        Exit = 1
+
+                    Case #Settings_Suitability_Save
+                        ;/ Sanity check variables
+                        Error = 0 : ErrorText = ""
+                        If Val(GetGadgetTextMac(#Settings_Unit_Warnings_Variance_Good)) < 1 : ErrorText + tTxt(#Str_Mustenteravalidnumberinthe)+"'"+tTxt(#Str_Variancegood)+"'"+" "+tTxt(#Str_field)+"." + Chr(10) : Error = 1 : EndIf
+                        If Val(GetGadgetTextMac(#Settings_Unit_Warnings_Variance_Bad)) < 1 : ErrorText + tTxt(#Str_Mustenteravalidnumberinthe)+"'"+tTxt(#Str_Variancebad)+"'"+" "+tTxt(#Str_field)+"." + Chr(10) : Error = 1  : EndIf
+                        If Val(GetGadgetTextMac(#Settings_Unit_Warnings_Capacity_Good)) < 1 : ErrorText + tTxt(#Str_Mustenteravalidnumberinthe)+"'"+tTxt(#Str_Capacitygood)+"'"+" "+tTxt(#Str_field)+"." + Chr(10) : Error = 1  : EndIf
+                        If Val(GetGadgetTextMac(#Settings_Unit_Warnings_Capacity_Bad)) < 1 : ErrorText + tTxt(#Str_Mustenteravalidnumberinthe)+"'"+tTxt(#Str_Capacitybad)+"'"+" "+tTxt(#Str_field)+"." + Chr(10) : Error = 1  : EndIf
                     
-                  Case #Settings_Field_MeasurementsUnits
-                    ;/ Hide All Gadgets
-                    For MyLoop = #Settings_Gad_Hide_Start To #Settings_Gad_Hide_End
-                      If IsGadget(MyLoop) : HideGadget(MyLoop,1) : EndIf
-                    Next
-                    ;/ Now show relevant gadgets
-                    For MyLoop = #Settings_Gad_Unit_Start To #Settings_Gad_Unit_End
-                      If IsGadget(MyLoop) : HideGadget(MyLoop,0) : EndIf
-                    Next 
+                        If Val(GetGadgetTextMac(#Settings_Unit_Warnings_Capacity_Bad)) > Val(GetGadgetTextMac(#Settings_Unit_Warnings_Capacity_Good))
+                            ErrorText + "'"+tTxt(#Str_Capacitybad)+"'"+" "+tTxt(#Str_fieldshouldntexceedthe)+tTxt(#Str_Capacitygood)+"'"+tTxt(#Str_field) + Chr(10) : Error = 1
+                        EndIf
                     
-                    ;/ PJ - removed due to v1.68 update.
-;                   Case #Settings_Field_Variance_WarningValues
-;                     If Check_Manager_Mode()
-;                       ;/ Hide All Gadgets
-;                       For MyLoop = #Settings_Gad_Hide_Start To #Settings_Gad_Hide_End
-;                         If IsGadget(MyLoop) : HideGadget(MyLoop,1) : EndIf
-;                       Next
-;                       ;/ Now show relevant gadgets
-;                       For MyLoop = #Settings_Unit_Warnings_Start To #Settings_Unit_Warnings_End
-;                         If IsGadget(MyLoop) : HideGadget(MyLoop,0) : EndIf
-;                       Next
-;                       For MyLoop = #Settings_Unit_Warnings_Variance_Start To #Settings_Unit_Warnings_Variance_End
-;                         If IsGadget(MyLoop) : HideGadget(MyLoop,0) : EndIf
-;                       Next
-;                     EndIf
-;                     
-;                   Case #Settings_Field_Capacity_WarningValues
-;                     If Check_Manager_Mode()
-;                       ;/ Hide All Gadgets
-;                       For MyLoop = #Settings_Gad_Hide_Start To #Settings_Gad_Hide_End
-;                         If IsGadget(MyLoop) : HideGadget(MyLoop,1) : EndIf
-;                       Next
-;                       ;/ Now show relevant gadgets
-;                       For MyLoop = #Settings_Unit_Warnings_Start To #Settings_Unit_Warnings_End
-;                         If IsGadget(MyLoop) : HideGadget(MyLoop,0) : EndIf
-;                       Next
-;                       For MyLoop = #Settings_Unit_Warnings_Capacity_Start To #Settings_Unit_Warnings_Capacity_End
-;                         If IsGadget(MyLoop) : HideGadget(MyLoop,0) : EndIf
-;                       Next  
-;                     EndIf
+                        If Val(GetGadgetTextMac(#Settings_Unit_Warnings_Variance_Good)) > Val(GetGadgetTextMac(#Settings_Unit_Warnings_Variance_Bad))
+                            ErrorText + "'"+tTxt(#Str_Variancegood)+"'"+" "+tTxt(#Str_fieldshouldntexceedthe)+tTxt(#Str_Variancebad)+"'"+" "+tTxt(#Str_field) + Chr(10) : Error = 1
+                        EndIf
                     
-                  Case #Settings_Field_ManufacturerList
-                    ;/ Hide All Gadgets
-                    For MyLoop = #Settings_Gad_Hide_Start To #Settings_Gad_Hide_End
-                      If IsGadget(MyLoop) : HideGadget(MyLoop,1) : EndIf
-                    Next
-                    For MyLoop = #Settings_Manufacturer_Start To #Settings_Manufacturer_End
-                      If IsGadget(MyLoop) : HideGadget(MyLoop,0) : EndIf
-                    Next  
-                    
-                  Case #Settings_Field_SuitabilityTypes ;/ PJ 03.01.2022 - added managers mode check
-                    ;If Check_Manager_Mode()
-                      
-                      ;/ Hide All Gadgets
-                      For MyLoop = #Settings_Gad_Hide_Start To #Settings_Gad_Hide_End
-                        If IsGadget(MyLoop) : HideGadget(MyLoop,1) : EndIf
-                      Next
-                      For MyLoop = #Settings_Suitability_Start To #Settings_Suitability_End
-                        If IsGadget(MyLoop) : HideGadget(MyLoop,0) : EndIf
-                      Next 
-                    ;EndIf
-                    
-                    
-                  Case #Settings_Field_GeneralHistoryList
-                    ;/ Hide All Gadgets
-                    For MyLoop = #Settings_Gad_Hide_Start To #Settings_Gad_Hide_End
-                      If IsGadget(MyLoop) : HideGadget(MyLoop,1) : EndIf
-                    Next
-                    For MyLoop = #Settings_GeneralHistoryList_Start To #Settings_GeneralHistoryList_End
-                      If IsGadget(MyLoop) : HideGadget(MyLoop,0) : EndIf
-                    Next 
-                    
-                  Case #Settings_Field_LiveMonitoring
-                    ;/ Hide All Gadgets
-                    For MyLoop = #Settings_Gad_Hide_Start To #Settings_Gad_Hide_End
-                      If IsGadget(MyLoop) : HideGadget(MyLoop,1) : EndIf
-                    Next
-                    For MyLoop = #Settings_Gad_Import_Start To #Settings_Gad_Import_End
-                      If IsGadget(MyLoop) : HideGadget(MyLoop,0) : EndIf
-                    Next 
-                    
-                  Case #Settings_Field_MultiSiteSettings
-                    If Check_Manager_Mode()
-                      ;/ Hide All Gadgets
-                      For MyLoop = #Settings_Gad_Hide_Start To #Settings_Gad_Hide_End
-                        If IsGadget(MyLoop) : HideGadget(MyLoop,1) : EndIf
-                      Next
-                      For MyLoop = #Settings_MultiSite_Start To #Settings_MultiSite_End
-                        If IsGadget(MyLoop) : HideGadget(MyLoop,0) : EndIf
-                      Next 
-                    EndIf
-                  Default
-                    For MyLoop = #Settings_Gad_Hide_Start To #Settings_Gad_Hide_End
-                      If IsGadget(MyLoop) : HideGadget(MyLoop,1) : EndIf
-                    Next
-                    
+                        If Error > 0
+                            MessageRequester(tTxt(#Str_Error)+"...",ErrorText)
+                        Else
+                            Database_Update(#Databases_Master,"Update AMS_Suitability Set VarianceGood = '"+Val(GetGadgetTextMac(#Settings_Unit_Warnings_Variance_Good))+"' Where ID = "+Str(SuitabilityList()\ID),#PB_Compiler_Line)
+                            Database_Update(#Databases_Master,"Update AMS_Suitability Set VarianceBad = '"+Val(GetGadgetTextMac(#Settings_Unit_Warnings_Variance_Bad))+"' Where ID = "+Str(SuitabilityList()\ID),#PB_Compiler_Line)
+                            Database_Update(#Databases_Master,"Update AMS_Suitability Set CapacityGood = '"+Val(GetGadgetTextMac(#Settings_Unit_Warnings_Capacity_Good))+"' Where ID = "+Str(SuitabilityList()\ID),#PB_Compiler_Line)
+                            Database_Update(#Databases_Master,"Update AMS_Suitability Set CapacityBad = '"+Val(GetGadgetTextMac(#Settings_Unit_Warnings_Capacity_Bad))+"' Where ID = "+Str(SuitabilityList()\ID),#PB_Compiler_Line)
+                            Refresh_Suitability_List()
+                        EndIf
+                    Case #Settings_CamType_Combo
+                        intSelectedCamera = GetGadgetState(#Settings_CamType_Combo)
+                        strSQL = "UPDATE ams_localsettings SET CAM_TYPE = "
+                        Select intSelectedCamera
+                            Case 0
+                                strSQL = strSQL + "0"
+                                System\Settings_CameraType = 0
+                            Case 1
+                                strSQL = strSQL + "1"
+                                System\Settings_CameraType = 1
+                            Case 2
+                                strSQL = strSQL + "2"
+                                System\Settings_CameraType = 2
+                        EndSelect
+                        Database_Update(#Databases_LocalSettings, strSQL, #PB_Compiler_Line)
+                        
+                    Case #Settings_Gad_Okay
+                        Exit = 2
                 EndSelect
-              EndIf
-            EndIf
-          Case #Settings_Gad_Import_Directory
-            ResultS = PathRequester(tTxt(#Str_Selectimportpath), System\ImportPath)    
-            If ResultS <> ""
-              SetGadgetText(#Settings_Gad_Import_Directory, ResultS)
-            EndIf
-            
-          Case #Settings_Manufacturer_New
-            ResultS = InputRequester(tTxt(#Str_Newmanufacturer),tTxt(#Str_Enternewmanufacturername),"")
-            If ResultS <> ""
-              ;/ check for existence
-              Resulti = Database_CheckForDuplicate("Select Name from AMS_Manufacturers",ResultS) ;/DNT
-                                                                                                 ;/ if it doesn't exist
-              If Resulti = 0
-                Database_Update(#Databases_Master,"INSERT INTO AMS_Manufacturers (Name) VALUES ('"+ResultS+"')",#PB_Compiler_Line) ;/DNT
-                Refresh_Manufacturer_List()
-              EndIf
-            EndIf
-          Case #Settings_Manufacturer_Edit
-            If GetGadgetState(#Settings_Manufacturer_List) > -1
-              DatabaseID = Get_Manufacturer_Value(GetGadgetItemText(#Settings_Manufacturer_List,GetGadgetState(#Settings_Manufacturer_List)))
-              Debug "**** Manufacturer Database ID: "+Str(DatabaseID)
-              
-              ;SelectElement(ManufacturerList(),Get_Manufacturer_Index(GetGadgetState(#Settings_Manufacturer_List)))
-              ResultS = InputRequester(tTxt(#Str_Editmanufacturer),tTxt(#Str_Editmanufacturername),GetGadgetItemText(#Settings_Manufacturer_List,GetGadgetState(#Settings_Manufacturer_List)))
-              If ResultS <> ""
-                ;/ check for existence
-                Resulti = Database_CheckForDuplicate("Select Name from AMS_Manufacturers",ResultS) ;/DNT
-                                                                                                   ;/ if it doesn't exist
-                If Resulti = 0
-                  Database_Update(#Databases_Master,"Update AMS_Manufacturers SET Name = '"+ResultS+"' Where ID = "+Str(DatabaseID)+";",#PB_Compiler_Line) ;/DNT
-                  Refresh_Manufacturer_List()
-                EndIf
-              EndIf
-            EndIf
-          Case #Settings_Manufacturer_Delete
-            DeleteFlag = 1
-            If GetGadgetState(#Settings_Manufacturer_List) > -1
-              ;/ Count Roll Master where ID = 
-              DatabaseID = Get_Manufacturer_Value(GetGadgetItemText(#Settings_Manufacturer_List,GetGadgetState(#Settings_Manufacturer_List)))
-              Debug "**** Manufacturer Database ID: "+Str(DatabaseID)
-              
-              Resulti = Database_CountQuery("Select Count(*) from AMS_Roll_Master Where Manufacturer = "+Str(DatabaseID),#PB_Compiler_Line) ;/DNT
-              If Resulti > 0
-                If MessageRequester("Warning","There are "+Str(Resulti)+" Rolls assigned to this manufacturer, Are you Sure?",#PB_MessageRequester_YesNo) = #PB_MessageRequester_No ;/DNT
-                  DeleteFlag = 0
-                EndIf
-              EndIf
-              
-              If DeleteFlag = 1
-                
-                If Resulti > 0 ;/ reassign to zero
-                  Database_Update(#Databases_Master,"Update AMS_Roll_Master Set Manufacturer = 0 Where Manufacturer = "+Str(DatabaseID)+";",#PB_Compiler_Line) ;/DNT
-                EndIf
-                
-                Database_Update(#Databases_Master,"Delete from AMS_Manufacturers where ID = "+Str(DatabaseID)+";",#PB_Compiler_Line) ;/DNT
-                Refresh_Manufacturer_List()
-                
-              EndIf
-            EndIf
-          Case #Settings_Gad_Import_Database_Directory
-            MS_CheckDatabaseLocation(1)
-            
-          Case #Settings_Suitability_New
-            ResultS = Trim(InputRequester("New Suitability type","Enter new Suitability type","")) ;/DNT
-            If ResultS <> ""
-              ;/ check for existence
-              Resulti = Database_CheckForDuplicate("Select Description from AMS_Suitability",ResultS) ;/DNT
-                                                                                                      ;/ if it doesn't exist
-              If Resulti = 0
-                Database_Update(#Databases_Master,"INSERT INTO AMS_Suitability (RollType, Description) VALUES ('1', '"+ResultS+"')",#PB_Compiler_Line) ;/DNT
-                Refresh_Suitability_List()
-                DatabaseID = Get_Suitability_Value(ResultS)
-                ;/SelectElement(SuitabilityList(),DatabaseID)
-                ;/MessageRequester(Str(SuitabilityList()\id),Str(DatabaseID))
-                Database_Update(#Databases_Master,"Update AMS_Suitability Set VarianceGood = '5' Where ID = "+Str(DatabaseID),#PB_Compiler_Line)
-                Database_Update(#Databases_Master,"Update AMS_Suitability Set VarianceBad = '10' Where ID = "+Str(DatabaseID),#PB_Compiler_Line)
-                Database_Update(#Databases_Master,"Update AMS_Suitability Set CapacityGood = '91' Where ID = "+Str(DatabaseID),#PB_Compiler_Line)
-                Database_Update(#Databases_Master,"Update AMS_Suitability Set CapacityBad = '86' Where ID = "+Str(DatabaseID),#PB_Compiler_Line)
-                Refresh_Suitability_List()
-              EndIf
-              
-            EndIf
-          Case #Settings_Suitability_List ;/ new PJ 05.01.2022
-            If GetGadgetState(#Settings_Suitability_List) > -1
-              ;/ update variance and capacity fields
-              DatabaseID = Get_Suitability_Value(GetGadgetItemText(#Settings_Suitability_List,GetGadgetState(#Settings_Suitability_List)))
-              ;/SelectElement(SuitabilityList(),DatabaseID) 
-              SetGadgetText(#Settings_Unit_Warnings_Variance_Good,Str(SuitabilityList()\VarianceGood)) 
-              SetGadgetText(#Settings_Unit_Warnings_Variance_Bad,Str(SuitabilityList()\VarianceBad)) 
-              SetGadgetText(#Settings_Unit_Warnings_Capacity_Good,Str(SuitabilityList()\CapacityGood)) 
-              SetGadgetText(#Settings_Unit_Warnings_Capacity_Bad,Str(SuitabilityList()\CapacityBad))
-            EndIf
-            
-          Case #Settings_Suitability_Edit
-            If GetGadgetState(#Settings_Suitability_List) > -1
-              DatabaseID = Get_Suitability_Value(GetGadgetItemText(#Settings_Suitability_List,GetGadgetState(#Settings_Suitability_List)))
-              Debug "*** Suitability ID: "+Str(DatabaseID)
-              ;SelectElement(SuitabilityList(),Get_Suitability_Index(GetGadgetState(#Settings_Suitability_List)))
-              ResultS = InputRequester("Edit Suitability","Edit Suitability name",GetGadgetItemText(#Settings_Suitability_List,GetGadgetState(#Settings_Suitability_List))) ;/DNT
-              If ResultS <> ""
-                ;/ check for existence
-                Resulti = Database_CheckForDuplicate("Select Description from AMS_Suitability",ResultS) ;/DNT
-                                                                                                        ;/ if it doesn't exist
-                If Resulti = 0
-                  Database_Update(#Databases_Master,"Update AMS_Suitability SET Description = '"+ResultS+"' Where ID = "+Str(DatabaseID)+";",#PB_Compiler_Line) ;/DNT
-                  Refresh_Suitability_List()
-                EndIf
-              EndIf
-            EndIf
-          Case #Settings_Suitability_Delete
-            DeleteFlag = 1
-            If GetGadgetState(#Settings_Suitability_List) > -1
-              DatabaseID = Get_Suitability_Value(GetGadgetItemText(#Settings_Suitability_List,GetGadgetState(#Settings_Suitability_List)))
-              Debug "*** Suitability ID: "+Str(DatabaseID)
-              ;/ Count Roll Master where ID = 
-              ;SelectElement(SuitabilityList(),Get_Suitability_Index(GetGadgetState(#Settings_Suitability_List)))
-              Resulti = Database_CountQuery("Select Count(*) from AMS_Roll_Master Where Suitability = "+Str(DatabaseID),#PB_Compiler_Line) ;/DNT
-              If Resulti > 0
-                If MessageRequester(tTxt(#Str_Warning),tTxt(#Str_Thereare)+Str(Resulti)+" "+"Roll"+"("+"s"+")"+" "+tTxt(#Str_AssignedToThisSuitabilityType)+","+" "+tTxt(#Str_AreyouSure)+"?",#PB_MessageRequester_YesNo) = #PB_MessageRequester_No
-                  DeleteFlag = 0
-                EndIf
-              EndIf
-              If DeleteFlag = 1
-                If Resulti > 0 ;/ reassign to zero
-                  Database_Update(#Databases_Master,"Update AMS_Roll_Master Set Suitability = 0 Where Suitability = "+Str(DatabaseID)+";",#PB_Compiler_Line)
-                EndIf
-                Database_Update(#Databases_Master,"Delete from AMS_Suitability where ID = "+Str(DatabaseID)+";",#PB_Compiler_Line)
-                Refresh_Suitability_List()
-              EndIf
-            EndIf       
-            
-          Case #Settings_GeneralHistoryList_New
-            ResultS = Trim(InputRequester(tTxt(#Str_NewGeneralHistoryType),tTxt(#Str_EnternewGeneralHistoryTypename),"")) ;/DNT
-            If ResultS <> ""
-              ;/ check for existence
-              Resulti = Database_CheckForDuplicate("Select Name from AMS_General_History_Types",ResultS) ;/DNT
-                                                                                                      ;/ if it doesn't exist
-              If Resulti = 0
-                Database_Update(#Databases_Master,"INSERT INTO AMS_General_History_Types (Name) VALUES ('"+ResultS+"')",#PB_Compiler_Line) ;/DNT
-              EndIf
-              Refresh_GeneralHistory_List()
-            EndIf
-          Case #Settings_GeneralHistoryList_Edit
-            If GetGadgetState(#Settings_GeneralHistoryList_List) > -1
-              DatabaseID = Get_GeneralHistoryType_Value(GetGadgetItemText(#Settings_GeneralHistoryList_List,GetGadgetState(#Settings_GeneralHistoryList_List)))
-              Debug "Deleting GH name: "+ResultS              
-              Debug "*** GH ID: "+Str(DatabaseID)
-              ResultS = Trim(InputRequester(tTxt(#Str_EditGeneralHistoryType),tTxt(#Str_EditGeneralHistoryTypename),GetGadgetItemText(#Settings_GeneralHistoryList_List,GetGadgetState(#Settings_GeneralHistoryList_List)))) ;/DNT
-              If ResultS <> ""
-                ;/ check for existence
-                Resulti = Database_CheckForDuplicate("Select Name from AMS_General_History_Types",ResultS) ;/DNT
-                If Resulti = 0                                                                             ;/ if it doesn't exist, edit it
-
-                  Database_Update(#Databases_Master,"Update AMS_General_History_Types SET Name = '"+ResultS+"' Where ID = "+Str(DatabaseID)+";",#PB_Compiler_Line) ;/DNT
-                  Database_Update(#Databases_Master,"Update AMS_General_History SET Type = '"+ResultS+"' Where Type = '"+GetGadgetItemText(#Settings_GeneralHistoryList_List,GetGadgetState(#Settings_GeneralHistoryList_List))+"';",#PB_Compiler_Line) ;/DNT
-                  Refresh_GeneralHistory_List()
-                EndIf
-              EndIf
-            EndIf
-          Case #Settings_GeneralHistoryList_Delete
-            If GetGadgetState(#Settings_GeneralHistoryList_List) > -1
-              ResultS = GetGadgetItemText(#Settings_GeneralHistoryList_List,GetGadgetState(#Settings_GeneralHistoryList_List))
-              If MessageRequester(tTxt(#Str_Warning),tTxt(#Str_DeleteSelectedHistoryEntry)+": ["+ResultS+"] - "+tTxt(#Str_areyousure)+"?",#PB_MessageRequester_YesNo) = #PB_MessageRequester_Yes
-                
-                Database_Update(#Databases_Master,"Delete from AMS_General_History_Types where Name = '"+ResultS+"';",#PB_Compiler_Line)
-                Refresh_GeneralHistory_List()
-              EndIf
-            EndIf
-            
-          Case #Settings_Gad_Cancel
-            Exit = 1
-          Case #Settings_Suitability_Save
-            ;/ Sanity check variables
-            Error = 0 : ErrorText = ""
-            If Val(GetGadgetTextMac(#Settings_Unit_Warnings_Variance_Good)) < 1 : ErrorText + tTxt(#Str_Mustenteravalidnumberinthe)+"'"+tTxt(#Str_Variancegood)+"'"+" "+tTxt(#Str_field)+"." + Chr(10) : Error = 1 : EndIf
-            If Val(GetGadgetTextMac(#Settings_Unit_Warnings_Variance_Bad)) < 1 : ErrorText + tTxt(#Str_Mustenteravalidnumberinthe)+"'"+tTxt(#Str_Variancebad)+"'"+" "+tTxt(#Str_field)+"." + Chr(10) : Error = 1  : EndIf
-            If Val(GetGadgetTextMac(#Settings_Unit_Warnings_Capacity_Good)) < 1 : ErrorText + tTxt(#Str_Mustenteravalidnumberinthe)+"'"+tTxt(#Str_Capacitygood)+"'"+" "+tTxt(#Str_field)+"." + Chr(10) : Error = 1  : EndIf
-            If Val(GetGadgetTextMac(#Settings_Unit_Warnings_Capacity_Bad)) < 1 : ErrorText + tTxt(#Str_Mustenteravalidnumberinthe)+"'"+tTxt(#Str_Capacitybad)+"'"+" "+tTxt(#Str_field)+"." + Chr(10) : Error = 1  : EndIf
-            
-            If Val(GetGadgetTextMac(#Settings_Unit_Warnings_Capacity_Bad)) > Val(GetGadgetTextMac(#Settings_Unit_Warnings_Capacity_Good))
-              ErrorText + "'"+tTxt(#Str_Capacitybad)+"'"+" "+tTxt(#Str_fieldshouldntexceedthe)+tTxt(#Str_Capacitygood)+"'"+tTxt(#Str_field) + Chr(10) : Error = 1
-            EndIf
-            
-            If Val(GetGadgetTextMac(#Settings_Unit_Warnings_Variance_Good)) > Val(GetGadgetTextMac(#Settings_Unit_Warnings_Variance_Bad))
-              ErrorText + "'"+tTxt(#Str_Variancegood)+"'"+" "+tTxt(#Str_fieldshouldntexceedthe)+tTxt(#Str_Variancebad)+"'"+" "+tTxt(#Str_field) + Chr(10) : Error = 1
-            EndIf
-            
-            If Error > 0
-              MessageRequester(tTxt(#Str_Error)+"...",ErrorText)
-              
-            Else
-              Database_Update(#Databases_Master,"Update AMS_Suitability Set VarianceGood = '"+Val(GetGadgetTextMac(#Settings_Unit_Warnings_Variance_Good))+"' Where ID = "+Str(SuitabilityList()\ID),#PB_Compiler_Line)
-              Database_Update(#Databases_Master,"Update AMS_Suitability Set VarianceBad = '"+Val(GetGadgetTextMac(#Settings_Unit_Warnings_Variance_Bad))+"' Where ID = "+Str(SuitabilityList()\ID),#PB_Compiler_Line)
-              Database_Update(#Databases_Master,"Update AMS_Suitability Set CapacityGood = '"+Val(GetGadgetTextMac(#Settings_Unit_Warnings_Capacity_Good))+"' Where ID = "+Str(SuitabilityList()\ID),#PB_Compiler_Line)
-              Database_Update(#Databases_Master,"Update AMS_Suitability Set CapacityBad = '"+Val(GetGadgetTextMac(#Settings_Unit_Warnings_Capacity_Bad))+"' Where ID = "+Str(SuitabilityList()\ID),#PB_Compiler_Line)
-              Refresh_Suitability_List()
-              
-            EndIf
-
-            
-          Case #Settings_Gad_Okay
-            Exit = 2
         EndSelect
-    EndSelect
     
-    If LanguageChange = 1
-      Debug "Language Change"
-      LanguageChange = 0
-      OpenDatabase(#Databases_Language,System\Language_Current_File,"","",#PB_Database_SQLite)
-      DatabaseQuery(#Databases_Language, "Select CSVDelimiter, DecimalNotation From AMS_Language_Master;")
-      NextDatabaseRow(#Databases_Language) ;/ only one row, so no need for while / 
-      System\CSVDelimiter = GetDatabaseLong(#Databases_Language,0)
-      System\DecimalNotation = GetDatabaseLong(#Databases_Language,1)
-      SetGadgetState(#Settings_Gad_Language_CSVDelimiter,System\CSVDelimiter)
-      SetGadgetState(#Settings_Gad_Language_DecimalNotation,System\DecimalNotation)
-      CloseDatabase(#Databases_Language)
-    EndIf
+        If LanguageChange = 1
+            LanguageChange = 0
+            OpenDatabase(#Databases_Language,System\Language_Current_File,"","",#PB_Database_SQLite)
+            DatabaseQuery(#Databases_Language, "Select CSVDelimiter, DecimalNotation From AMS_Language_Master;")
+            NextDatabaseRow(#Databases_Language) ;/ only one row, so no need for while / 
+            System\CSVDelimiter = GetDatabaseLong(#Databases_Language,0)
+            System\DecimalNotation = GetDatabaseLong(#Databases_Language,1)
+            SetGadgetState(#Settings_Gad_Language_CSVDelimiter,System\CSVDelimiter)
+            SetGadgetState(#Settings_Gad_Language_DecimalNotation,System\DecimalNotation)
+            CloseDatabase(#Databases_Language)
+        EndIf
     
-  Until Exit <> 0
+    Until Exit <> 0
   
-  If Exit = 2 ;/ Save settings here
-              ;/ refresh system variables
+    If Exit = 2 ;/ Save settings here
+    ;/ refresh system variables
+        If GetGadgetItemText(#Settings_Gad_Language_Combo, GetGadgetState(#Settings_Gad_Language_Combo)) <> System\Settings_Language
+            System\Language_Update = 1
+        EndIf
+        
+        System\Settings_Language.s = GetGadgetItemText(#Settings_Gad_Language_Combo, GetGadgetState(#Settings_Gad_Language_Combo))
+        Debug "Language setting set to: "+System\Settings_Language.s
+        System\Settings_Screen_Unit.i = GetGadgetState(#Settings_Gad_Unit_Screen_Combo)
+        System\Settings_Length_Unit.i = GetGadgetState(#Settings_Gad_Unit_Length_Combo)
+        System\Settings_Volume_Unit.i = GetGadgetState(#Settings_Gad_Unit_Volume_Combo)
+        System\Settings_Date_Format.i = GetGadgetState(#Settings_Gad_DateFormat_Combo)
+        
+        System\Settings_Capacity_Good.i = Val(GetGadgetTextMac(#Settings_Unit_Warnings_Capacity_Good))
+        System\Settings_Capacity_Bad.i = Val(GetGadgetTextMac(#Settings_Unit_Warnings_Capacity_Bad))
+        
+        System\Settings_Variance_Good.i = Val(GetGadgetTextMac(#Settings_Unit_Warnings_Variance_Good))
+        System\Settings_Variance_Bad.i = Val(GetGadgetTextMac(#Settings_Unit_Warnings_Variance_Bad))
+        
+        System\LiveMonitor = GetGadgetState(#Settings_Gad_Import_AutoToggle)
+        SetGadgetState(#Gad_AutoImport,System\LiveMonitor)
+        System\ImportPath = GetGadgetText(#Settings_Gad_Import_Directory)
+        
+        System\DeleteAfterImport = 1;GetGadgetState(#Settings_Gad_Import_DeleteAfter)
+        System\Show_Depth = 1;GetGadgetState(#Settings_Gad_Import_ShowReadingDepth)
+        
+        If Multi_Site_Mode = 1
+        
+            If System\Default_Site <> Get_Site_ID(GetGadgetText(#Settings_MultiSite_DefaultSite))
+            ;/ force refresh
+            System\Refresh_NavTreeID = 1
+            EndIf
+        
+            If System\DefaultOnly <> GetGadgetState(#Settings_MultiSite_PollingInterval)
+            ;/ force refresh  
+            System\Refresh_NavTreeID = 1
+            EndIf
+        
+            System\Database_Path = GetGadgetText(#Settings_MultiSite_DatabasePath)
+            System\Default_Site = Get_Site_ID(GetGadgetText(#Settings_MultiSite_DefaultSite))
+            Debug "Default site set to : "+Str(System\Default_Site)
+        
+            System\DefaultOnly = GetGadgetState(#Settings_MultiSite_ShowDefaultOnly)
+            System\PollingInterval = GetGadgetState(#Settings_MultiSite_PollingInterval)
+        EndIf
+        
+        Tool_TimeTest_Begin()
+        Database_SaveSettings()
+        Database_LoadSettings()
+        Tool_TimeTest_End()
+        
+        System\Showing_RollID = 0
+        Redraw_RollID(System\Last_Drawn_Roll)
+        Report_Generate(System\Last_Drawn_Report_SiteId,System\Last_Drawn_Report_GroupId)
     
-    If GetGadgetItemText(#Settings_Gad_Language_Combo, GetGadgetState(#Settings_Gad_Language_Combo)) <> System\Settings_Language
-      System\Language_Update = 1
     EndIf
-    
-    System\Settings_Language.s = GetGadgetItemText(#Settings_Gad_Language_Combo, GetGadgetState(#Settings_Gad_Language_Combo))
-    Debug "Language setting set to: "+System\Settings_Language.s
-    System\Settings_Screen_Unit.i = GetGadgetState(#Settings_Gad_Unit_Screen_Combo)
-    System\Settings_Length_Unit.i = GetGadgetState(#Settings_Gad_Unit_Length_Combo)
-    System\Settings_Volume_Unit.i = GetGadgetState(#Settings_Gad_Unit_Volume_Combo)
-    System\Settings_Date_Format.i = GetGadgetState(#Settings_Gad_DateFormat_Combo)
-    
-    System\Settings_Capacity_Good.i = Val(GetGadgetTextMac(#Settings_Unit_Warnings_Capacity_Good))
-    System\Settings_Capacity_Bad.i = Val(GetGadgetTextMac(#Settings_Unit_Warnings_Capacity_Bad))
-    
-    System\Settings_Variance_Good.i = Val(GetGadgetTextMac(#Settings_Unit_Warnings_Variance_Good))
-    System\Settings_Variance_Bad.i = Val(GetGadgetTextMac(#Settings_Unit_Warnings_Variance_Bad))
-    
-    System\LiveMonitor = GetGadgetState(#Settings_Gad_Import_AutoToggle)
-    SetGadgetState(#Gad_AutoImport,System\LiveMonitor)
-    System\ImportPath = GetGadgetText(#Settings_Gad_Import_Directory)
-    
-    System\DeleteAfterImport = 1;GetGadgetState(#Settings_Gad_Import_DeleteAfter)
-    
-    ;If GetGadgetState(#Settings_Gad_Import_ShowReadingDepth) <> System\Show_Depth
-    ;  System\Refresh_Roll_Information = 1
-    ;  System\Showing_RollID = -1
-    ;EndIf
-    
-    System\Show_Depth = 1;GetGadgetState(#Settings_Gad_Import_ShowReadingDepth)
-    
-    If Multi_Site_Mode = 1
-      
-      If System\Default_Site <> Get_Site_ID(GetGadgetText(#Settings_MultiSite_DefaultSite))
-        ;/ force refresh
-        System\Refresh_NavTreeID = 1
-      EndIf
-      
-      If System\DefaultOnly <> GetGadgetState(#Settings_MultiSite_PollingInterval)
-        ;/ force refresh  
-        System\Refresh_NavTreeID = 1
-      EndIf
-      
-      System\Database_Path = GetGadgetText(#Settings_MultiSite_DatabasePath)
-      System\Default_Site = Get_Site_ID(GetGadgetText(#Settings_MultiSite_DefaultSite))
-      Debug "Default site set to : "+Str(System\Default_Site)
-      
-      System\DefaultOnly = GetGadgetState(#Settings_MultiSite_ShowDefaultOnly)
-      System\PollingInterval = GetGadgetState(#Settings_MultiSite_PollingInterval)
-    EndIf
-    
-    Tool_TimeTest_Begin()
-    Database_SaveSettings()
-    Database_LoadSettings()
-    Tool_TimeTest_End()
-    
-    ;    MessageRequester("","Time to save settings: "+Str(System\TimeTest)+"ms")
-    
-    System\Showing_RollID = 0
-    Redraw_RollID(System\Last_Drawn_Roll)
-    Report_Generate(System\Last_Drawn_Report_SiteId,System\Last_Drawn_Report_GroupId)
-    
-  EndIf
   
-  CloseWindow(#Window_Settings)
-  DisableWindow(#Window_Main,0) : System\AllowSystemTray = #True
-  SetActiveWindow(#Window_Main)
+    CloseWindow(#Window_Settings)
+    DisableWindow(#Window_Main,0) : System\AllowSystemTray = #True
+    SetActiveWindow(#Window_Main)
   
 EndProcedure
 
 Procedure Init_Presets(Type.i)
-  Protected Presets_Event.i, Width.i, Height.i, Exit.i, Error.i, ErrorText.S, X.i, Y.i, RedrawList.i, myLoop.i
-  Protected ResultS.S, Resulti.i, DeleteFlag.i, Txt.s, Editting.i, NoSave.i, SQL.s, Val.i, OldFilter.s, Added.i, StringCount.i
-  
-  Width.i = 440 : Height.i = 350 : Editting = 0
+  Protected Presets_Event.i, Width.i, Height.i, Exit.i, Error.i, ErrorText.S, X.i, Y.i, RedrawList.i, myLoop.i, strDateMask.s
+  Protected ResultS.S, Resulti.i, DeleteFlag.i, Txt.s, editing.i, NoSave.i, SQL.s, Val.i, OldFilter.s, Added.i, StringCount.i
+  Protected strEpochDate.s, index.i, result.s, strSQL.s
+
+  Width.i = 440 : Height.i = 350 : editing = 0
   
   If type = 2 ;/ Edit
     If GetGadgetState(#Gad_Report_Preset_Combo) = 0
@@ -9872,11 +10001,11 @@ Procedure Init_Presets(Type.i)
     ResultI = GetGadgetState(#Gad_Report_Preset_Combo)
     If Resulti > 0
       SelectElement(Report_PresetList(),Resulti)
-      Editting = Report_PresetList()\ID
+      editing = Report_PresetList()\ID
       Txt.s = tTxt(#Str_Areyousureyouwanttodeletepreset)+":"+" '"+Report_PresetList()\Name+"'"+"?"
       
       If MessageRequester(tTxt(#Str_Deletepreset)+", "+tTxt(#Str_Areyousure)+"?",Txt,#PB_MessageRequester_YesNo) = #PB_MessageRequester_Yes
-        Database_Update(#Databases_Master,"Delete From AMS_ReportPresets where ID = "+Str(Editting)+";",#PB_Compiler_Line)
+        Database_Update(#Databases_Master,"Delete From AMS_ReportPresets where ID = "+Str(editing)+";",#PB_Compiler_Line)
         Refresh_Presets_List()
         ProcedureReturn 
       EndIf
@@ -9926,8 +10055,20 @@ Procedure Init_Presets(Type.i)
   StringGadget(#Gad_Presets_Name,90,4,336,20,"")
   
   TextGadget(#Gad_Presets_Query_Text,4,36,80,20,tTxt(#Str_Presetquery)+":")
-  EditorGadget(#Gad_Presets_Query,90,34,336,60)
-  TextGadget(#Gad_Presets_QueryCount,90,96,336,20,tTxt(#Str_Queryreturnscounts))
+  EditorGadget(#Gad_Presets_Query,90,55,336,20)
+
+  If System\Settings_Date_Mask = "DD/MM/YYYY"
+    strDateMask = "%dd/%mm/%yyyy"
+  Else
+    strDateMask = "%mm/%dd/%yyyy"
+  EndIf
+
+  TextGadget(#PB_Any,91,34,50,20,"From:") ;/SL20230614
+  DateGadget(#Gad_Date_From, 120, 34, 120,20, strDateMask) ;/SL20230614
+  TextGadget(#PB_Any,286,34,50,20,"To:") ;/SL20230614
+  DateGadget(#Gad_Date_To, 306, 34, 120,20, strDateMask) ;/SL20230614
+
+  TextGadget(#Gad_Presets_QueryCount,90,76,336,20,tTxt(#Str_Queryreturnscounts))
   
   TextGadget(#Gad_Presets_RollTable_Text,4,120,120,20,"AMS_Roll_Master") ;/DNT
   TextGadget(#Gad_Presets_SuitabilityTable_Text,128,120,120,20,"AMS_Suitability") ;/DNT
@@ -9963,7 +10104,28 @@ Procedure Init_Presets(Type.i)
     If Resulti > 0
       SelectElement(Report_PresetList(),Resulti)
       SetGadgetText(#Gad_Presets_Name,tTxt(#Str_New)+" - "+Report_PresetList()\Name)
-      SetGadgetText(#Gad_Presets_query,Report_PresetList()\SQL)
+
+      index.i = FindString(Report_PresetList()\SQL, "-", -1, #PB_String_NoCase)
+
+      If index > 0
+        strEpochDate = Mid(Report_PresetList()\SQL, index + 1)
+        strEpochDate = Trim(strEpochDate)
+
+        Debug Date()
+      EndIf 
+      
+      strSQL = Report_PresetList()\SQL
+      strSQL = ReplaceString(strSQL, strEpochDate, FormatDate(strDateMask, Date() - Val(strEpochDate)))
+      strSQL = ReplaceString(strSQL, " - ", "")
+      strSQL = ReplaceString(strSQL, "/DATE/", "")
+      ;strSQL = ReplaceString(strSQL, "<", "Before")
+      ;strSQL = ReplaceString(strSQL, ">", "After")
+    
+;      Debug GetGadgetState(#Gad_Date_From)
+
+      SetGadgetText(#Gad_Presets_Query, strSQL)
+
+     ; SetGadgetText(#Gad_Presets_query,Report_PresetList()\SQL)
       Type = 1
     EndIf
   EndIf
@@ -9972,11 +10134,12 @@ Procedure Init_Presets(Type.i)
     ResultI = GetGadgetState(#Gad_Report_Preset_Combo)
     If Resulti > 0
       SelectElement(Report_PresetList(),Resulti)
-      Editting = Report_PresetList()\ID
+      editing = Report_PresetList()\ID
       SetGadgetText(#Gad_Presets_Name,Report_PresetList()\Name)
       SetGadgetText(#Gad_Presets_query,Report_PresetList()\SQL)
     EndIf
   EndIf
+
   Exit = 0
   Protected *el1, *el2, SetAfterRefresh = -1
   Repeat
@@ -9992,7 +10155,9 @@ Procedure Init_Presets(Type.i)
             If OldFilter <> GetGadgetText(#Gad_Presets_Query)
               OldFilter = GetGadgetText(#Gad_Presets_Query)
               SQL.s = "Select Count(*) From (Select * From AMS_Roll_Master,AMS_Groups Where AMS_Roll_Master.GroupID = AMS_Groups.ID and AMS_Groups.SiteID = 1) where "
-              SQL.s + ReplaceString( GetGadgetText(#Gad_Presets_Query),"/DATE/",Str(Date()))  ;/DNT
+              SQL.s + ReplaceString( GetGadgetText(#Gad_Presets_Query),"/DATE/", Str(GetGadgetState(#Gad_Date_From)))  ;/DNT
+              ;SQL.s + ReplaceString( GetGadgetText(#Gad_Presets_Query),"/DATE/", Str(Date()))  ;/DNT
+              Debug SQL
               Val = Database_CountQuery(SQL,#PB_Compiler_Line,1)
               SetGadgetText(#Gad_Presets_QueryCount,tTxt(#Str_Thequeryreturned)+Str(val) +" "+tTxt(#Str_results)+".")
             EndIf
@@ -10005,7 +10170,28 @@ Procedure Init_Presets(Type.i)
             ;If GetGadgetText(#Gad_Presets_Query) = "" : MessageRequester(tTxt(#Str_Error),tTxt(#Str_Youmustenterapresetquery),#PB_MessageRequester_Ok) : NoSave = 1 : EndIf
             If NoSave = 0
               Exit = 2
-            EndIf 
+            EndIf
+          Case #Gad_Date_From
+              index.i = FindString(Report_PresetList()\SQL, "-", -1, #PB_String_NoCase)
+
+              If index > 0
+                strEpochDate = Mid(Report_PresetList()\SQL, index + 1)
+                strEpochDate = Trim(strEpochDate)
+        
+                Debug Date()
+              EndIf
+
+              strSQL = Report_PresetList()\SQL
+              strSQL = ReplaceString(strSQL, strEpochDate, FormatDate(strDateMask, GetGadgetState(#Gad_Date_From) - Val(strEpochDate)))
+              strSQL = ReplaceString(strSQL, " - ", "")
+              strSQL = ReplaceString(strSQL, "/DATE/", "")
+              strSQL = ReplaceString(strSQL, "<", "Before")
+              strSQL = ReplaceString(strSQL, ">", "After")
+
+              SetGadgetText(#Gad_Presets_Query, strSQL)
+
+              SQL.s = "Select Count(*) From (Select * From AMS_Roll_Master,AMS_Groups Where AMS_Roll_Master.GroupID = AMS_Groups.ID and AMS_Groups.SiteID = 1) where "
+              SQL.s + ReplaceString(GetGadgetText(#Gad_Presets_Query),"/DATE/", Str(GetGadgetState(#Gad_Date_From)))  ;/DNT
         EndSelect
         
     EndSelect
@@ -10025,9 +10211,9 @@ Procedure Init_Presets(Type.i)
   
   If Exit = 2 ;/ save 
     
-    If Editting > 0
+    If editing > 0
 ;      Database_Update(#Databases_Master,"Update AMS_ReportPresets Set Name = '"+GetGadgetText(#Gad_Presets_Name)+"', SQL = '"+GetGadgetText(#Gad_Presets_Query)+"', FieldSelection = '"+Txt+"' Where ID = "+Str(Editting),#PB_Compiler_Line)
-      Database_Update(#Databases_Master,"Update AMS_ReportPresets Set Name = '"+GetGadgetText(#Gad_Presets_Name)+"', SQL = '"+GetGadgetText(#Gad_Presets_Query)+"' Where ID = "+Str(Editting),#PB_Compiler_Line)
+      Database_Update(#Databases_Master,"Update AMS_ReportPresets Set Name = '"+GetGadgetText(#Gad_Presets_Name)+"', SQL = '"+GetGadgetText(#Gad_Presets_Query)+"' Where ID = "+Str(editing),#PB_Compiler_Line)
       Refresh_Presets_List(GetGadgetText(#Gad_Presets_Name))
     Else
       ;/ Is new entry
@@ -10043,9 +10229,9 @@ EndProcedure
 
 Procedure Init_Layout(Type.i)
   Protected Presets_Event.i, Width.i, Height.i, Exit.i, Error.i, ErrorText.S, X.i, Y.i, RedrawList.i, myLoop.i
-  Protected ResultS.S, Result.i, Resulti.i, DeleteFlag.i, Txt.s, Editting.i, NoSave.i, SQL.s, Val.i, OldFilter.s, Added.i, StringCount.i
+  Protected ResultS.S, Result.i, Resulti.i, DeleteFlag.i, Txt.s, editing.i, NoSave.i, SQL.s, Val.i, OldFilter.s, Added.i, StringCount.i
   
-  Width.i = 440 : Height.i = 384 : Editting = 0
+  Width.i = 440 : Height.i = 384 : editing = 0
   
   NewList Reportfields.ReportField();
   RedrawList = #True
@@ -10067,7 +10253,7 @@ Procedure Init_Layout(Type.i)
     
     SelectElement(Report_Layout(),GetGadgetState(#Gad_ReportLayout_Combo)) 
     If Report_Layout()\Fieldcount > 0 : ClearList(Reportfields()) : EndIf
-    Editting = Report_Layout()\ID
+    editing = Report_Layout()\ID
     For myLoop = 1 To Report_Layout()\Fieldcount
       AddElement(Reportfields()) 
       Reportfields()\Value = Report_Layout()\FieldBreakdown[myLoop]\Value
@@ -10086,11 +10272,11 @@ Procedure Init_Layout(Type.i)
     ResultI = GetGadgetState(#Gad_ReportLayout_Combo)
     If Resulti > 0
       SelectElement(Report_Layout(),Resulti)
-      Editting = Report_Layout()\ID
+      editing = Report_Layout()\ID
       Txt.s = tTxt(#Str_Areyousureyouwanttodeletelayout)+":"+" '"+Report_Layout()\Name+"'"+"?"
       
       If MessageRequester(tTxt(#Str_Deletelayout)+", "+tTxt(#Str_Areyousure)+"?",Txt,#PB_MessageRequester_YesNo) = #PB_MessageRequester_Yes
-        Database_Update(#Databases_Master,"Delete From AMS_ReportLayouts where ID = "+Str(Editting)+";",#PB_Compiler_Line)
+        Database_Update(#Databases_Master,"Delete From AMS_ReportLayouts where ID = "+Str(editing)+";",#PB_Compiler_Line)
         Refresh_Layouts()
         ProcedureReturn 
       EndIf
@@ -10259,7 +10445,7 @@ Procedure Init_Layout(Type.i)
     ResultI = GetGadgetState(#Gad_ReportLayout_Combo)
     If Resulti > 0
       SelectElement(Report_Layout(),Resulti)
-      Editting = Report_Layout()\ID
+      editing = Report_Layout()\ID
       SetGadgetText(#Gad_ReportLayout_Name,Report_Layout()\Name)
       SetGadgetState(#Gad_ReportLayout_SortBy_Combo,Report_Layout()\Sort_Field)
       SetGadgetState(#Gad_ReportLayout_SortDirection_Combo,Report_Layout()\Sort_Direction)
@@ -10406,7 +10592,7 @@ Procedure Init_Layout(Type.i)
       Txt + Str(Reportfields()\Value)+"|"+Reportfields()\GHString + "|"
     Next
     
-    If Editting > 0
+    If editing > 0
       ;Database_Update(#Databases_Master,"Update AMS_ReportLayouts Set Name = '"+GetGadgetText(#Gad_ReportLayout_Name)+"', SortField = "+Str(GetGadgetState(#Gad_ReportLayout_SortBy_Combo))+", SortDirection = "+Str(GetGadgetState(#Gad_ReportLayout_SortDirection_Combo))+", Type = "+Str(GetGadgetState(#Gad_ReportLayout_Style_Combo))+", Fields = '"+Txt+"' Where ID = "+Str(Editting),#PB_Compiler_Line)
       ;/ updated PJ20191128 - added new entries
       Database_Update(#Databases_Master,"Update AMS_ReportLayouts Set Name = '"+GetGadgetText(#Gad_ReportLayout_Name)+
@@ -10416,7 +10602,7 @@ Procedure Init_Layout(Type.i)
                                         ", Filter_GH = "+Str(GetGadgetState(#Gad_ReportLayout_Filter_General_History))+
                                         ", Filter_Comments = "+Str(GetGadgetState(#Gad_ReportLayout_Filter_Comments))+
                                         ", Fields = '"+ Txt+
-                                        "' Where ID = "+Str(Editting),#PB_Compiler_Line)
+                                        "' Where ID = "+Str(editing),#PB_Compiler_Line)
     Else
       ;/ Is new entry
       ;Database_Update(#Databases_Master,"Insert into AMS_ReportLayouts (Name, SortField, SortDirection, Type, Fields) VALUES ('"+GetGadgetText(#Gad_ReportLayout_Name)+"', "+Str(GetGadgetState(#Gad_ReportLayout_SortBy_Combo))+", "+Str(GetGadgetState(#Gad_ReportLayout_SortDirection_Combo))+", "+Str(GetGadgetState(#Gad_ReportLayout_Style_Combo))+",'"+Txt+"')",#PB_Compiler_Line)
@@ -10921,6 +11107,7 @@ Procedure Export_Rollinfo_Print()
               If MyLoop = #Gad_RollInfo_Undo       : Excluded = 1 : EndIf
               If MyLoop = #Gad_RollInfo_Import_AMS : Excluded = 1 : EndIf
               If MyLoop = #Gad_RollInfo_ExportRollName : Excluded = 1 : EndIf ;/JM20220816
+              If MyLoop = #Gad_RollInfo_SetScan : Excluded = 1 : EndIf ;/SL20231008
               If MyLoop = #Gad_RollInfo_Import_ACP : Excluded = 1 : EndIf
               If MyLoop = #Gad_RollInfo_Commit     : Excluded = 1 : EndIf
               If MyLoop = #Gad_RollInfo_Import_New : Excluded = 1 : EndIf
@@ -11248,11 +11435,262 @@ Procedure.i Export_RollReport_PDF()
   
 EndProcedure
 
+; Procedure.i Export_Rollinfo_PDF()
+;   Protected MyLoop.i, File.s, PageWidth.i, PageHeight.i, MinX.i, MaxX.i, MinY.i, MaxY.i, SizeX.f, SizeY.f, PageSizeX.i, PageSizeY.i, ScaleX.f, ScaleY.f, PosX.f, PosY.f
+;   Protected GadSizeX.f, GadSizeY.f, Excluded.i, LeftBorder.i, Column.i, OnLine.i, LineCount.i, FilePattern.s, TopBorder.i, Col.i, Justify.s, TempImage.i
+;   Protected strText.s
+;   SetActiveGadget(-1) ;/ remove any gadget selection
+;   
+;   FilePattern = "*.pdf|*.pdf" ;/DNT
+;   File.s = SaveFileRequester(tTxt(#Str_Enterfilename),"",FilePattern,0)
+;   
+;   If File = "" : ProcedureReturn : EndIf
+;   If FileSize(File) > 0 ;/ file exists, prompt to overwrite)
+;     If MessageRequester(tTxt(#Str_Message),tTxt(#Str_Fileexists)+", "+tTxt(#Str_overwrite)+"?",#PB_MessageRequester_YesNo) = #PB_MessageRequester_No
+;       ProcedureReturn 
+;     EndIf
+;   EndIf
+;   
+;   If UCase(Right(File,4)) <> ".PDF" : File + ".pdf" : EndIf ;/DNT
+;   
+;   If CreateFile(1,File)
+;     CloseFile(1)
+;   Else
+;     MessageRequester(tTxt(#Str_Error),tTxt(#Str_Cannotwritetofile)+", "+tTxt(#Str_filealreadyopenelsewhere)+"?",#PB_MessageRequester_Ok)
+;     ProcedureReturn 
+;   EndIf
+;   
+;   MinX = 9999 : MaxX = -9999
+;   MinY = 9999 : MaxY = -9999
+;   
+;   For MyLoop = #Gad_RollInfo_Start To #Gad_RollInfo_Finish
+;     If IsGadget(MyLoop)
+;       ForEach GadgetScale()
+;         If GadgetScale()\Gadget = MyLoop : Break : EndIf
+;       Next
+;       If GadgetScale()\KeyPosX < MinX : MinX = GadgetScale()\KeyPosX : EndIf
+;       If GadgetScale()\KeyPosX + GadgetScale()\KeySizeX > MaxX : MaxX = GadgetScale()\KeyPosX + GadgetScale()\KeySizeX: EndIf
+;       If GadgetScale()\KeyPosY < MinY : MinY = GadgetScale()\KeyPosY : EndIf
+;       If GadgetScale()\KeyPosY + GadgetScale()\KeySizeY > MaxY : MaxY = GadgetScale()\KeyPosY + GadgetScale()\KeySizeY: EndIf
+;     EndIf
+;   Next
+;   
+;   pdf_Create()
+;   pdf_SetDisplayMode(#PDF_ZOOM_REAL,#PDF_LAYOUT_SINGLE)
+;   pdf_SetProcHeader(@PDF_Header())
+;   pdf_SetProcFooter(@PDF_Footer())
+;   pdf_AddPage("P",#PDF_PAGE_FORMAT_A4)
+;   pdf_StartPageNums()
+;   
+;   Debug "Font debug issue (Russian) >> "
+;   Debug "**** System Font: "+System\Font_Name
+;   pdf_SetFont(System\Font_Name,"",8)  ;/DNT
+;   ;pdf_SetFont(System\Font_Name,"",8)  ;/DNT
+;   
+;   
+;   PageSizeX = pdf_GetW() - 4
+;   PageSizeY = pdf_GetH() - 96 ;/ remove header
+;   Debug "Page Size: "+Str(PageSizeX)+", "+Str(PageSizeY)
+;   
+;   SizeX = MaxX - MinX
+;   SizeY = MaxY - MinY
+;   ScaleX = SizeX / PageSizeX
+;   ScaleY = SizeY / PageSizey
+;   LeftBorder = 8
+;   TopBorder = 10
+;   Debug "Scale XY: "+StrF(ScaleX,1)+", "+StrF(ScaleY,1)
+;   Debug "Min XY: "+Str(MinX)+", "+Str(MinY)
+;   Debug "Max XY: "+Str(MaxX)+", "+Str(MaxY)
+;   
+;   pdf_SetFillColor(255,255,255)
+;   pdf_RoundRect(2+LeftBorder,20+TopBorder,pdf_GetW()-24-LeftBorder,62,2,#PDF_STYLE_DRAWANDFILL)
+;   
+;   pdf_SetFillColor(240,240,240)
+;   
+;   For MyLoop = #Gad_RollInfo_Start To #Gad_RollInfo_Finish
+;     If IsGadget(MyLoop)
+;       ;/ Exclude specific gadgets from being displayed on the report
+;       Excluded = 0
+;       If MyLoop = #Gad_RollInfo_Commit : Excluded = 1 : EndIf
+;       If MyLoop = #Gad_RollInfo_Undo : Excluded = 1 : EndIf
+;       If MyLoop = #Gad_RollInfo_Import_AMS : Excluded = 1 : EndIf
+;       If MyLoop = #Gad_RollInfo_ExportRollName : Excluded = 1 : EndIf ;/JM20220816
+;       If MyLoop = #Gad_RollInfo_Import_ACP : Excluded = 1 : EndIf
+;       If MyLoop = #Gad_RollInfo_Commit : Excluded = 1 : EndIf
+;       If MyLoop = #Gad_RollInfo_Import_New : Excluded = 1 : EndIf
+;       
+;       
+; 
+;       If Excluded = 0
+;         ForEach GadgetScale()
+;           If GadgetScale()\Gadget = MyLoop : Break : EndIf
+;         Next
+;         
+;         If Myloop = #Gad_RollInfo_GeneralHistory_History_List
+;           
+;           pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-1)
+;           pdfy = ((GadgetScale()\KeyPosY-MinY)/ScaleY)+23+TopBorder
+;           LineCount = CountGadgetItems(#Gad_RollInfo_GeneralHistory_History_List)
+;           If LineCount > 3 : LineCount = 3 : EndIf ;/ limit the amount of lines being displayed on the general history box
+;           SetGadgetState(#Gad_RollInfo_GeneralHistory_History_List,-1)
+;           For OnLine = -1 To Linecount
+;             For Column = 0 To 2
+;               pdf_Cell(GadgetScale()\ColumnSize[Column] / ScaleX ,4,GetGadgetItemText(Myloop,Online,Column),-15,0,#PDF_ALIGN_LEFT,1)
+;             Next
+;             pdf_Ln() : pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-1)
+;           Next
+;         EndIf
+;         
+;         If Myloop = #Gad_RollInfo_Original_List
+;           SetGadgetState(#Gad_RollInfo_Original_List,-1)
+;           
+;           pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-1)
+;           pdfy = ((GadgetScale()\KeyPosY-MinY)/ScaleY) + 24 + TopBorder
+;           For OnLine = 0 To 1
+;             For Column = 0 To 12 
+;               ;Debug "GadgetScale "+Str(GadgetScale()\ColumnSize[Column])
+;               
+;               Justify = #PDF_ALIGN_LEFT
+;               If Column > 1 
+;                 Justify = #PDF_ALIGN_CENTER
+;               EndIf
+;               
+;               ;/ Set foreground / Background colouring
+;               Col.i = GetGadgetItemColor(Myloop,Online,#PB_Gadget_FrontColor,Column)
+;               If Col = -1 : Col = 0 : EndIf
+;               pdf_SetTextColor(Red(Col), Green(Col), Blue(Col))
+;               
+;               Col.i = GetGadgetItemColor(Myloop,Online,#PB_Gadget_BackColor,Column)
+;               If Col = -1 : Col = RGB(255,255,255) : EndIf
+;               pdf_SetFillColor(Red(Col), Green(Col), Blue(Col))
+;               
+;               pdf_Cell(GadgetScale()\ColumnSize[Column] / ScaleX ,6,GetGadgetItemText(Myloop,Online,Column),-15,0,Justify,1)
+;             Next
+;             pdf_Ln() : pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-1)
+;           Next
+;         EndIf
+;         
+;         If Myloop = #Gad_RollInfo_History_List
+;           SetGadgetState(#Gad_RollInfo_History_List,-1)
+;           
+;           pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-1)
+;           pdfy = ((GadgetScale()\KeyPosY-MinY)/ScaleY)+24+TopBorder
+;           LineCount = CountGadgetItems(#Gad_RollInfo_History_List) - 1
+;           If LineCount > 15 : LineCount = 15 : EndIf
+;           For OnLine = 0 To Linecount
+;             For Column = 0 To 12
+;               
+;               Justify = #PDF_ALIGN_LEFT
+;               If Column > 1 
+;                 Justify = #PDF_ALIGN_CENTER
+;               EndIf
+;               
+;               Col.i = GetGadgetItemColor(Myloop,Online,#PB_Gadget_FrontColor,Column)
+;               If Col = -1 : Col = 0 : EndIf
+;               
+;               pdf_SetTextColor(Red(Col), Green(Col), Blue(Col))
+;               
+;               Col.i = GetGadgetItemColor(Myloop,Online,#PB_Gadget_BackColor,Column)
+;               If Col = -1 : Col = RGB(255,255,255) : EndIf
+;               
+;               pdf_SetFillColor(Red(Col), Green(Col), Blue(Col))
+;               pdf_Cell(GadgetScale()\ColumnSize[Column] / ScaleX ,6,GetGadgetItemText(Myloop,Online,Column),-15,0,Justify,1)
+;             Next
+;             pdf_Ln() : pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-1)
+;           Next
+;         EndIf
+;         
+;         PosX = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + leftborder
+;         PosY = ((GadgetScale()\KeyPosY-MinY)/ScaleY)+26+TopBorder
+;         GadSizeX = GadgetScale()\KeySizeX / ScaleX
+;         GadSizeY = GadgetScale()\KeySizeY / ScaleY
+;         
+;         ;Debug "PosX(Y): "+Str(PosX)+", "+Str(PosY)
+;         If GadgetType(GadgetScale()\Gadget) <> #PB_GadgetType_Text And GadgetType(GadgetScale()\Gadget) <> #PB_GadgetType_Image
+;           If GetGadgetText(MyLoop) <> "" : pdf_RoundRect(PosX-2,PosY-3,GadSizeX,GadSizeY,1,#PDF_STYLE_DRAWANDFILL) : EndIf
+;         EndIf
+;         
+;         If GadgetType(GadgetScale()\Gadget) = #PB_GadgetType_Image
+;           Select GadgetScale()\Gadget
+;             Case #Gad_RollInfo_Image_Reference
+;               If System\Reference_Image_Length > 0
+;                 Debug "Ref Image: "+Str(System\ReferenceImage)+" - Length: "+Str(System\Reference_Image_Length)
+;                 pdf_ImageMem("Scan1",System\ReferenceImage,System\Reference_Image_Length,PosX-2,PosY-3,GadSizeX,GadSizeY)   ;/DNT 
+;               EndIf
+;               
+;             Case #Gad_RollInfo_Image_Latest
+;               If System\Current_Image_Length > 0
+;                 Debug "Current Image: "+Str(System\CurrentImage)+" - Length: "+Str(System\Current_Image_Length)
+;                 pdf_ImageMem("Scan2",System\CurrentImage,System\Current_Image_Length,PosX-2,PosY-3,GadSizeX,GadSizeY);/DNT
+;               EndIf
+;               
+;             Case #Gad_RollInfo_Wall_Image
+;               pdf_ImageMem("Wall",?Roll_Wall_Opaque,?Roll_Wall_Opaque_End - ?Roll_Wall_Opaque,PosX-2,PosY-3,GadSizeX,GadSizeY);/DNT
+;               
+;             Case #Gad_RollInfo_Opening_Image
+;               pdf_ImageMem("Opening",?Roll_Opening_Opaque,?Roll_Opening_Opaque_End - ?Roll_Opening_Opaque,PosX-2,PosY-3,GadSizeX,GadSizeY);/DNT
+;               
+;             Case #Gad_RollInfo_Screen_Image
+;               pdf_ImageMem("Screen",?Roll_Screen_Opaque,?Roll_Screen_Opaque_End - ?Roll_Screen_Opaque,PosX-2,PosY-3,GadSizeX,GadSizeY);/DNT
+;               
+;             Case #Gad_RollInfo_AniCAM_Image
+;               pdf_ImageMem("AniCAM",?AniCAM_Opaque,?AniCAM_Opaque_End - ?AniCAM_Opaque,PosX-2,PosY-3,GadSizeX,GadSizeY);/DNT
+;               
+;             Case #Gad_RollInfo_Roll_Image
+;               pdf_ImageMem("Roll",?Roll_Opaque,?Roll_Opaque_End - ?Roll_Opaque,PosX-2,PosY-3.5,GadSizeX,GadSizeY+1);/DNT
+;               
+;             Case #Gad_RollInfo_Roll_Pins
+;               pdf_ImageMem("RollPins",?Roll_Pins_Opaque,?Roll_Pins_Opaque_End - ?Roll_Pins_Opaque,PosX-2,PosY-3.5,GadSizeX,GadSizeY+1) ;/DNT
+;               
+;           EndSelect
+;           
+;         EndIf
+;         
+;         If GetGadgetText(MyLoop) <> "" 
+;           Select MyLoop
+;             Case #Gad_Rollinfo_Readings_Text ;/ increase font size on readings text only
+;               pdf_SetFontSize(14)            ;/DNT
+;               pdf_Text(PosX-1,PosY,GetGadgetText(MyLoop))
+;               pdf_SetFontSize(8)  ;/DNT
+;             Case #Gad_RollInfo_Comment_Box
+;               ;2+LeftBorder,20+TopBorder,pdf_GetW()-24-LeftBorder,62,2,#PDF_STYLE_DRAWANDFILL)
+;               pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-2)
+;               pdfy = ((GadgetScale()\KeyPosY-MinY)/ScaleY)+24+TopBorder
+;               pdf_MultiCell(GadgetScale()\KeySizeX / ScaleX,(GadgetScale()\KeySizeY / ScaleY)/4.0,GetGadgetText(MyLoop),0,#PDF_ALIGN_Justified,0,0,3)
+;             Case #Gad_RollInfo_Opening_IDText ;/SL20230210
+;                 pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-4)
+;                 pdfy = ((GadgetScale()\KeyPosY-MinY)/ScaleY)+24+TopBorder
+;                 pdf_MultiCell(GadgetScale()\KeySizeX / ScaleX,(GadgetScale()\KeySizeY / ScaleY)/4.0,GetGadgetText(MyLoop),0,#PDF_ALIGN_LEFT,0,0,3)
+;             Case #Gad_RollInfo_Width_IDText ;/SL20230210
+;                 pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-4)
+;                 pdfy = ((GadgetScale()\KeyPosY-MinY)/ScaleY)+24+TopBorder
+;                 pdf_MultiCell(GadgetScale()\KeySizeX / ScaleX,(GadgetScale()\KeySizeY / ScaleY)/4.0,GetGadgetText(MyLoop),0,#PDF_ALIGN_LEFT,0,0,3)
+;             Case #Gad_Rollinfo_Group_Combo ;/SL20230210
+;                 pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-2)
+;                 pdfy = ((GadgetScale()\KeyPosY-MinY)/ScaleY)+24+TopBorder
+;                 pdf_MultiCell(GadgetScale()\KeySizeX / ScaleX,(GadgetScale()\KeySizeY / ScaleY)/4.0,GetGadgetText(MyLoop),0,#PDF_ALIGN_LEFT,0,0,3)
+;             Default
+;               pdf_Text(PosX-1,PosY,GetGadgetText(MyLoop))
+;           EndSelect
+;           
+;         EndIf 
+;       EndIf
+;       
+;     EndIf
+;   Next
+;   
+;   pdf_StopPageNums()
+;   pdf_Save(File)
+;   pdf_End()
+;   RunProgram(File)
+;   
+; EndProcedure
 Procedure.i Export_Rollinfo_PDF()
   Protected MyLoop.i, File.s, PageWidth.i, PageHeight.i, MinX.i, MaxX.i, MinY.i, MaxY.i, SizeX.f, SizeY.f, PageSizeX.i, PageSizeY.i, ScaleX.f, ScaleY.f, PosX.f, PosY.f
-  Protected GadSizeX.f, GadSizeY.f, Excluded.i, LeftBorder.i, Column.i, OnLine.i, LineCount.i, FilePattern.s, TopBorder.i, Col.i, Justify.s, TempImage.i
+  Protected GadSizeX.f, GadSizeY.f, Excluded.i, LeftBorder.i, Column.i, OnLine.i, LineCount.i, FilePattern.s, TopBorder.i, Col.i, Justify.s
   Protected strText.s
-  SetActiveGadget(-1) ;/ remove any gadget selection
+
+  SetActiveGadget(-1)
   
   FilePattern = "*.pdf|*.pdf" ;/DNT
   File.s = SaveFileRequester(tTxt(#Str_Enterfilename),"",FilePattern,0)
@@ -11272,10 +11710,10 @@ Procedure.i Export_Rollinfo_PDF()
     MessageRequester(tTxt(#Str_Error),tTxt(#Str_Cannotwritetofile)+", "+tTxt(#Str_filealreadyopenelsewhere)+"?",#PB_MessageRequester_Ok)
     ProcedureReturn 
   EndIf
-  
+
   MinX = 9999 : MaxX = -9999
   MinY = 9999 : MaxY = -9999
-  
+
   For MyLoop = #Gad_RollInfo_Start To #Gad_RollInfo_Finish
     If IsGadget(MyLoop)
       ForEach GadgetScale()
@@ -11287,7 +11725,7 @@ Procedure.i Export_Rollinfo_PDF()
       If GadgetScale()\KeyPosY + GadgetScale()\KeySizeY > MaxY : MaxY = GadgetScale()\KeyPosY + GadgetScale()\KeySizeY: EndIf
     EndIf
   Next
-  
+
   pdf_Create()
   pdf_SetDisplayMode(#PDF_ZOOM_REAL,#PDF_LAYOUT_SINGLE)
   pdf_SetProcHeader(@PDF_Header())
@@ -11295,11 +11733,8 @@ Procedure.i Export_Rollinfo_PDF()
   pdf_AddPage("P",#PDF_PAGE_FORMAT_A4)
   pdf_StartPageNums()
   
-  Debug "Font debug issue (Russian) >> "
   Debug "**** System Font: "+System\Font_Name
   pdf_SetFont(System\Font_Name,"",8)  ;/DNT
-  ;pdf_SetFont(System\Font_Name,"",8)  ;/DNT
-  
   
   PageSizeX = pdf_GetW() - 4
   PageSizeY = pdf_GetH() - 96 ;/ remove header
@@ -11316,10 +11751,10 @@ Procedure.i Export_Rollinfo_PDF()
   Debug "Max XY: "+Str(MaxX)+", "+Str(MaxY)
   
   pdf_SetFillColor(255,255,255)
-  pdf_RoundRect(2+LeftBorder,20+TopBorder,pdf_GetW()-24-LeftBorder,62,2,#PDF_STYLE_DRAWANDFILL)
+  pdf_RoundRect(5,20+TopBorder,pdf_GetW()-10,pdf_GetH()-35,2,#PDF_STYLE_DRAWANDFILL)
   
   pdf_SetFillColor(240,240,240)
-  
+
   For MyLoop = #Gad_RollInfo_Start To #Gad_RollInfo_Finish
     If IsGadget(MyLoop)
       ;/ Exclude specific gadgets from being displayed on the report
@@ -11328,40 +11763,38 @@ Procedure.i Export_Rollinfo_PDF()
       If MyLoop = #Gad_RollInfo_Undo : Excluded = 1 : EndIf
       If MyLoop = #Gad_RollInfo_Import_AMS : Excluded = 1 : EndIf
       If MyLoop = #Gad_RollInfo_ExportRollName : Excluded = 1 : EndIf ;/JM20220816
+      If MyLoop = #Gad_RollInfo_SetScan : Excluded = 1 : EndIf ;/SL20231008
       If MyLoop = #Gad_RollInfo_Import_ACP : Excluded = 1 : EndIf
       If MyLoop = #Gad_RollInfo_Commit : Excluded = 1 : EndIf
       If MyLoop = #Gad_RollInfo_Import_New : Excluded = 1 : EndIf
       
-      
-
       If Excluded = 0
         ForEach GadgetScale()
           If GadgetScale()\Gadget = MyLoop : Break : EndIf
         Next
-        
+
         If Myloop = #Gad_RollInfo_GeneralHistory_History_List
-          
-          pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-1)
+          pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-5)
           pdfy = ((GadgetScale()\KeyPosY-MinY)/ScaleY)+23+TopBorder
           LineCount = CountGadgetItems(#Gad_RollInfo_GeneralHistory_History_List)
           If LineCount > 3 : LineCount = 3 : EndIf ;/ limit the amount of lines being displayed on the general history box
           SetGadgetState(#Gad_RollInfo_GeneralHistory_History_List,-1)
           For OnLine = -1 To Linecount
             For Column = 0 To 2
-              pdf_Cell(GadgetScale()\ColumnSize[Column] / ScaleX ,4,GetGadgetItemText(Myloop,Online,Column),-15,0,#PDF_ALIGN_LEFT,1)
+              pdf_Cell(GadgetScale()\ColumnSize[Column] / ScaleX+2.6 ,4,GetGadgetItemText(Myloop,Online,Column),-15,0,#PDF_ALIGN_LEFT,1)
             Next
-            pdf_Ln() : pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-1)
+            pdf_Ln() : pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-5)
           Next
         EndIf
         
         If Myloop = #Gad_RollInfo_Original_List
           SetGadgetState(#Gad_RollInfo_Original_List,-1)
           
-          pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-1)
-          pdfy = ((GadgetScale()\KeyPosY-MinY)/ScaleY) + 24 + TopBorder
+          pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX-1) + (leftborder-1)
+          pdfy = ((GadgetScale()\KeyPosY-MinY)/ScaleY)+24+TopBorder
           For OnLine = 0 To 1
-            For Column = 0 To 12 
-              ;Debug "GadgetScale "+Str(GadgetScale()\ColumnSize[Column])
+            For Column = 0 To 12
+              Debug "GadgetScale "+Str(GadgetScale()\ColumnSize[Column])
               
               Justify = #PDF_ALIGN_LEFT
               If Column > 1 
@@ -11376,17 +11809,17 @@ Procedure.i Export_Rollinfo_PDF()
               Col.i = GetGadgetItemColor(Myloop,Online,#PB_Gadget_BackColor,Column)
               If Col = -1 : Col = RGB(255,255,255) : EndIf
               pdf_SetFillColor(Red(Col), Green(Col), Blue(Col))
-              
-              pdf_Cell(GadgetScale()\ColumnSize[Column] / ScaleX ,6,GetGadgetItemText(Myloop,Online,Column),-15,0,Justify,1)
+
+              pdf_Cell(GadgetScale()\ColumnSize[Column] / ScaleX+0.09, 6, GetGadgetItemText(Myloop,Online,Column), -15, 0, Justify, 1)
             Next
-            pdf_Ln() : pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-1)
+            pdf_Ln() : pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX-1) + (leftborder-1)
           Next
         EndIf
         
         If Myloop = #Gad_RollInfo_History_List
           SetGadgetState(#Gad_RollInfo_History_List,-1)
           
-          pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-1)
+          pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX-1) + (leftborder-1)
           pdfy = ((GadgetScale()\KeyPosY-MinY)/ScaleY)+24+TopBorder
           LineCount = CountGadgetItems(#Gad_RollInfo_History_List) - 1
           If LineCount > 15 : LineCount = 15 : EndIf
@@ -11397,7 +11830,7 @@ Procedure.i Export_Rollinfo_PDF()
               If Column > 1 
                 Justify = #PDF_ALIGN_CENTER
               EndIf
-              
+
               Col.i = GetGadgetItemColor(Myloop,Online,#PB_Gadget_FrontColor,Column)
               If Col = -1 : Col = 0 : EndIf
               
@@ -11407,33 +11840,52 @@ Procedure.i Export_Rollinfo_PDF()
               If Col = -1 : Col = RGB(255,255,255) : EndIf
               
               pdf_SetFillColor(Red(Col), Green(Col), Blue(Col))
-              pdf_Cell(GadgetScale()\ColumnSize[Column] / ScaleX ,6,GetGadgetItemText(Myloop,Online,Column),-15,0,Justify,1)
+              pdf_Cell(GadgetScale()\ColumnSize[Column] / ScaleX+0.09 ,6,GetGadgetItemText(Myloop,Online,Column),-15,0,Justify,1)
             Next
-            pdf_Ln() : pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-1)
+            pdf_Ln() : pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX-1) + (leftborder-1)
           Next
         EndIf
-        
+
         PosX = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + leftborder
         PosY = ((GadgetScale()\KeyPosY-MinY)/ScaleY)+26+TopBorder
         GadSizeX = GadgetScale()\KeySizeX / ScaleX
         GadSizeY = GadgetScale()\KeySizeY / ScaleY
         
-        ;Debug "PosX(Y): "+Str(PosX)+", "+Str(PosY)
+        Debug "PosX(Y): "+Str(PosX)+", "+Str(PosY)
         If GadgetType(GadgetScale()\Gadget) <> #PB_GadgetType_Text And GadgetType(GadgetScale()\Gadget) <> #PB_GadgetType_Image
           If GetGadgetText(MyLoop) <> "" : pdf_RoundRect(PosX-2,PosY-3,GadSizeX,GadSizeY,1,#PDF_STYLE_DRAWANDFILL) : EndIf
         EndIf
         
+
+        If MyLoop = #Gad_Rollinfo_Suitability_String
+            pdf_RoundRect(PosX-2,PosY-3,GadSizeX+11.2,GadSizeY,1,#PDF_STYLE_DRAWANDFILL)
+        EndIf
+
+        If MyLoop = #Gad_RollInfo_GeneralHistory_History_Text
+          pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-15)
+          pdfy = ((GadgetScale()\KeyPosY-MinY)/ScaleY)+23+TopBorder
+        EndIf
+
+
+
         If GadgetType(GadgetScale()\Gadget) = #PB_GadgetType_Image
           Select GadgetScale()\Gadget
             Case #Gad_RollInfo_Image_Reference
+              Debug "*********************** Exporting System reference image"
+              Debug "Ref Image: "+Str(System\ReferenceImage)
+              Debug "Length: "+Str(System\Reference_Image_Length)
+              Debug "Gadgetsize X & Y: "+Str(GadSizeX)+" - "+Str(GadSizeY)
               If System\Reference_Image_Length > 0
-                Debug "Ref Image: "+Str(System\ReferenceImage)+" - Length: "+Str(System\Reference_Image_Length)
+                
                 pdf_ImageMem("Scan1",System\ReferenceImage,System\Reference_Image_Length,PosX-2,PosY-3,GadSizeX,GadSizeY)   ;/DNT 
               EndIf
               
             Case #Gad_RollInfo_Image_Latest
+              Debug "********************** Exporting Current image"
+              Debug "Ref Image: "+Str(System\CurrentImage)
+              Debug "Length: "+Str(System\Current_Image_Length)
+              Debug "Gadgetsize X & Y: "+Str(GadSizeX)+" - "+Str(GadSizeY)
               If System\Current_Image_Length > 0
-                Debug "Current Image: "+Str(System\CurrentImage)+" - Length: "+Str(System\Current_Image_Length)
                 pdf_ImageMem("Scan2",System\CurrentImage,System\Current_Image_Length,PosX-2,PosY-3,GadSizeX,GadSizeY);/DNT
               EndIf
               
@@ -11445,7 +11897,7 @@ Procedure.i Export_Rollinfo_PDF()
               
             Case #Gad_RollInfo_Screen_Image
               pdf_ImageMem("Screen",?Roll_Screen_Opaque,?Roll_Screen_Opaque_End - ?Roll_Screen_Opaque,PosX-2,PosY-3,GadSizeX,GadSizeY);/DNT
-              
+
             Case #Gad_RollInfo_AniCAM_Image
               pdf_ImageMem("AniCAM",?AniCAM_Opaque,?AniCAM_Opaque_End - ?AniCAM_Opaque,PosX-2,PosY-3,GadSizeX,GadSizeY);/DNT
               
@@ -11458,15 +11910,18 @@ Procedure.i Export_Rollinfo_PDF()
           EndSelect
           
         EndIf
+
+        If MyLoop = #Gad_RollInfo_Comment_Box
+            pdf_RoundRect(PosX-2,PosY-3,GadSizeX+2.6,GadSizeY,1,#PDF_STYLE_DRAWANDFILL)
+        EndIf
         
         If GetGadgetText(MyLoop) <> "" 
           Select MyLoop
             Case #Gad_Rollinfo_Readings_Text ;/ increase font size on readings text only
-              pdf_SetFontSize(14)            ;/DNT
-              pdf_Text(PosX-1,PosY,GetGadgetText(MyLoop))
-              pdf_SetFontSize(8)  ;/DNT
+              pdf_SetFontSize(14) ;/DNT
+              pdf_Text(PosX+3.5,PosY,GetGadgetText(MyLoop))
+              pdf_SetFontSize(7)  ;/DNT
             Case #Gad_RollInfo_Comment_Box
-              ;2+LeftBorder,20+TopBorder,pdf_GetW()-24-LeftBorder,62,2,#PDF_STYLE_DRAWANDFILL)
               pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-2)
               pdfy = ((GadgetScale()\KeyPosY-MinY)/ScaleY)+24+TopBorder
               pdf_MultiCell(GadgetScale()\KeySizeX / ScaleX,(GadgetScale()\KeySizeY / ScaleY)/4.0,GetGadgetText(MyLoop),0,#PDF_ALIGN_Justified,0,0,3)
@@ -11479,13 +11934,24 @@ Procedure.i Export_Rollinfo_PDF()
                 pdfy = ((GadgetScale()\KeyPosY-MinY)/ScaleY)+24+TopBorder
                 pdf_MultiCell(GadgetScale()\KeySizeX / ScaleX,(GadgetScale()\KeySizeY / ScaleY)/4.0,GetGadgetText(MyLoop),0,#PDF_ALIGN_LEFT,0,0,3)
             Case #Gad_Rollinfo_Group_Combo ;/SL20230210
-                pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-4)
+                pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX) + (leftborder-2)
                 pdfy = ((GadgetScale()\KeyPosY-MinY)/ScaleY)+24+TopBorder
+                pdf_MultiCell(GadgetScale()\KeySizeX / ScaleX,(GadgetScale()\KeySizeY / ScaleY)/4.0,GetGadgetText(MyLoop),0,#PDF_ALIGN_LEFT,0,0,3)
+            Case #Gad_RollInfo_GeneralHistory_History_Text
+                pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX-1) + (leftborder-2)
+                pdfy = ((GadgetScale()\KeyPosY-MinY)/ScaleY)+26+TopBorder
+                pdf_MultiCell(GadgetScale()\KeySizeX / ScaleX,(GadgetScale()\KeySizeY / ScaleY)/4.0,GetGadgetText(MyLoop),0,#PDF_ALIGN_LEFT,0,0,3)
+            Case #Gad_RollInfo_Original_Text
+                pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX+2.5) + (leftborder-2)
+                pdfy = ((GadgetScale()\KeyPosY-MinY)/ScaleY)+26+TopBorder
+                pdf_MultiCell(GadgetScale()\KeySizeX / ScaleX,(GadgetScale()\KeySizeY / ScaleY)/4.0,GetGadgetText(MyLoop),0,#PDF_ALIGN_LEFT,0,0,3)
+            Case #Gad_RollInfo_History_Text
+                pdfx = ((GadgetScale()\KeyPosX-MinX)/ScaleX+4.6) + (leftborder-2)
+                pdfy = ((GadgetScale()\KeyPosY-MinY)/ScaleY)+26+TopBorder
                 pdf_MultiCell(GadgetScale()\KeySizeX / ScaleX,(GadgetScale()\KeySizeY / ScaleY)/4.0,GetGadgetText(MyLoop),0,#PDF_ALIGN_LEFT,0,0,3)
             Default
               pdf_Text(PosX-1,PosY,GetGadgetText(MyLoop))
           EndSelect
-          
         EndIf 
       EndIf
       
@@ -11496,9 +11962,8 @@ Procedure.i Export_Rollinfo_PDF()
   pdf_Save(File)
   pdf_End()
   RunProgram(File)
-  
-EndProcedure
 
+EndProcedure
 Procedure.i Export_Excel(View.i) ;/ Report = 0, Anilox = 1
   Protected MyLoop.i, File.s, Text.s, Column.i, ColumnCount.i, ColumnLetter.s, SM.s, TmpTxt.s, Temp.i, Online.i
   Protected ExcelObject.COMateObject , WorkBook.i, CellColour.i, Range.s, Tmp.s, CellData.i, CellText.s
@@ -12534,8 +12999,8 @@ Procedure Init_Menu()
   MenuBar()
   MenuItem(#Menu_Help_ViewEULA,tTxt(#Str_ShowLicenceAgreement))
   MenuBar()
-  MenuItem(#Menu_Help_CheckForUpdates,tTxt(#Str_Checkforupdate)+"...")
-  MenuBar()
+  ;MenuItem(#Menu_Help_CheckForUpdates,tTxt(#Str_Checkforupdate)+"...") ;/SL20230406 Hidden as website links are no longer valid
+  ;MenuBar()
   OpenSubMenu(tTxt(#Str_Licencecode)+"...") 
   ;(tTxt(#Str_Export)+"...")
   
@@ -12777,6 +13242,7 @@ Procedure Init_Window_HomeScreen(SiteID.i=1)
   Redraw_HomeScreen()
   
 EndProcedure
+
 Procedure Init_Window_RollInformation()
   Protected Y.i, SavedY.i, X.i = 310, Tmp.s, strCellOpening.s
   ;  AddGadgetItem(#Gad_TabGadget,#Panel_Roll_Info,"Roll Information",ImageID(#Image_Info))
@@ -12784,28 +13250,28 @@ Procedure Init_Window_RollInformation()
   
   Y = 6
   
-  TextGadget(#Gad_Rollinfo_RollID_Text,X + 20,Y,118,16,tTxt(#Str_RollID)) :  SetGadgetColor(#Gad_Rollinfo_RollID_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
-  TextGadget(#Gad_Rollinfo_Manufacturer_Text,X + 146,Y,118,16,tTxt(#Str_Manufacturer)) :  SetGadgetColor(#Gad_Rollinfo_Manufacturer_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
-  TextGadget(#Gad_Rollinfo_DateMade_Text,X + 270,Y,90,16,tTxt(#Str_Datemade)) :  SetGadgetColor(#Gad_Rollinfo_DateMade_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
-  TextGadget(#Gad_Rollinfo_Group_Text,X + 364,Y,90,16,tTxt(#Str_Group)) :  SetGadgetColor(#Gad_Rollinfo_Group_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
-  TextGadget(#Gad_Rollinfo_Suitability_Text,X + 475,Y,120,16,tTxt(#Str_Suitability)) :  SetGadgetColor(#Gad_Rollinfo_Suitability_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+  TextGadget(#Gad_Rollinfo_RollID_Text,X,Y,118,16,tTxt(#Str_RollID)) :  SetGadgetColor(#Gad_Rollinfo_RollID_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+  TextGadget(#Gad_Rollinfo_Manufacturer_Text,X + 126,Y,118,16,tTxt(#Str_Manufacturer)) :  SetGadgetColor(#Gad_Rollinfo_Manufacturer_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+  TextGadget(#Gad_Rollinfo_DateMade_Text,X + 250,Y,90,16,tTxt(#Str_Datemade)) :  SetGadgetColor(#Gad_Rollinfo_DateMade_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+  TextGadget(#Gad_Rollinfo_Group_Text,X + 344,Y,90,16,tTxt(#Str_Group)) :  SetGadgetColor(#Gad_Rollinfo_Group_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+  TextGadget(#Gad_Rollinfo_Suitability_Text,X + 455,Y,120,16,tTxt(#Str_Suitability)) :  SetGadgetColor(#Gad_Rollinfo_Suitability_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
   
-  ButtonGadget(#Gad_RollInfo_Commit,X + 620,Y+2,90,20,tTxt(#Str_Commitchanges))
-  ButtonGadget(#Gad_RollInfo_Undo,X + 620,Y+24,90,20,tTxt(#Str_Undochanges))
+  ButtonGadget(#Gad_RollInfo_Commit,X + 610,Y+16,90,20,tTxt(#Str_Commitchanges))
+  ButtonGadget(#Gad_RollInfo_Undo,X + 610,Y+37,90,20,tTxt(#Str_Undochanges))
   
   Y + 17
-  StringGadget(#Gad_Rollinfo_RollID_String,X + 20,Y,124,20,"",#PB_String_ReadOnly); :  setgadgetcolor(#Gad_Rollinfo_RollID_String,#PB_Gadget_BackColor,#WinCol_RollInfo)
-  ComboBoxGadget(#Gad_Rollinfo_Manufacturer_String,X + 146,Y,120,20)              ;:  setgadgetcolor(#Gad_Rollinfo_Manufacturer_String,#PB_Gadget_BackColor,#WinCol_RollInfo)
-                                                                                  ;AddGadgetItem(#Gad_Rollinfo_Manufacturer_String,-1,"*"+ tTxt(#Str_Unknown) +"*") ;/DNT
+  StringGadget(#Gad_Rollinfo_RollID_String,X,Y,124,20,"",#PB_String_ReadOnly); :  setgadgetcolor(#Gad_Rollinfo_RollID_String,#PB_Gadget_BackColor,#WinCol_RollInfo)
+  ComboBoxGadget(#Gad_Rollinfo_Manufacturer_String,X + 126,Y,120,20) ;:  setgadgetcolor(#Gad_Rollinfo_Manufacturer_String,#PB_Gadget_BackColor,#WinCol_RollInfo)
+  ;AddGadgetItem(#Gad_Rollinfo_Manufacturer_String,-1,"*"+ tTxt(#Str_Unknown) +"*") ;/DNT
   ForEach ManufacturerList()
     AddGadgetItem(#Gad_Rollinfo_Manufacturer_String,-1,ManufacturerList()\Text)
   Next
   
-  DateGadget(#Gad_Rollinfo_DateMade_Date,X + 270,Y,90,20); :  setgadgetcolor(#Gad_Rollinfo_DateMade_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+  DateGadget(#Gad_Rollinfo_DateMade_Date,X + 250,Y,90,20); :  setgadgetcolor(#Gad_Rollinfo_DateMade_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
   
-  StringGadget(#Gad_Rollinfo_Group_Combo,X + 362,Y,110,20,"",#PB_String_ReadOnly) ; :  setgadgetcolor(#Gad_Rollinfo_Group_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+  StringGadget(#Gad_Rollinfo_Group_Combo,X + 342,Y,110,20,"",#PB_String_ReadOnly) ; :  setgadgetcolor(#Gad_Rollinfo_Group_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
   
-  ComboBoxGadget(#Gad_Rollinfo_Suitability_String,X + 475,Y,140,20); :  setgadgetcolor(#Gad_Rollinfo_Suitability_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+  ComboBoxGadget(#Gad_Rollinfo_Suitability_String,X + 455,Y,145,20); :  setgadgetcolor(#Gad_Rollinfo_Suitability_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
   Refresh_Suitability_List()
   ;AddGadgetItem(#Gad_Rollinfo_Suitability_String,-1,"*"+tTxt(#Str_Notset)+"*")
   ;ForEach SuitabilityList()
@@ -12816,37 +13282,37 @@ Procedure Init_Window_RollInformation()
   
   ImageGadget(#Gad_RollInfo_Screen_Image,X + 16,Y,ImageWidth(#Image_RollInfo_Screen),ImageHeight(#Image_RollInfo_Screen),ImageID(#Image_RollInfo_Screen))
   ImageGadget(#Gad_RollInfo_Wall_Image,X + 121,Y,ImageWidth(#Image_RollInfo_Wall),ImageHeight(#Image_RollInfo_Wall),ImageID(#Image_RollInfo_Wall))
-  ImageGadget(#Gad_RollInfo_Opening_Image,X + 226,Y,ImageWidth(#Image_RollInfo_Opening),ImageHeight(#Image_RollInfo_Opening),ImageID(#Image_RollInfo_Opening))
+  ImageGadget(#Gad_RollInfo_Opening_Image,X + 206,Y,ImageWidth(#Image_RollInfo_Opening),ImageHeight(#Image_RollInfo_Opening),ImageID(#Image_RollInfo_Opening))
   
   Y + 22
   StringGadget(#Gad_RollInfo_Screen_String,X + 20,Y,40,18,"")
-  StringGadget(#Gad_RollInfo_Wall_String_New,X + 145,Y,30,18,"") ;/JM20220221 Make room for 2 measurments, reference and current
+  StringGadget(#Gad_RollInfo_Wall_String_New,X + 145,Y,30,18,"") ;/SL20230405 Make room for 2 measurments, reference and current
   StringGadget(#Gad_RollInfo_Wall_String,X + 115,Y,30,18,"")
-  StringGadget(#Gad_RollInfo_Opening_String_New,X + 250,Y,30,18,"") ;/JM20220221
-  StringGadget(#Gad_RollInfo_Opening_String,X + 220,Y,30,18,"")
-  StringGadget(#Gad_RollInfo_Width_String,X + 305,Y,40,18,"")
+  StringGadget(#Gad_RollInfo_Opening_String_New,X + 235,Y,30,18,"") ;/SL20230405
+  StringGadget(#Gad_RollInfo_Opening_String,X + 205,Y,30,18,"")
+  StringGadget(#Gad_RollInfo_Width_String,X + 293,Y,40,18,"")
   
-  TextGadget(#Gad_RollInfo_Ref_String_One,X + 95,Y,20,20,tTxt(#Str_Ref)) :  SetGadgetColor(#Gad_RollInfo_Ref_String_One,#PB_Gadget_BackColor,#WinCol_RollInfo)
-  TextGadget(#Gad_RollInfo_Screen_UnitText,X + 62,Y,20,20,System\Settings_Screen_UnitMask) :  SetGadgetColor(#Gad_RollInfo_Screen_UnitText,#PB_Gadget_BackColor,#WinCol_RollInfo)
-  TextGadget(#Gad_RollInfo_Ref_String_Two,X + 200,Y,20,20,tTxt(#Str_Ref)) :  SetGadgetColor(#Gad_RollInfo_Ref_String_Two,#PB_Gadget_BackColor,#WinCol_RollInfo)
+;  TextGadget(#Gad_RollInfo_Ref_String_One,X + 95,Y,20,20,tTxt(#Str_Ref)) :  SetGadgetColor(#Gad_RollInfo_Ref_String_One,#PB_Gadget_BackColor,#WinCol_RollInfo)
+  TextGadget(#Gad_RollInfo_Screen_UnitText,X + 66,Y,20,20,System\Settings_Screen_UnitMask) :  SetGadgetColor(#Gad_RollInfo_Screen_UnitText,#PB_Gadget_BackColor,#WinCol_RollInfo)
+;  TextGadget(#Gad_RollInfo_Ref_String_Two,X + 200,Y,20,20,tTxt(#Str_Ref)) :  SetGadgetColor(#Gad_RollInfo_Ref_String_Two,#PB_Gadget_BackColor,#WinCol_RollInfo)
   TextGadget(#Gad_RollInfo_Wall_UnitText,X + 175,Y,20,20,System\Settings_Length_UnitMask) :  SetGadgetColor(#Gad_RollInfo_Wall_UnitText,#PB_Gadget_BackColor,#WinCol_RollInfo)
-  TextGadget(#Gad_RollInfo_Opening_UnitText,X + 280,Y,20,20,System\Settings_Length_UnitMask) :  SetGadgetColor(#Gad_RollInfo_Opening_UnitText,#PB_Gadget_BackColor,#WinCol_RollInfo)
-  TextGadget(#Gad_RollInfo_Width_UnitText,X + 347,Y,22,20,System\Settings_MLength_UnitMask) :  SetGadgetColor(#Gad_RollInfo_Width_UnitText,#PB_Gadget_BackColor,#WinCol_RollInfo)
-  
+  TextGadget(#Gad_RollInfo_Opening_UnitText,X + 266,Y,20,20,System\Settings_Length_UnitMask) :  SetGadgetColor(#Gad_RollInfo_Opening_UnitText,#PB_Gadget_BackColor,#WinCol_RollInfo)
+  TextGadget(#Gad_RollInfo_Width_UnitText,X + 333,Y,22,20,System\Settings_MLength_UnitMask) :  SetGadgetColor(#Gad_RollInfo_Width_UnitText,#PB_Gadget_BackColor,#WinCol_RollInfo)
+
   Y + 20
   TextGadget(#Gad_RollInfo_Screen_IDText,X + 20,Y,80,20,tTxt(#Str_Screen))    :  SetGadgetColor(#Gad_RollInfo_Screen_IDText,#PB_Gadget_BackColor,#WinCol_RollInfo)
-  TextGadget(#Gad_RollInfo_Wall_IDText,X + 120,Y,80,40,tTxt(#Str_Wallwidth)) :  SetGadgetColor(#Gad_RollInfo_Wall_IDText,#PB_Gadget_BackColor,#WinCol_RollInfo) 
-  TextGadget(#Gad_RollInfo_Opening_IDText,X + 220,Y,80,40,tTxt(#Str_Cellopening)) :  SetGadgetColor(#Gad_RollInfo_Opening_IDText,#PB_Gadget_BackColor,#WinCol_RollInfo)
-  TextGadget(#Gad_RollInfo_Width_IDText,X + 305,Y,70,40,tTxt(#Str_Rollwidth)) :  SetGadgetColor(#Gad_RollInfo_Width_IDText,#PB_Gadget_BackColor,#WinCol_RollInfo)
+  TextGadget(#Gad_RollInfo_Wall_IDText,X + 115,Y,80,40,tTxt(#Str_Wallwidth)) :  SetGadgetColor(#Gad_RollInfo_Wall_IDText,#PB_Gadget_BackColor,#WinCol_RollInfo)
+  TextGadget(#Gad_RollInfo_Opening_IDText,X + 205,Y,80,40,tTxt(#Str_Cellopening)) :  SetGadgetColor(#Gad_RollInfo_Opening_IDText,#PB_Gadget_BackColor,#WinCol_RollInfo)
+  TextGadget(#Gad_RollInfo_Width_IDText,X + 293,Y,70,40,tTxt(#Str_Rollwidth)) :  SetGadgetColor(#Gad_RollInfo_Width_IDText,#PB_Gadget_BackColor,#WinCol_RollInfo)
   
   Y + 18
-  TextGadget(#Gad_RollInfo_GeneralHistory_History_Text,X + 20,Y,180,18,tTxt(#Str_Generalhistory)+":") : SetGadgetColor(#Gad_RollInfo_GeneralHistory_History_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+  TextGadget(#Gad_RollInfo_GeneralHistory_History_Text, X, Y,180,18,tTxt(#Str_Generalhistory)+":") : SetGadgetColor(#Gad_RollInfo_GeneralHistory_History_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
   
   Y + 18
   
-  ListIconGadget(#Gad_RollInfo_GeneralHistory_History_List,X + 20,Y,600,90,tTxt(#Str_Date),80,#PB_ListIcon_FullRowSelect|#PB_ListIcon_GridLines)
+  ListIconGadget(#Gad_RollInfo_GeneralHistory_History_List,X + 10, Y,640,90,tTxt(#Str_Date),80,#PB_ListIcon_FullRowSelect|#PB_ListIcon_GridLines)
   AddGadgetColumn(#Gad_RollInfo_GeneralHistory_History_List,1,tTxt(#Str_Type),100)
-  AddGadgetColumn(#Gad_RollInfo_GeneralHistory_History_List,2,tTxt(#Str_Comments),390)
+  AddGadgetColumn(#Gad_RollInfo_GeneralHistory_History_List,2,tTxt(#Str_Comments),433)
   
   SendMessage_(GadgetID(#Gad_RollInfo_GeneralHistory_History_List), #LVM_SETEXTENDEDLISTVIEWSTYLE, 0, #LVS_EX_LABELTIP|#LVS_EX_FULLROWSELECT) 
   ;    SendMessage_(GadgetID(#Gad_RollInfo_GeneralHistory_History_List), #LVM_SETEXTENDEDLISTVIEWSTYLE, #LVS_EX_FULLROWSELECT, #LVS_EX_FULLROWSELECT)
@@ -12854,33 +13320,35 @@ Procedure Init_Window_RollInformation()
   Y = SavedY
   TextGadget(#Gad_RollInfo_Comment_Text,X + 370,Y+2,200,18,tTxt(#Str_LastComment)+":") :  SetGadgetColor(#Gad_RollInfo_Comment_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
   Y = SavedY + 20
-  EditorGadget(#Gad_RollInfo_Comment_Box,X + 370,Y,250,38)
+  EditorGadget(#Gad_RollInfo_Comment_Box,X + 370,Y,260,38)
   SetGadgetFont(#Gad_RollInfo_Comment_Box,FontID(#Font_List_S))
   ;Debug "Original FonID: "+Str(#Font_List_M)
   
   Y + 154
-  TextGadget(#Gad_RollInfo_Image_Reference_Text,X + 80,Y,240,18,tTxt(#Str_Reference)+":") :  SetGadgetColor(#Gad_RollInfo_Image_Reference_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
-  TextGadget(#Gad_RollInfo_Image_Latest_Text,X + 370,Y,280,18,tTxt(#Str_Lastimported)+" / "+tTxt(#Str_selected)+": ["+tTxt(#Str_PrintDistance)+": "+"]") : SetGadgetColor(#Gad_RollInfo_Image_Latest_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
-  ImageGadget(#Gad_RollInfo_Image_Reference,X + 80,Y+18,240,180,0,#PB_Image_Border)
-  ImageGadget(#Gad_RollInfo_Image_Latest,X + 370,Y+18,240,180,0,#PB_Image_Border)
+  TextGadget(#Gad_RollInfo_Image_Reference_Text,X + 70,Y,240,18,tTxt(#Str_Reference)+":") :  SetGadgetColor(#Gad_RollInfo_Image_Reference_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+  TextGadget(#Gad_RollInfo_Image_Latest_Text,X + 340,Y,280,18,tTxt(#Str_Lastimported)+" / "+tTxt(#Str_selected)+":") : SetGadgetColor(#Gad_RollInfo_Image_Latest_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+  ImageGadget(#Gad_RollInfo_Image_Reference,X + 70,Y+18,240,180,0,#PB_Image_Border)
+  ImageGadget(#Gad_RollInfo_Image_Latest,X + 340,Y+18,240,180,0,#PB_Image_Border)
   
   Y + 210
   
-  ImageGadget(#Gad_RollInfo_AniCAM_Image,X + 10,Y,ImageWidth(#Image_AniCAM),ImageHeight(#Image_AniCAM),ImageID(#Image_AniCAM))
+  ;ImageGadget(#Gad_RollInfo_AniCAM_Image,X + 10,Y,ImageWidth(#Image_AniCAM),ImageHeight(#Image_AniCAM),ImageID(#Image_AniCAM))
   
-  ImageGadget(#Gad_RollInfo_Roll_Image,X + 174,Y+16,ImageWidth(#Image_Roll_Large),ImageHeight(#Image_Roll_Large),ImageID(#Image_Roll_Large))
+  ImageGadget(#Gad_RollInfo_Roll_Image,X + 114,Y+16,ImageWidth(#Image_Roll_Large),ImageHeight(#Image_Roll_Large),ImageID(#Image_Roll_Large))
   DisableGadget(#Gad_RollInfo_Roll_Image,1)
-  ImageGadget(#Gad_RollInfo_Roll_Pins,X + 174,Y+80+41,ImageWidth(#Image_Roll_Pins),ImageHeight(#Image_Roll_Pins),ImageID(#Image_Roll_Pins))
+  ImageGadget(#Gad_RollInfo_Roll_Pins,X + 114,Y+80+41,ImageWidth(#Image_Roll_Pins), ImageHeight(#Image_Roll_Pins),ImageID(#Image_Roll_Pins))
   DisableGadget(#Gad_RollInfo_Roll_Pins,1)
   
-  TextGadget(#Gad_Rollinfo_Readings_Text,X+75,Y+36,100,30,tTxt(#Str_Readings),#PB_Text_Center) : SetGadgetColor(#Gad_Rollinfo_Readings_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+  TextGadget(#Gad_Rollinfo_Readings_Text, X-20, Y,100,30,tTxt(#Str_Readings),#PB_Text_Center) : SetGadgetColor(#Gad_Rollinfo_Readings_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
   SetGadgetFont(#Gad_Rollinfo_Readings_Text,FontID(#Font_List_L))
   
   Y + 80
   
-  TextGadget(#Gad_RollInfo_Original_Text,X-10 ,Y+20,62,20,tTxt(#Str_Reference)+":",#PB_Text_Right):  SetGadgetColor(#Gad_RollInfo_Original_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
-  ListIconGadget(#Gad_RollInfo_Original_List,X + 60,Y-4,652,48,tTxt(#Str_Date)+":",66,#PB_ListIcon_FullRowSelect|#PB_ListIcon_GridLines|#LVS_NOCOLUMNHEADER)
-  ;    ListIconGadget(#Gad_RollInfo_Original_List,X + 60,Y-4,580,48,tTxt(#Str_Date)+":",80,#PB_ListIcon_FullRowSelect|#PB_ListIcon_GridLines)
+  TextGadget(#Gad_RollInfo_Original_Text,X-13,Y-20,62,20,tTxt(#Str_Reference)+":",#PB_Text_Right):  SetGadgetColor(#Gad_RollInfo_Original_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
+  ListIconGadget(#Gad_RollInfo_Original_List, X, Y-4,652,40,tTxt(#Str_Date)+":",66,#PB_ListIcon_FullRowSelect|#PB_ListIcon_GridLines|#LVS_NOCOLUMNHEADER)
+  
+
+;    ListIconGadget(#Gad_RollInfo_Original_List,X + 60,Y-4,580,48,tTxt(#Str_Date)+":",80,#PB_ListIcon_FullRowSelect|#PB_ListIcon_GridLines)
   ;SetListIconColumnJustification(#Gad_RollInfo_Original_List,0,#PB_ListIcon_JustifyColumnCenter)
   AddGadgetColumn(#Gad_RollInfo_Original_List,1,tTxt(#Str_Examiner),70)
   AddGadgetColumn(#Gad_RollInfo_Original_List,2,"1",38)
@@ -12898,31 +13366,26 @@ Procedure Init_Window_RollInformation()
   SetListIconColumnJustification(#Gad_RollInfo_Original_List,8,#PB_ListIcon_JustifyColumnCenter)
   AddGadgetColumn(#Gad_RollInfo_Original_List,9,tTxt(#Str_Variance),56)
   SetListIconColumnJustification(#Gad_RollInfo_Original_List,9,#PB_ListIcon_JustifyColumnCenter)
-  AddGadgetColumn(#Gad_RollInfo_Original_List,10,tTxt(#Str_Capacity),96) ;/JM20220124 increase width to allow for new text of "Volume Retention"
+  AddGadgetColumn(#Gad_RollInfo_Original_List,10,tTxt(#Str_Capacity),96) ;/SL20230405 increase width to allow for new text of "Volume Retention"
   SetListIconColumnJustification(#Gad_RollInfo_Original_List,10,#PB_ListIcon_JustifyColumnCenter)
   ;MessageRequester("Show Depth: "+Str(System\Show_Depth),",")
   
-  ;If System\Show_Depth = 1
-    AddGadgetColumn(#Gad_RollInfo_Original_List,11,tTxt(#Str_Depth),46)
+  If System\Show_Depth = 1
+    AddGadgetColumn(#Gad_RollInfo_Original_List,11,tTxt(#Str_Depth),40)
     SetListIconColumnJustification(#Gad_RollInfo_Original_List,11,#PB_ListIcon_JustifyColumnCenter)
-  ;EndIf
+  EndIf
+
   
-  AddGadgetColumn(#Gad_RollInfo_Original_List,12,tTxt(#Str_Usage),38)
+  AddGadgetColumn(#Gad_RollInfo_Original_List,12,tTxt(#Str_Usage),50)
   SetListIconColumnJustification(#Gad_RollInfo_Original_List,12,#PB_ListIcon_JustifyColumnCenter)
-  
-  
-  ;    SetGadgetItemColor(#Gad_RollInfo_Original_List,-1,#PB_Gadget_BackColor,RGB(250,200,200),4)
-  ;    SetGadgetItemColor(#Gad_RollInfo_Original_List,-1,#PB_Gadget_BackColor,RGB(250,200,200),6)
-  
+
   ;AddGadgetItem(#Gad_RollInfo_Original_List,-1,tTxt(#Str_Test))
   SendMessage_(GadgetID(#Gad_RollInfo_Original_List), #LVM_SETEXTENDEDLISTVIEWSTYLE, 0, #LVS_EX_LABELTIP|#LVS_EX_FULLROWSELECT) 
-  
-  ;    SetGadgetItemColor(#Gad_RollInfo_Original_List,0,#PB_Gadget_BackColor,RGB(0,255,0),9)
-  
+
   Y + 50
-  TextGadget(#Gad_RollInfo_History_Text,X-10 ,Y,62,20,tTxt(#Str_Historical)+":",#PB_Text_Right)
+  TextGadget(#Gad_RollInfo_History_Text,X-20 ,Y-10,62,20,tTxt(#Str_Historical)+":",#PB_Text_Right)
   SetGadgetColor(#Gad_RollInfo_History_Text,#PB_Gadget_BackColor,#WinCol_RollInfo)
-  ListIconGadget(#Gad_RollInfo_History_List,X + 60,Y,652,100,tTxt(#Str_Date),66,#PB_ListIcon_FullRowSelect|#PB_ListIcon_GridLines|#LVS_NOCOLUMNHEADER|#PB_ListIcon_AlwaysShowSelection)
+  ListIconGadget(#Gad_RollInfo_History_List,X, Y+5,652,90,tTxt(#Str_Date),66,#PB_ListIcon_FullRowSelect|#PB_ListIcon_GridLines|#LVS_NOCOLUMNHEADER|#PB_ListIcon_AlwaysShowSelection)
   AddGadgetColumn(#Gad_RollInfo_History_List,1,tTxt(#Str_Examiner),70)
   AddGadgetColumn(#Gad_RollInfo_History_List,2,"1",38)
   SetListIconColumnJustification(#Gad_RollInfo_History_List,2,#PB_ListIcon_JustifyColumnCenter)
@@ -12941,46 +13404,31 @@ Procedure Init_Window_RollInformation()
   SetListIconColumnJustification(#Gad_RollInfo_History_List,9,#PB_ListIcon_JustifyColumnCenter)
   AddGadgetColumn(#Gad_RollInfo_History_List,10,tTxt(#Str_Capacity),96)
   SetListIconColumnJustification(#Gad_RollInfo_History_List,10,#PB_ListIcon_JustifyColumnCenter)
-  ;If System\Show_Depth = 1
-    AddGadgetColumn(#Gad_RollInfo_History_List,11,tTxt(#Str_Depth),46)
-    SetListIconColumnJustification(#Gad_RollInfo_History_List,11,#PB_ListIcon_JustifyColumnCenter)
-  ;EndIf
   
-  AddGadgetColumn(#Gad_RollInfo_History_List,12,tTxt(#Str_Usage),38)
+  If System\Show_Depth = 1
+    AddGadgetColumn(#Gad_RollInfo_History_List,11,tTxt(#Str_Depth),40)
+    SetListIconColumnJustification(#Gad_RollInfo_History_List,11,#PB_ListIcon_JustifyColumnCenter)
+  EndIf
+
+  AddGadgetColumn(#Gad_RollInfo_History_List,12,tTxt(#Str_Usage),50)
   SetListIconColumnJustification(#Gad_RollInfo_History_List,12,#PB_ListIcon_JustifyColumnCenter)
-    
+
   SendMessage_(GadgetID(#Gad_RollInfo_History_List), #LVM_SETEXTENDEDLISTVIEWSTYLE, 0, #LVS_EX_LABELTIP|#LVS_EX_FULLROWSELECT) 
   Y-100
-  ;    Framegadget(#Gad_RollInfo_Import_Frame,600,Y,100,90,"Import options") : Y + 20
+  ;    FrameGadget(#Gad_RollInfo_Import_Frame,600,Y,100,90,"Import options") : Y + 20
   Tmp.s = ":"+" "+tTxt(#Str_AMS)
-  ButtonGadget(#Gad_RollInfo_Import_New,x+460,y,24,20,"+")
-  GadgetToolTip(#Gad_RollInfo_Import_New,tTxt(#Str_Insertnewreading))
-  ButtonGadget(#Gad_RollInfo_Import_AMS,X + 500,Y-12,80,20,tTxt(#Str_Import)+Tmp)
-  ButtonGadget(#Gad_RollInfo_ExportRollName, X + 500, Y + 12, 80, 20, "Export to AQC") ;/JM20220816
-  ButtonImageGadget(#Gad_RollInfo_GraphIcon, x + 590 ,Y-10 ,50,40,ImageID(#Image_GraphIcon))  
+  ;If System\User_AccessLevel <> #Access_ReadOnly
+    ButtonGadget(#Gad_RollInfo_Import_New, x + 448, y, 20, 20, "+")
+    GadgetToolTip(#Gad_RollInfo_Import_New,tTxt(#Str_Insertnewreading))
+    ButtonGadget(#Gad_RollInfo_Import_AMS,X + 472, Y, 80, 20, tTxt(#Str_Import)+Tmp) : Y + 20
+    ;ButtonGadget(#Gad_RollInfo_ExportRollName, X + 477, Y, 80, 20, "Export to AQC") ;/JM20220816
+
+    ;ButtonGadget(#Gad_RollInfo_SetScan, X + 394, Y, 80, 20, "Setup Scan") ;/SL20231008
+    ButtonImageGadget(#Gad_RollInfo_SetScan, X + 557, Y - 20, 40, 40, ImageID(#Image_AniCAMSmall)) ;/SL20231008
+    
+    ButtonImageGadget(#Gad_RollInfo_GraphIcon, x + 602,Y - 20, 50, 40, ImageID(#Image_GraphIcon))
+  ;EndIf
   
-  : Y + 20
-  Tmp.s = ":"+" "+tTxt(#Str_ACP)
-  
-  
-  
-  ;    ButtonGadget(#Gad_RollInfo_Import_ACP,X + 550,Y,80,20,tTxt(#Str_Import)+Tmp)       : Y + 22
-  ;    DisableGadget(#Gad_RollInfo_Import_ACP,1)
-  ;    ButtonGadget(#Gad_RollInfo_Import_New,X + 610,Y,80,18,"Manual Entry")       : Y + 40
-  ;    ButtonGadget(#Gad_RollInfo_Edit,X + 600,Y,90,18,"Edit Selected")           : Y + 20
-  ;    ButtonGadget(#Gad_RollInfo_Delete,X + 600,Y,90,18,"Delete Selected")       : Y + 20
-  
-  ;SetGadgetColor(#Gad_RollInfo_Import_AMS,#PB_Gadget_BackColor,RGB(80,220,80))
-  
-  ;  #Gad_RollInfo_Import_AMS
-  ;  #Gad_RollInfo_Import_ACP
-  ;  #Gad_RollInfo_Import_New ;Manually input values
-  ;  #Gad_RollInfo_Delete
-  ;  #Gad_RollInfo_Edit
-  
-  
-  ;  CloseGadgetList()
-  ;  SetGadgetColor(#Gad_Container_RollInfo,#PB_Gadget_BackColor,#WinCol_RollInfo)
 EndProcedure
 Procedure Init_Window_Reporting()
   Protected X.i = 296, Y = 14, Val.i, Layout.s, Filter.s
@@ -13305,6 +13753,8 @@ Procedure Init_Images()
   CatchImage(#Image_RollInfo_Wall,?Roll_Wall)
   ;  CatchImage(#Image_RollInfo_Sample,?Sample)
   CatchImage(#Image_AniCAM,?AniCAM)
+  CatchImage(#Image_AnicamSmall, ?AniCAM)
+  ResizeImage(#Image_AniCAMSmall, 40, 40)
   CatchImage(#Image_AniCAM_Opaque,?AniCAM_Opaque)
   CatchImage(#NoImageLoaded,?NoImageLoaded)
   CatchImage(#Image_AniCAMIcon,?AniCAMIcon)
@@ -13326,6 +13776,8 @@ Procedure Init_Images()
   CatchImage(#Image_BorderRolls,?BorderRolls)
   CatchImage(#Image_TroikaAMS,?TroikaAMS)
   
+  CatchImage(#Image_Launcher,?Launcher)
+  
   CatchImage(#Image_Padlock_Open,?Padlock_Open)
   CatchImage(#Image_Padlock_Closed,?Padlock_Closed)
   CatchImage(#Image_PrinterIcon,?Print_Start)
@@ -13346,13 +13798,13 @@ Procedure Init_Images()
   CopyImage(#Image_Logo,#Image_OEM_Logo)
   
   If FileSize("OEM\OEM Logo.bmp") > -1
-    Debug "************************ Loaded OEM Logo - BMP"
+    ;Debug "************************ Loaded OEM Logo - BMP"
     LoadImage(#Image_OEM_Logo,"OEM\OEM Logo.bmp")
   ElseIf FileSize("OEM\OEM Logo.jpg") > -1
-    Debug "************************ Loaded OEM Logo - JPG"
+    ;Debug "************************ Loaded OEM Logo - JPG"
     LoadImage(#Image_OEM_Logo,"OEM\OEM Logo.jpg")
   ElseIf FileSize("OEM\OEM Logo.png") > -1
-    Debug "************************ Loaded OEM Logo - PNG"
+    ;Debug "************************ Loaded OEM Logo - PNG"
     LoadImage(#Image_OEM_Logo,"OEM\OEM Logo.png")
   EndIf
   
@@ -13362,31 +13814,29 @@ Procedure Init_Images()
   
   Debug "Image Width: "+Str(ImageWidth(#Image_OEM_Logo_Scaled))+" - " + "Image Width: "+Str(ImageHeight(#Image_OEM_Logo_Scaled))
   If ImageWidth(#Image_OEM_Logo_Scaled) / 260.0 > ImageHeight(#Image_OEM_Logo_Scaled) / 94.0
-    Debug "a: "
+    ;Debug "a: "
     ResizeImage(#Image_OEM_Logo_Scaled,ImageWidth(#Image_OEM_Logo) / (ImageWidth(#Image_OEM_Logo) / 260.0),ImageHeight(#Image_OEM_Logo) / (ImageWidth(#Image_OEM_Logo) / 260.0))
   Else
-    Debug "b"
+    ;Debug "b"
     ResizeImage(#Image_OEM_Logo_Scaled,ImageWidth(#Image_OEM_Logo) / (ImageHeight(#Image_OEM_Logo) / 94.0),ImageHeight(#Image_OEM_Logo) / (ImageHeight(#Image_OEM_Logo) / 94.0))
   EndIf
   
-  Debug "***************************"
-  Debug "Image Width: "+Str(ImageWidth(#Image_OEM_Logo_Scaled))+" - " + "Image Width: "+Str(ImageHeight(#Image_OEM_Logo_Scaled))
+  ;Debug "***************************"
+  ;Debug "Image Width: "+Str(ImageWidth(#Image_OEM_Logo_Scaled))+" - " + "Image Width: "+Str(ImageHeight(#Image_OEM_Logo_Scaled))
   
   System\OEM_ImageBuffer = EncodeImage(#Image_OEM_Logo_Scaled,#PB_ImagePlugin_JPEG,10,24)
   System\OEM_ImageBufferSize = MemorySize(System\OEM_ImageBuffer)
   CatchImage(#Image_OEM_Logo_Opaque_Scaled,System\OEM_ImageBuffer)
-  Debug "Caught Image - Bits @ imagedepth: "+Str(ImageDepth(#Image_OEM_Logo_Opaque_Scaled))
-  Debug "ImageBufferSize: "+Str(System\OEM_ImageBufferSize)
+  ;Debug "Caught Image - Bits @ imagedepth: "+Str(ImageDepth(#Image_OEM_Logo_Opaque_Scaled))
+  ;Debug "ImageBufferSize: "+Str(System\OEM_ImageBufferSize)
   
   
   System\OEM_ImageBuffer = EncodeImage(#Image_OEM_Logo,#PB_ImagePlugin_JPEG,10,24)
   System\OEM_ImageBufferSize = MemorySize(System\OEM_ImageBuffer)
   CatchImage(#Image_OEM_Logo_Opaque,System\OEM_ImageBuffer)
-  Debug "Caught Image - Bits @ imagedepth: "+Str(ImageDepth(#Image_OEM_Logo_Opaque))
-  Debug "ImageBufferSize: "+Str(System\OEM_ImageBufferSize)
-  
-  
-  
+  ;Debug "Caught Image - Bits @ imagedepth: "+Str(ImageDepth(#Image_OEM_Logo_Opaque))
+  ;Debug "ImageBufferSize: "+Str(System\OEM_ImageBufferSize)
+    
   System\Weblink = "www.troika-systems.com"
   
   If FileSize("OEM\OEM Weblink.txt") > -1
@@ -13448,8 +13898,11 @@ Procedure Init_Window_Main()
   
   SetGadgetState(#Gad_AutoImport,System\LiveMonitor)
   
-  ButtonImageGadget(#Gad_Icon_Manager_Mode,240,Y,42,32,ImageID(#Image_Padlock_Closed))
+  ButtonImageGadget(#Gad_Icon_Manager_Mode,207,Y,42,32,ImageID(#Image_Padlock_Closed))
   GadgetToolTip(#Gad_Icon_Manager_Mode,tTxt(#Str_ManagerMode)+":"+" "+tTxt(#Str_CurrentlyOff))
+  
+  ResizeImage(#Image_Launcher, 25, 25, #PB_Image_Smooth)
+  ButtonImageGadget(#Gad_Icon_Launcher, 250, Y, 32,32,ImageID(#Image_Launcher))
   
   CloseGadgetList() ;/ end of container section
   
@@ -13544,9 +13997,8 @@ Procedure Init_Window_Main()
   Colours\Report_Rollcount = RGB(240,230,230)
   Colours\Report_RollInfo = RGB(255,255,200)
   System\AllowSystemTray = #True
+
 EndProcedure 
-
-
 
 Procedure Init_Begin()
   Init_Fonts()
@@ -13588,7 +14040,7 @@ Procedure.s JSON_BUILD_NAVTREE(RollsOnly = 0)
     EndIf
     
     Time = ElapsedMilliseconds() - Time
-    Debug "Time to construct JSON tree: "+Str(Time)+"ms"
+    ;Debug "Time to construct JSON tree: "+Str(Time)+"ms"
     FreeJSON(0)
   EndIf
   ProcedureReturn Response
@@ -13602,13 +14054,13 @@ Procedure Thread_PipeHandler(Hpipe.l)
     fConnected = ConnectNamedPipe_(Hpipe, #Null)
     If fConnected
       ;AddGadgetItem(#Gadget, -1, "A Client is connected, reading the file")
-      Debug "A Client is connected, reading the file"
+      ;Debug "A Client is connected, reading the file"
 
       PipeMessage.s=Space(128)
       ReadFile_(Hpipe, @PipeMessage, StringByteLength(PipeMessage), @ReceivedBytes, 0)
       
       PipeMessage = Trim(PipeMessage)
-      Debug PipeMessage
+      ;Debug PipeMessage
       ;MessageRequester("F",PipeMessage)
       Response.s = "No reponse"
       
@@ -13671,7 +14123,7 @@ Procedure Thread_PipeHandler(Hpipe.l)
             ForEach Navtree()
               If NavTree()\String = ValueS And NavTree()\Type = #NavTree_Roll
                 Response = Database_BuildRollLog(Navtree()\RollID)
-                Debug "Response: " + Response
+                ;Debug "Response: " + Response
                 Break
               EndIf
             Next ;}
@@ -13695,8 +14147,8 @@ Procedure Thread_PipeHandler(Hpipe.l)
         EndSelect
       EndIf
       WriteFile_(Hpipe , @Response, StringByteLength(Response), @BytesWritten, 0)
-      Debug "String Length: "+Str(StringByteLength(Response))
-      Debug "Written Length: "+Str(BytesWritten)
+;      Debug "String Length: "+Str(StringByteLength(Response))
+;      Debug "Written Length: "+Str(BytesWritten)
       Delay(100)
       FlushFileBuffers_(Hpipe)
       
@@ -13714,7 +14166,7 @@ Procedure Init_Pipe()
   System\AMS_PipeHandle = CreateNamedPipe_(System\AMS_PipeName, #PIPE_ACCESS_DUPLEX, #PIPE_TYPE_MESSAGE | #PIPE_READMODE_MESSAGE, 1, 100, 100, 3000, #Null)
   If System\AMS_PipeHandle
     System\AMS_PipeThread = CreateThread(@Thread_PipeHandler(),System\AMS_PipeHandle)
-    Debug "System\AMS_PipeThread: "+Str(System\AMS_PipeThread)
+    ;Debug "System\AMS_PipeThread: "+Str(System\AMS_PipeThread)
   EndIf
 EndProcedure
 
@@ -13732,6 +14184,7 @@ Procedure Program_End()
   CloseDatabase(1)
   End
 EndProcedure
+
 Procedure Init_Test()
   ;/ Procedure to test for redraw times & memory leak on RollID refresh routine
   Protected Timer.i, CurrentRollID.i, RollCount.i, Text.s, TempTime.i, BestTime.i, WorstTime.i, MyLoop.i, Loops.i
@@ -13963,8 +14416,8 @@ Procedure Process_Menu_Events() ;/*CHG*
       Init_About(#Window_Main)
     Case #Menu_Help_ViewEULA
       Init_Eula(1)
-    Case #Menu_Help_CheckForUpdates
-      Tool_CheckForUpdate()
+    ;Case #Menu_Help_CheckForUpdates ;/SL20230406 Hidden on request of JJ, as the website links are no longer valid.
+    ;  Tool_CheckForUpdate()
     Case #Menu_Help_Input_Code_Import
       Init_Code_Input(0)
     Case #Menu_Help_Input_Code_Export
@@ -14143,7 +14596,7 @@ Procedure Process_Menu_Events() ;/*CHG*
       
     Case #Menu_Popup7_Historical_Reading_Edit
       If Check_Manager_Mode()
-        Debug "Original Roll Data - Editting!!"
+        Debug "Original Roll Data - editing!!"
         SelectElement(HistoryList(),GetGadgetState(#Gad_RollInfo_History_List))
         Init_Window_Readings_Edit(System\Selected_Roll_ID,#Database_Overwrite,#Reading_Historical,HistoryList())
         ;      SelectElement(DamageList(),GetGadgetState(#Gad_RollInfo_GeneralHistory_History_List))
@@ -14203,508 +14656,526 @@ Procedure Process_Menu_Events() ;/*CHG*
       
   EndSelect
 EndProcedure
+
 Procedure Process_Window_Events()
   Protected TempL.i, RollID.i, MyLoop.i, ReadingCount.i
-  If EventType() = #PB_EventType_Focus And GadgetType(EventGadget())=#PB_GadgetType_String
-    SendMessage_(GadgetID(EventGadget()),#EM_SETSEL,0,-1)
-  EndIf
-  Select System\Window_Main_Events
-    Case #Menu_Force_Refresh
+  
+    If EventType() = #PB_EventType_Focus And GadgetType(EventGadget())=#PB_GadgetType_String
+        SendMessage_(GadgetID(EventGadget()),#EM_SETSEL,0,-1)
+    EndIf
+
+    Select System\Window_Main_Events
+        Case #Menu_Force_Refresh
+     
+        Case #PB_Event_PIPECOMMAND
+            ;Debug "PIPE Command event triggered!"
       
-    Case #PB_Event_PIPECOMMAND
-      Debug "PIPE Command event triggered!"
+        Case #PB_Event_SysTray
+            If EventType() = #PB_EventType_LeftClick
+                ShowWindow_(WindowID(#Window_Main),#SW_MINIMIZE)
+                Delay(250)
+                ShowWindow_(WindowID(#Window_Main),#SW_RESTORE)
+                System\WindowMinimized = 0
+                RemoveSysTrayIcon(0)
+            EndIf
       
-    Case #PB_Event_SysTray
-      If EventType() = #PB_EventType_LeftClick
-        ShowWindow_(WindowID(#Window_Main),#SW_MINIMIZE)
-        Delay(250)
-        ShowWindow_(WindowID(#Window_Main),#SW_RESTORE)
-        System\WindowMinimized = 0
-        RemoveSysTrayIcon(0)
-      EndIf
-      
-      If EventType() = #PB_EventType_RightClick 
-        If IsIconic_(WindowID(#Window_Main))
-          DisplayPopupMenu(13, WindowID(#Window_Main))
-        EndIf 
-      EndIf
-    Case #PB_Event_GadgetDrop
-      Debug "Drag-Move Ending..."
-      If EventDropType() = #PB_Drop_Text And System\Drag_Selected > 0
+            If EventType() = #PB_EventType_RightClick 
+                If IsIconic_(WindowID(#Window_Main))
+                    DisplayPopupMenu(13, WindowID(#Window_Main))
+                EndIf 
+            EndIf
+
+        Case #PB_Event_GadgetDrop
+            ;Debug "Drag-Move Ending..."
+            If EventDropType() = #PB_Drop_Text And System\Drag_Selected > 0
         
-        System\Drag_Target = GetGadgetState(#Gad_NavTree) 
+                System\Drag_Target = GetGadgetState(#Gad_NavTree) 
         
-        If System\Drag_Target > -1
+                If System\Drag_Target > -1
           
-          ;/ identify original RollID - Overwrite drag 
-          SelectElement(NavTree(),System\Drag_Selected)
-          System\Drag_Selected = NavTree()\RollID
-          
-          ;/ See if we've dragged over compatible Source.
-          SelectElement(NavTree(),System\Drag_Target)
-          If NavTree()\GroupID > 0 ;/ over a press, or a roll
-            Debug "Reassigning"
-            ;/ reallocating logic here
-            
-            Database_Reassign_Roll(System\Drag_Selected,NavTree()\GroupID)
-            
-          Else
-            ;/ Do nothing, other than resetting flags
-            Debug "Not Moving!"
-            System\Drag_Target = -1 : System\Drag_Selected = -1
-          EndIf
-        EndIf
-      Else
-        Debug "Move Failed :("
-        Debug "Does: "+Str(EventDropType())+" = "+Str(#PB_Drop_Private)+"?"
-        ;        Debug "Does: "+Str(EventDropText())+" = 0 ?"
-        Debug "Does: "+Str(System\Drag_Selected)+" have greater value than 0?"
-      EndIf
-      
-    Case #PB_Event_SizeWindow
-      ;SmartWindowRefresh(#Window_Main,0)
-      SendMessage_(WindowID(0),#WM_SETREDRAW,#False,0)
-      ResizeGadgets()
-      ;Flush_Events()
-      ;Form_Update_Images()
-      SendMessage_(WindowID(0),#WM_SETREDRAW,#True,0)
-      RedrawWindow_(WindowID(#Window_Main),#Null,#Null,#RDW_INVALIDATE|#RDW_UPDATENOW|#RDW_ERASE)
-      ;SmartWindowRefresh(#Window_Main,1)
-      
-    Case #PB_Event_Menu 
-      ;Message("Menu Item: "+Str(EventMenu()) +" selected")  ;/DNT
-      Process_Menu_Events()
-      
-    Case #PB_Event_Gadget
-      System\LastSelectedGadget = EventGadget()
-      Debug(System\LastSelectedGadget)
-      
-      Select System\LastSelectedGadget
-        Case #Gad_Graph_Type_Combo
-          Redraw_Graph(System\Graph_Roll.i)
-        Case #Gad_Graph_Tolerance_Combo
-          Redraw_Graph(System\Graph_Roll.i)
-          
-        Case #Gad_RollInfo_GraphIcon
-          If Database_CountQuery("Select Count(*) From AMS_Roll_Data where RollID = "+Str(System\Selected_Roll_ID)+";",#PB_Compiler_Line) > 0
-            Show_Window(#Panel_Graph,#PB_Compiler_Line)
-            Redraw_Graph(System\Showing_RollID)
-          EndIf
-        Case #Gad_RollInfo_Import_New
-          Init_Window_Readings_Edit(System\Selected_Roll_ID,#Database_Insert,-1)
-        Case #Gad_Icon_Manager_Mode
-          
-          If System\Manager_Mode = 1
-            System\Manager_Mode = 0
-            GadgetToolTip(#Gad_Icon_Manager_Mode,tTxt(#Str_ManagerMode)+":"+" "+tTxt(#Str_CurrentlyOff))
-            SetGadgetAttribute(#Gad_Icon_Manager_Mode,#PB_Button_Image,ImageID(#Image_Padlock_Closed))
-          Else
-            If Init_Password_Requester() = 1
-              System\Manager_Mode = 1
-              Debug "Manager Mode on"
-              GadgetToolTip(#Gad_Icon_Manager_Mode,tTxt(#Str_ManagerMode)+":"+" "+tTxt(#Str_CurrentlyOn))
-              SetGadgetAttribute(#Gad_Icon_Manager_Mode,#PB_Button_Image,ImageID(#Image_Padlock_Open))
+                    ;/ identify original RollID - Overwrite drag 
+                    SelectElement(NavTree(),System\Drag_Selected)
+                    System\Drag_Selected = NavTree()\RollID
+                    
+                    ;/ See if we've dragged over compatible Source.
+                    SelectElement(NavTree(),System\Drag_Target)
+
+                    If NavTree()\GroupID > 0 ;/ over a press, or a roll
+                        ;Debug "Reassigning"
+                        ;/ reallocating logic here
+                    
+                        Database_Reassign_Roll(System\Drag_Selected,NavTree()\GroupID)
+                    
+                    Else
+                        ;/ Do nothing, other than resetting flags
+                        ;Debug "Not Moving!"
+                        System\Drag_Target = -1 : System\Drag_Selected = -1
+                    EndIf
+                EndIf
             Else
-              Debug "Manager mode remains off"
-              MessageRequester(tTxt(#Str_Sorry),tTxt(#Str_Incorrectpasscodeentered)+", "+tTxt(#Str_Pleasetryagain))
-              ;              SetGadgetState(#Gad_Icon_Manager_Mode,0)
+                ;Debug "Move Failed :("
+                ;Debug "Does: "+Str(EventDropType())+" = "+Str(#PB_Drop_Private)+"?"
+                ;Debug "Does: "+Str(EventDropText())+" = 0 ?"
+                ;Debug "Does: "+Str(System\Drag_Selected)+" have greater value than 0?"
             EndIf
-          EndIf
-          
-        Case #Gad_AutoImport
-          System\LiveMonitor = GetGadgetState(#Gad_AutoImport)
-          Database_SaveSettings()
-          If System\LiveMonitor = 0
-            GadgetToolTip(#Gad_AutoImport,tTxt(#Str_Toggleautomaticimporting)+":"+tTxt(#Str_Currentlyoff))
-            ;WindowShowBalloonTip(#Window_Main,0,"AMS Message","Live Monitoring for AMS Exports is Off",3000)
-          Else
-            GadgetToolTip(#Gad_AutoImport,tTxt(#Str_Toggleautomaticimporting)+":"+tTxt(#Str_Currentlyon))
-            ;WindowShowBalloonTip(#Window_Main,0,"AMS Message","Live Monitoring for AMS Exports is ON",3000)
-          EndIf
-        Case #Gad_Icon_Export_CSV
-          If System\Showing_Panel = #Panel_Group_List : Export_CSV(0) : EndIf
-          If System\Showing_Panel = #Panel_Roll_Info  : Export_CSV(1) : EndIf
-        Case #Gad_Icon_Export_XLS
-          If System\Showing_Panel = #Panel_Group_List : Export_Excel(0) : EndIf
-          If System\Showing_Panel = #Panel_Roll_Info  : Export_Excel(1) : EndIf
-        Case #Gad_Icon_Export_PDF
-          If System\Showing_Panel = #Panel_Group_List : Export_RollReport_PDF() : EndIf
-          If System\Showing_Panel = #Panel_Roll_Info  : Export_RollInfo_PDF() : EndIf
-        Case #Gad_Icon_Export_Print
-          If System\Showing_Panel = #Panel_Group_List : Export_RollReport_Print() : EndIf
-          If System\Showing_Panel = #Panel_Roll_Info  : Export_RollInfo_Print() : EndIf
-          
-          If System\Showing_Panel = #Panel_Graph  : Export_Graph_Print() : EndIf
-          
-        Case #Gad_Icon_Export_IMG
-          ;/ Grab the image before the menu is displayed as stops any delays waiting for the menu text to fade out
-          Image_FullScreen_Grab(0)
-          DisplayPopupMenu(14,WindowID(#Window_Main))
-          
-        Case #Gad_SQL_Run
-          If GetGadgetState(#Gad_SQL_QueryUpdateCombo) = 0 ;/ query mode
-            SQLite_Process_Live_Query()
-          Else
-            SQLite_Process_Live_Update()
-          EndIf
-          
-        Case #Gad_SQL_Query_Txt
-          If Multi_Site_Mode = 0
-            If GetGadgetState(#Gad_SQL_QueryUpdateCombo) = 0 ;/ query mode
-              SQLite_Process_Live_Query()
-            EndIf
-            
-          Else
-            If GetGadgetState(#Gad_SQL_QueryUpdateCombo) = 0 ;/ query mode
-              SQLite_Process_Live_Query()
-            EndIf
-            
-          EndIf
-          
-        Case #Gad_Report_Preset_Combo
-          Database_Update(#Databases_Master,"Update AMS_Settings Set Default_Filter = '"+GetGadgetText(#Gad_Report_Preset_Combo)+"'",#PB_Compiler_Line) ;/DNT
-          Report_Generate(System\Last_Drawn_Report_SiteId,System\Last_Drawn_Report_GroupId)
-          
-        Case #Gad_ReportLayout_Combo
-          Database_Update(#Databases_Master,"Update AMS_Settings Set Default_Layout = '"+GetGadgetText(#Gad_ReportLayout_Combo)+"'",#PB_Compiler_Line) ;/DNT
-          Report_Generate(System\Last_Drawn_Report_SiteId,System\Last_Drawn_Report_GroupId)
-          
-          
-        Case #Gad_Report_ReportList
-          If EventType() = #PB_EventType_LeftDoubleClick
-            TempL = GetGadgetState(#Gad_Report_ReportList)
-            If TempL > -1
-              SelectElement(ReportLine_RollID(),TempL)
-              Debug "Selected RollID?: "+Str(ReportLine_RollID())
-              RollID = ReportLine_RollID()
-              If RollID > 0
-                ;/ identify line on Navtree that it refers to:
-                ForEach NavTree()
-                  If NavTree()\RollID = RollID
-                    Show_Window(#Panel_Roll_Info,#PB_Compiler_Line)
-                    SetGadgetState(#Gad_NavTree,ListIndex(NavTree()))
-                    Redraw_RollID(RollID)
-                    Break
-                  EndIf
-                Next
-              EndIf 
-            EndIf
-          EndIf
-        Case #Gad_Report_New
-          Init_Presets(1)
-          Report_Generate(System\Last_Drawn_Report_SiteId,System\Last_Drawn_Report_GroupId)
-        Case #Gad_Report_Edit
-          Init_Presets(2)
-          Report_Generate(System\Last_Drawn_Report_SiteId,System\Last_Drawn_Report_GroupId)
-        Case #Gad_Report_Delete
-          Init_Presets(3)
-          Report_Generate(System\Last_Drawn_Report_SiteId,System\Last_Drawn_Report_GroupId)
-          
-        Case #Gad_ReportLayout_New
-          Init_Layout(1)
-          Report_Generate(System\Last_Drawn_Report_SiteId,System\Last_Drawn_Report_GroupId)
-        Case #Gad_ReportLayout_Edit
-          Init_Layout(2)
-          Report_Generate(System\Last_Drawn_Report_SiteId,System\Last_Drawn_Report_GroupId)
-        Case #Gad_ReportLayout_Delete
-          Init_Layout(3)
-          Report_Generate(System\Last_Drawn_Report_SiteId,System\Last_Drawn_Report_GroupId)
-          
-        Case #Gad_RollInfo_Commit; #Gad_RollInfo_Start To #Gad_RollInfo_Finish
-          Database_Update_RollMaster_FromForm(System\Selected_Roll_ID)
-          System\Showing_RollID = 0
-          Redraw_RollID(System\Selected_Roll_ID)
-          RollInfo_CheckEditted()
-          
-        Case #Gad_RollInfo_Hide_Begin To #Gad_RollInfo_Comment_Box
-          RollInfo_CheckEditted()
-        Case #Gad_RollInfo_Undo
-          System\Refresh_Roll_Information = 1
-        Case #Gad_SQL_Set
-          SQL_Set_Example()
-        Case #Gad_TroikaButton
-          RunProgram(System\Weblink)  ;/DNT
-        Case #Gad_SearchBox
-          If GetGadgetTextMac(#Gad_SearchBox) <> "" ;And Len(GetGadgetTextMac(#Gad_SearchBox)) > 1
-            ForEach NavTree()
-              If FindString(UCase(NavTree()\String),UCase(GetGadgetTextMac(#Gad_SearchBox)),1) > 0
-                SetGadgetState(#Gad_NavTree,ListIndex(NavTree()))
-                If NavTree()\Type = #NavTree_Site
-                  System\Last_Drawn_Report_SiteID = NavTree()\SiteID
-                  System\Last_Drawn_Report_GroupID = -1
-                  Report_Generate(System\Last_Drawn_Report_SiteID,System\Last_Drawn_Report_GroupID)
-                  Show_Window(#Panel_Group_List,#PB_Compiler_Line)
-                EndIf
-                
-                If NavTree()\Type = #NavTree_Group
-                  System\Last_Drawn_Report_SiteID = NavTree()\SiteID
-                  System\Last_Drawn_Report_GroupID = NavTree()\GroupID
-                  Report_Generate(System\Last_Drawn_Report_SiteID,System\Last_Drawn_Report_GroupID)
-                  Show_Window(#Panel_Group_List,#PB_Compiler_Line)
-                EndIf
-                
-                If NavTree()\Type = #NavTree_Roll
-                  Redraw_RollID(NavTree()\RollID)
-                  Show_Window(#Panel_Roll_Info,#PB_Compiler_Line)
-                EndIf
-                Break
-              EndIf 
-            Next 
-          EndIf 
-        Case #Gad_SearchNext
-          System\CurrentSearchPos = GetGadgetState(#Gad_NavTree)
-          If GetGadgetTextMac(#Gad_SearchBox) <> "" ;And Len(GetGadgetTextMac(#Gad_SearchBox)) > 1
-            ForEach NavTree()
-              If FindString(UCase(NavTree()\String),UCase(GetGadgetTextMac(#Gad_SearchBox)),0) > 0 And ListIndex(NavTree()) > System\CurrentSearchPos
-                SetGadgetState(#Gad_NavTree,ListIndex(NavTree()))
-                If NavTree()\Type = #NavTree_Site
-                  System\Last_Drawn_Report_SiteID = NavTree()\SiteID
-                  System\Last_Drawn_Report_GroupID = -1
-                  Report_Generate(System\Last_Drawn_Report_SiteID,System\Last_Drawn_Report_GroupID)
-                  Show_Window(#Panel_Group_List,#PB_Compiler_Line)
-                EndIf
-                
-                If NavTree()\Type = #NavTree_Group
-                  System\Last_Drawn_Report_SiteID = NavTree()\SiteID
-                  System\Last_Drawn_Report_GroupID = NavTree()\GroupID
-                  Report_Generate(System\Last_Drawn_Report_SiteID,System\Last_Drawn_Report_GroupID)
-                  Show_Window(#Panel_Group_List,#PB_Compiler_Line)
-                EndIf
-                
-                If NavTree()\Type = #NavTree_Roll
-                  Redraw_RollID(NavTree()\RollID)
-                  Show_Window(#Panel_Roll_Info,#PB_Compiler_Line)
-                EndIf
-                Break
-              EndIf 
-            Next 
-          EndIf 
-        Case #Gad_SearchPrevious
-          System\CurrentSearchPos = GetGadgetState(#Gad_NavTree)
-          If GetGadgetTextMac(#Gad_SearchBox) <> ""
-            For MyLoop = System\CurrentSearchPos-1 To 1 Step -1
-              SelectElement(NavTree(),MyLoop)
-              If FindString(UCase(NavTree()\String),UCase(GetGadgetTextMac(#Gad_SearchBox)),0) > 0 And ListIndex(NavTree()) < System\CurrentSearchPos
-                SetGadgetState(#Gad_NavTree,ListIndex(NavTree()))
-                If NavTree()\Type = #NavTree_Site
-                  System\Last_Drawn_Report_SiteID = NavTree()\SiteID
-                  System\Last_Drawn_Report_GroupID = -1
-                  Report_Generate(System\Last_Drawn_Report_SiteID,System\Last_Drawn_Report_GroupID)
-                  Show_Window(#Panel_Group_List,#PB_Compiler_Line)
-                EndIf
-                
-                If NavTree()\Type = #NavTree_Group
-                  System\Last_Drawn_Report_SiteID = NavTree()\SiteID
-                  System\Last_Drawn_Report_GroupID = NavTree()\GroupID
-                  Report_Generate(System\Last_Drawn_Report_SiteID,System\Last_Drawn_Report_GroupID)
-                  Show_Window(#Panel_Group_List,#PB_Compiler_Line)
-                EndIf
-                
-                If NavTree()\Type = #NavTree_Roll
-                  Redraw_RollID(NavTree()\RollID)
-                  Show_Window(#Panel_Roll_Info,#PB_Compiler_Line)
-                EndIf
-                Break
-              EndIf 
-            Next 
-          EndIf 
-          
-        Case #Gad_RollInfo_Image_Reference
-          If EventType()=#PB_EventType_RightClick
-            DisplayPopupMenu(10,WindowID(#Window_Main))
-          EndIf
-          
-        Case #Gad_RollInfo_Image_Latest
-          If EventType()=#PB_EventType_RightClick
-            DisplayPopupMenu(11,WindowID(#Window_Main))
-          EndIf
-          
-        Case #Gad_RollInfo_GeneralHistory_History_List
-          Select EventType() 
-            Case #PB_EventType_LeftDoubleClick
-              If GetGadgetState(#Gad_RollInfo_GeneralHistory_History_List) > -1
-                SelectElement(DamageList(),GetGadgetState(#Gad_RollInfo_GeneralHistory_History_List))
-                Init_Window_GeneralHistory_Control(System\Selected_Roll_ID,DamageList())
-              EndIf
-            Case #PB_EventType_RightClick
-              DisableMenuItem(5,#Menu_Popup5_GeneralHistory_Delete,0)
-              DisableMenuItem(5,#Menu_Popup5_GeneralHistory_Edit,0)
-              If GetGadgetState(#Gad_RollInfo_GeneralHistory_History_List) > -1
-                SelectElement(DamageList(),GetGadgetState(#Gad_RollInfo_GeneralHistory_History_List))
-              Else
-                DisableMenuItem(5,#Menu_Popup5_GeneralHistory_Delete,1)
-                DisableMenuItem(5,#Menu_Popup5_GeneralHistory_Edit,1)
-              EndIf 
-              DisplayPopupMenu(5,WindowID(#Window_Main))
-          EndSelect
-          
-        Case #Gad_RollInfo_Original_List
-          If EventType() = #PB_EventType_LeftDoubleClick
-            If Check_Manager_Mode()
-              Init_Window_Readings_Edit(System\Selected_Roll_ID,#Database_Overwrite,#Reading_Master)
-            EndIf
-          EndIf
-          If EventType()=#PB_EventType_RightClick
-            DisableMenuItem(6,#Menu_Popup6_Original_Reading_Delete,0) ;/ enable all 3 items
-            DisableMenuItem(6,#Menu_Popup6_Original_Reading_Edit,0)
-            DisableMenuItem(6,#Menu_Popup6_Original_Reading_Insert,0)
-            
-            If GetGadgetItemText(#Gad_RollInfo_Original_List,0,0) = ""
-              DisableMenuItem(6,#Menu_Popup6_Original_Reading_Delete,1) ;/ enable all 3 items
-              DisableMenuItem(6,#Menu_Popup6_Original_Reading_Edit,1)
-            Else
-              DisableMenuItem(6,#Menu_Popup6_Original_Reading_Insert,1)
-            EndIf 
-            DisplayPopupMenu(6,WindowID(#Window_Main))
-          EndIf
-          
-        Case #Gad_RollInfo_History_List
-          
-          If EventType() = #PB_EventType_LeftClick
-            If GetGadgetState(#Gad_RollInfo_History_List) > -1
-              SelectElement(HistoryList(),GetGadgetState(#Gad_RollInfo_History_List))
-              System\Selected_HistoryID = HistoryList()
-              Image_Refresh_History(System\Selected_HistoryID)
-            EndIf
-          EndIf            
-          If EventType() = #PB_EventType_LeftDoubleClick
-            If GetGadgetState(#Gad_RollInfo_History_List) > -1
-              If Check_Manager_Mode()
-                SelectElement(HistoryList(),GetGadgetState(#Gad_RollInfo_History_List))
-                System\Selected_HistoryID = HistoryList()
-                Image_Refresh_History(System\Selected_HistoryID)
-                Init_Window_Readings_Edit(System\Selected_Roll_ID,#Database_Overwrite,#Reading_Historical,HistoryList())
-              EndIf
-              
-            EndIf
-          EndIf
-          
-          If EventType()=#PB_EventType_RightClick
-            DisableMenuItem(7,#Menu_Popup7_Historical_Reading_Delete,0)
-            DisableMenuItem(7,#Menu_Popup7_Historical_Usage_Add,0)
-            DisableMenuItem(7,#Menu_Popup7_Historical_Reading_Edit,0)
-            DisableMenuItem(7,#Menu_Popup7_Historical_Reading_Insert,0)
-            
-            If GetGadgetState(#Gad_RollInfo_History_List) > -1
-              SelectElement(HistoryList(),GetGadgetState(#Gad_RollInfo_History_List))
-              System\Selected_HistoryID = HistoryList()
-              Debug "On line: "+Str(GetGadgetState(#Gad_RollInfo_History_List))+" - HistoryID: "+Str(HistoryList())
-            Else
-              DisableMenuItem(7,#Menu_Popup7_Historical_Reading_Delete,1)
-              DisableMenuItem(7,#Menu_Popup7_Historical_Reading_Edit,1)
-              DisableMenuItem(7,#Menu_Popup7_Historical_Usage_Add,1)
-              Debug "Clicked History list whilst not over a line"
-            EndIf 
-            DisplayPopupMenu(7,WindowID(#Window_Main))
-          EndIf
-          
-        Case #Gad_Report_ExportCSV
-          Export_CSV(0)
-        Case #Gad_Report_ExportXLS
-          Export_Excel(0)
-        Case #Gad_RollInfo_Import_AMS
-          Import_AMS()
-        Case #Gad_RollInfo_ExportRollName
-          SendToAQCIni(GetGadgetText(#Gad_Rollinfo_RollID_String),System\Last_Drawn_Roll)
-        Case #Gad_Report_ExportPDF
-          Export_RollReport_PDF()
-          
-        Case #Gad_2D_Analysis_Image
-          Debug "2d Event: "+Str(EventType())
-          
-        Case #Gad_NavTree
-          
-          If EventType() = #PB_EventType_DragStart
-            Debug "Drag-Move Initialised"
-            System\Drag_Selected = GetGadgetState(#Gad_NavTree)
-            If System\Drag_Selected > -1 ;/ actually dragged something
-              Debug "Drag Flag set"
-              SelectElement(NavTree(),System\Drag_Selected)
-              If Navtree()\RollID > 0 ;/ have dragged a roll, good!
-                dragtxt.s = GetGadgetItemText(#Gad_NavTree, GetGadgetState(#Gad_NavTree)) 
-                SetDragCallback(@DragCallBack())
-                DragText(dragtxt, #PB_Drag_Move) 
-              Else
-                Debug "Drag Cancelled"
-                System\Drag_Selected = 0
-              EndIf
-            EndIf
-          EndIf
-          
-          If EventType()=#PB_EventType_RightClick
-            SelectElement(NavTree(),GetGadgetState(#Gad_NavTree))
-            Debug "GadLine: "+Str(GetGadgetState(#Gad_NavTree))+" - Level: "+Str(NavTree()\Type)
-            If NavTree()\Type = #NavTree_Company : DisplayPopupMenu(0,WindowID(#Window_Main)) : EndIf
-            If NavTree()\Type = #NavTree_Site : DisplayPopupMenu(1,WindowID(#Window_Main)) : EndIf
-            If NavTree()\Type = #NavTree_Group : DisplayPopupMenu(2,WindowID(#Window_Main)) : EndIf
-            If NavTree()\Type = #NavTree_Roll : DisplayPopupMenu(3,WindowID(#Window_Main)) : EndIf
-          EndIf
-          
-          If EventType()=#PB_EventType_LeftClick 
-            If GetGadgetState(#Gad_NavTree) < 0 : SetGadgetState(#Gad_NavTree,0) : EndIf
-            
-            ;             Select NavTree()\Type
-            ;               Case #NavTree_Company
-            ;                 Show_Window(#Panel_HomeScreen,#PB_Compiler_Line)
-            ;               Case #NavTree_Site
-            ;                 Show_Window(#Panel_Group_List,#PB_Compiler_Line)
-            ;               Case #NavTree_Group
-            ;                 Show_Window(#Panel_Group_List,#PB_Compiler_Line)
-            ;               Case #NavTree_Roll
-            ;                 Show_Window(#Panel_Roll_Info,#PB_Compiler_Line)
-            ;             EndSelect
-            
-            SelectElement(NavTree(),GetGadgetState(#Gad_NavTree))
-            Debug "Pos: "+Str(GetGadgetState(#Gad_NavTree))+" - Site: "+Str(Navtree()\SiteID)+" - Group: "+Str(Navtree()\GroupID)+" - Roll: "+Str(Navtree()\RollID)
-            System\Selected_Site = Navtree()\SiteID
-            System\Selected_Group = Navtree()\GroupID
-            System\Selected_Roll_ID = Navtree()\RollID
-            ;Debug "NavTree Clicked : "+Str(GetGadgetState(#Gad_NavTree))
-            System\TV_Line = GetGadgetState(#Gad_NavTree)
-            If System\TV_Line = -1 : System\TV_Line = 0 : EndIf 
-            System\TV_Depth = GetGadgetItemAttribute(#Gad_NavTree,System\TV_Line,#PB_Tree_SubLevel)
-            
-            SelectElement(NavTree(),System\TV_Line)
-            
-            If NavTree()\Type = #NavTree_Company
-              Show_Window(#Panel_HomeScreen,#PB_Compiler_Line)
-              Redraw_HomeScreen()
-            EndIf
-            
-            If NavTree()\Type = #NavTree_Site
-              Show_Window(#Panel_Group_List,#PB_Compiler_Line)
-              System\Last_Drawn_Report_SiteID = NavTree()\SiteID
-              System\Last_Drawn_Report_GroupID = -1
-              Report_Generate(System\Last_Drawn_Report_SiteID,System\Last_Drawn_Report_GroupID)
-            EndIf
-            
-            If NavTree()\Type = #NavTree_Group
-              Show_Window(#Panel_Group_List,#PB_Compiler_Line)
-              System\Last_Drawn_Report_SiteID = NavTree()\SiteID
-              System\Last_Drawn_Report_GroupID = NavTree()\GroupID
-              Report_Generate(System\Last_Drawn_Report_SiteID,System\Last_Drawn_Report_GroupID)
-            EndIf
-            
-            If NavTree()\Type = #NavTree_Roll
-              Show_Window(#Panel_Roll_Info,#PB_Compiler_Line)
-              Redraw_RollID(NavTree()\RollID)
-            EndIf
-            
-            System\Selected_Roll_ID_Text = NavTree()\String
-            System\Selected_Roll_ID = NavTree()\RollID
-            
-            ;Message("Event: "+Str(System\Window_Main_Events)+" - Type: "+Str(EventType())+" - TreegadgetState: "+Str(System\TV_Line)+" - "+Str(System\TV_Depth)) ;/DNT
-            
-          EndIf 
-          
-      EndSelect
       
-  EndSelect
+        Case #PB_Event_SizeWindow
+            ;SmartWindowRefresh(#Window_Main,0)
+            SendMessage_(WindowID(0),#WM_SETREDRAW,#False,0)
+            ResizeGadgets()
+            ;Flush_Events()
+            ;Form_Update_Images()
+            SendMessage_(WindowID(0),#WM_SETREDRAW,#True,0)
+            RedrawWindow_(WindowID(#Window_Main),#Null,#Null,#RDW_INVALIDATE|#RDW_UPDATENOW|#RDW_ERASE)
+            ;SmartWindowRefresh(#Window_Main,1)
+      
+        Case #PB_Event_Menu 
+            ;Message("Menu Item: "+Str(EventMenu()) +" selected")  ;/DNT
+            Process_Menu_Events()
+      
+        Case #PB_Event_Gadget
+            System\LastSelectedGadget = EventGadget()
+            ;Debug(System\LastSelectedGadget)
+
+            Select System\LastSelectedGadget
+                    
+                Case #Gad_Graph_Type_Combo
+                    Redraw_Graph(System\Graph_Roll.i)
+                Case #Gad_Graph_Tolerance_Combo
+                    Redraw_Graph(System\Graph_Roll.i)
+                Case #Gad_RollInfo_GraphIcon
+                    If Database_CountQuery("Select Count(*) From AMS_Roll_Data where RollID = "+Str(System\Selected_Roll_ID)+";",#PB_Compiler_Line) > 0
+                        Show_Window(#Panel_Graph,#PB_Compiler_Line)
+                        Redraw_Graph(System\Showing_RollID)
+                    EndIf
+
+                Case #Gad_RollInfo_Import_New
+                    Init_Window_Readings_Edit(System\Selected_Roll_ID,#Database_Insert,-1)
+                Case #Gad_Icon_Launcher
+                    If FindWindow_(0, "Untitled - Paint") = 0 
+                        If RunProgram("mspaint") = 0
+                            MessageRequester("Warning", "Troika Systems Launcher not Found", #PB_MessageRequester_Warning)
+                            ProcedureReturn
+                        EndIf
+                    Else
+                        Protected hWnd = FindWindow_(0,"Untitled - Paint")
+                        SetWindowPos_(hWnd, #HWND_TOP, 0, 0, 0, 0, #SWP_NOMOVE | #SWP_NOSIZE | #SWP_SHOWWINDOW)
+                    
+                    EndIf
+                    
+;
+;                     If RunProgram("C:\Program Files\Troika Systems LTD\Launcher.exe") = 0
+;                         MessageRequester("Warning", "Troika Systems Launcher not Found", #PB_MessageRequester_Warning)
+;                         ProcedureReturn
+;                     EndIf
+                    
+                Case #Gad_Icon_Manager_Mode
+                    If System\Manager_Mode = 1
+                        System\Manager_Mode = 0
+                        GadgetToolTip(#Gad_Icon_Manager_Mode,tTxt(#Str_ManagerMode)+":"+" "+tTxt(#Str_CurrentlyOff))
+                        SetGadgetAttribute(#Gad_Icon_Manager_Mode,#PB_Button_Image,ImageID(#Image_Padlock_Closed))
+                    Else
+                        If Init_Password_Requester() = 1
+                            System\Manager_Mode = 1
+                            ;Debug "Manager Mode on"
+                            GadgetToolTip(#Gad_Icon_Manager_Mode,tTxt(#Str_ManagerMode)+":"+" "+tTxt(#Str_CurrentlyOn))
+                            SetGadgetAttribute(#Gad_Icon_Manager_Mode,#PB_Button_Image,ImageID(#Image_Padlock_Open))
+                        Else
+                            ;Debug "Manager mode remains off"
+                            MessageRequester(tTxt(#Str_Sorry),tTxt(#Str_Incorrectpasscodeentered)+", "+tTxt(#Str_Pleasetryagain))
+                            ;SetGadgetState(#Gad_Icon_Manager_Mode,0)
+                        EndIf
+                    EndIf
+          
+                Case #Gad_AutoImport
+                    System\LiveMonitor = GetGadgetState(#Gad_AutoImport)
+                    Database_SaveSettings()
+                    If System\LiveMonitor = 0
+                        GadgetToolTip(#Gad_AutoImport,tTxt(#Str_Toggleautomaticimporting)+":"+tTxt(#Str_Currentlyoff))
+                        ;WindowShowBalloonTip(#Window_Main,0,"AMS Message","Live Monitoring for AMS Exports is Off",3000)
+                    Else
+                        GadgetToolTip(#Gad_AutoImport,tTxt(#Str_Toggleautomaticimporting)+":"+tTxt(#Str_Currentlyon))
+                        ;WindowShowBalloonTip(#Window_Main,0,"AMS Message","Live Monitoring for AMS Exports is ON",3000)
+                    EndIf
+
+                Case #Gad_Icon_Export_CSV
+                    If System\Showing_Panel = #Panel_Group_List : Export_CSV(0) : EndIf
+                    If System\Showing_Panel = #Panel_Roll_Info  : Export_CSV(1) : EndIf
+                Case #Gad_Icon_Export_XLS
+                    If System\Showing_Panel = #Panel_Group_List : Export_Excel(0) : EndIf
+                    If System\Showing_Panel = #Panel_Roll_Info  : Export_Excel(1) : EndIf
+                Case #Gad_Icon_Export_PDF
+                    If System\Showing_Panel = #Panel_Group_List : Export_RollReport_PDF() : EndIf
+                    If System\Showing_Panel = #Panel_Roll_Info  : Export_RollInfo_PDF() : EndIf
+                Case #Gad_Icon_Export_Print
+                    If System\Showing_Panel = #Panel_Group_List : Export_RollReport_Print() : EndIf
+                    If System\Showing_Panel = #Panel_Roll_Info  : Export_RollInfo_Print() : EndIf
+                
+                    If System\Showing_Panel = #Panel_Graph  : Export_Graph_Print() : EndIf
+
+                Case #Gad_Icon_Export_IMG
+                    ; Grab the image before the menu is displayed as stops any delays waiting for the menu text to fade out
+                    Image_FullScreen_Grab(0)
+                    DisplayPopupMenu(14,WindowID(#Window_Main))
+          
+                Case #Gad_SQL_Run
+                    If GetGadgetState(#Gad_SQL_QueryUpdateCombo) = 0 ;/ query mode
+                        SQLite_Process_Live_Query()
+                    Else
+                        SQLite_Process_Live_Update()
+                    EndIf
+          
+                Case #Gad_SQL_Query_Txt
+                    If Multi_Site_Mode = 0
+                        If GetGadgetState(#Gad_SQL_QueryUpdateCombo) = 0 ;/ query mode
+                            SQLite_Process_Live_Query()
+                        EndIf
+                    
+                    Else
+                        If GetGadgetState(#Gad_SQL_QueryUpdateCombo) = 0 ;/ query mode
+                            SQLite_Process_Live_Query()
+                        EndIf
+                    EndIf
+          
+                Case #Gad_Report_Preset_Combo
+                    Database_Update(#Databases_Master,"Update AMS_Settings Set Default_Filter = '"+GetGadgetText(#Gad_Report_Preset_Combo)+"'",#PB_Compiler_Line) ;/DNT
+                    Report_Generate(System\Last_Drawn_Report_SiteId,System\Last_Drawn_Report_GroupId)
+          
+                Case #Gad_ReportLayout_Combo
+                    Database_Update(#Databases_Master,"Update AMS_Settings Set Default_Layout = '"+GetGadgetText(#Gad_ReportLayout_Combo)+"'",#PB_Compiler_Line) ;/DNT
+                    Report_Generate(System\Last_Drawn_Report_SiteId,System\Last_Drawn_Report_GroupId)
+          
+          
+                Case #Gad_Report_ReportList
+                    If EventType() = #PB_EventType_LeftDoubleClick
+                        TempL = GetGadgetState(#Gad_Report_ReportList)
+                        If TempL > -1
+                            SelectElement(ReportLine_RollID(),TempL)
+                            ;Debug "Selected RollID?: "+Str(ReportLine_RollID())
+                            RollID = ReportLine_RollID()
+                            If RollID > 0
+                                ;/ identify line on Navtree that it refers to:
+                                ForEach NavTree()
+                                    If NavTree()\RollID = RollID
+                                        Show_Window(#Panel_Roll_Info,#PB_Compiler_Line)
+                                        SetGadgetState(#Gad_NavTree,ListIndex(NavTree()))
+                                        Redraw_RollID(RollID)
+                                        Break
+                                    EndIf
+                                Next
+                            EndIf 
+                        EndIf
+                    EndIf
+
+                Case #Gad_Report_New
+                    Init_Presets(1)
+                    Report_Generate(System\Last_Drawn_Report_SiteId,System\Last_Drawn_Report_GroupId)
+                Case #Gad_Report_Edit
+                    Init_Presets(2)
+                    Report_Generate(System\Last_Drawn_Report_SiteId,System\Last_Drawn_Report_GroupId)
+                Case #Gad_Report_Delete
+                    Init_Presets(3)
+                    Report_Generate(System\Last_Drawn_Report_SiteId,System\Last_Drawn_Report_GroupId)
+          
+                Case #Gad_ReportLayout_New
+                    Init_Layout(1)
+                    Report_Generate(System\Last_Drawn_Report_SiteId,System\Last_Drawn_Report_GroupId)
+                Case #Gad_ReportLayout_Edit
+                    Init_Layout(2)
+                    Report_Generate(System\Last_Drawn_Report_SiteId,System\Last_Drawn_Report_GroupId)
+                Case #Gad_ReportLayout_Delete
+                    Init_Layout(3)
+                    Report_Generate(System\Last_Drawn_Report_SiteId,System\Last_Drawn_Report_GroupId)
+                
+                Case #Gad_RollInfo_Commit; #Gad_RollInfo_Start To #Gad_RollInfo_Finish
+                    Database_Update_RollMaster_FromForm(System\Selected_Roll_ID)
+                    System\Showing_RollID = 0
+                    Redraw_RollID(System\Selected_Roll_ID)
+                    RollInfo_CheckEditted()
+                
+                Case #Gad_RollInfo_Hide_Begin To #Gad_RollInfo_Comment_Box
+                    RollInfo_CheckEditted()
+
+                Case #Gad_RollInfo_Undo
+                    System\Refresh_Roll_Information = 1
+                Case #Gad_SQL_Set
+                    SQL_Set_Example()
+                Case #Gad_TroikaButton
+                    RunProgram(System\Weblink)  ;/DNT
+
+                Case #Gad_SearchBox
+                    If GetGadgetTextMac(#Gad_SearchBox) <> "" ;And Len(GetGadgetTextMac(#Gad_SearchBox)) > 1
+                        ForEach NavTree()
+                            If FindString(UCase(NavTree()\String),UCase(GetGadgetTextMac(#Gad_SearchBox)),1) > 0
+                                SetGadgetState(#Gad_NavTree,ListIndex(NavTree()))
+                                If NavTree()\Type = #NavTree_Site
+                                    System\Last_Drawn_Report_SiteID = NavTree()\SiteID
+                                    System\Last_Drawn_Report_GroupID = -1
+                                    Report_Generate(System\Last_Drawn_Report_SiteID,System\Last_Drawn_Report_GroupID)
+                                    Show_Window(#Panel_Group_List,#PB_Compiler_Line)
+                                EndIf
+                
+                                If NavTree()\Type = #NavTree_Group
+                                    System\Last_Drawn_Report_SiteID = NavTree()\SiteID
+                                    System\Last_Drawn_Report_GroupID = NavTree()\GroupID
+                                    Report_Generate(System\Last_Drawn_Report_SiteID,System\Last_Drawn_Report_GroupID)
+                                    Show_Window(#Panel_Group_List,#PB_Compiler_Line)
+                                EndIf
+                    
+                                If NavTree()\Type = #NavTree_Roll
+                                    Redraw_RollID(NavTree()\RollID)
+                                    Show_Window(#Panel_Roll_Info,#PB_Compiler_Line)
+                                EndIf
+                                Break
+                            EndIf 
+                        Next 
+                    EndIf 
+
+                Case #Gad_SearchNext
+                    System\CurrentSearchPos = GetGadgetState(#Gad_NavTree)
+                    If GetGadgetTextMac(#Gad_SearchBox) <> "" ;And Len(GetGadgetTextMac(#Gad_SearchBox)) > 1
+                        ForEach NavTree()
+                            If FindString(UCase(NavTree()\String),UCase(GetGadgetTextMac(#Gad_SearchBox)),0) > 0 And ListIndex(NavTree()) > System\CurrentSearchPos
+                                SetGadgetState(#Gad_NavTree,ListIndex(NavTree()))
+                                If NavTree()\Type = #NavTree_Site
+                                    System\Last_Drawn_Report_SiteID = NavTree()\SiteID
+                                    System\Last_Drawn_Report_GroupID = -1
+                                    Report_Generate(System\Last_Drawn_Report_SiteID,System\Last_Drawn_Report_GroupID)
+                                    Show_Window(#Panel_Group_List,#PB_Compiler_Line)
+                                EndIf
+            
+                                If NavTree()\Type = #NavTree_Group
+                                    System\Last_Drawn_Report_SiteID = NavTree()\SiteID
+                                    System\Last_Drawn_Report_GroupID = NavTree()\GroupID
+                                    Report_Generate(System\Last_Drawn_Report_SiteID,System\Last_Drawn_Report_GroupID)
+                                    Show_Window(#Panel_Group_List,#PB_Compiler_Line)
+                                EndIf
+            
+                                If NavTree()\Type = #NavTree_Roll
+                                    Redraw_RollID(NavTree()\RollID)
+                                    Show_Window(#Panel_Roll_Info,#PB_Compiler_Line)
+                                EndIf
+                                Break
+                            EndIf 
+                        Next 
+                    EndIf 
+
+                Case #Gad_SearchPrevious
+                    System\CurrentSearchPos = GetGadgetState(#Gad_NavTree)
+                    If GetGadgetTextMac(#Gad_SearchBox) <> ""
+                        For MyLoop = System\CurrentSearchPos-1 To 1 Step -1
+                            SelectElement(NavTree(),MyLoop)
+                            
+                            If FindString(UCase(NavTree()\String),UCase(GetGadgetTextMac(#Gad_SearchBox)),0) > 0 And ListIndex(NavTree()) < System\CurrentSearchPos
+                                SetGadgetState(#Gad_NavTree,ListIndex(NavTree()))
+                                If NavTree()\Type = #NavTree_Site
+                                    System\Last_Drawn_Report_SiteID = NavTree()\SiteID
+                                    System\Last_Drawn_Report_GroupID = -1
+                                    Report_Generate(System\Last_Drawn_Report_SiteID,System\Last_Drawn_Report_GroupID)
+                                    Show_Window(#Panel_Group_List,#PB_Compiler_Line)
+                                EndIf
+                            
+                                If NavTree()\Type = #NavTree_Group
+                                    System\Last_Drawn_Report_SiteID = NavTree()\SiteID
+                                    System\Last_Drawn_Report_GroupID = NavTree()\GroupID
+                                    Report_Generate(System\Last_Drawn_Report_SiteID,System\Last_Drawn_Report_GroupID)
+                                    Show_Window(#Panel_Group_List,#PB_Compiler_Line)
+                                EndIf
+                            
+                                If NavTree()\Type = #NavTree_Roll
+                                    Redraw_RollID(NavTree()\RollID)
+                                    Show_Window(#Panel_Roll_Info,#PB_Compiler_Line)
+                                EndIf
+                                Break
+                            EndIf 
+                        Next 
+                    EndIf 
+          
+                Case #Gad_RollInfo_Image_Reference
+                    If EventType()=#PB_EventType_RightClick
+                        DisplayPopupMenu(10,WindowID(#Window_Main))
+                    EndIf
+                
+                Case #Gad_RollInfo_Image_Latest
+                    If EventType()=#PB_EventType_RightClick
+                        DisplayPopupMenu(11,WindowID(#Window_Main))
+                    EndIf
+                  
+                Case #Gad_RollInfo_GeneralHistory_History_List
+                    Select EventType() 
+                        Case #PB_EventType_LeftDoubleClick
+                            If GetGadgetState(#Gad_RollInfo_GeneralHistory_History_List) > -1
+                                SelectElement(DamageList(),GetGadgetState(#Gad_RollInfo_GeneralHistory_History_List))
+                                Init_Window_GeneralHistory_Control(System\Selected_Roll_ID,DamageList())
+                            EndIf
+                        Case #PB_EventType_RightClick
+                            DisableMenuItem(5,#Menu_Popup5_GeneralHistory_Delete,0)
+                            DisableMenuItem(5,#Menu_Popup5_GeneralHistory_Edit,0)
+                            If GetGadgetState(#Gad_RollInfo_GeneralHistory_History_List) > -1
+                                SelectElement(DamageList(),GetGadgetState(#Gad_RollInfo_GeneralHistory_History_List))
+                            Else
+                                DisableMenuItem(5,#Menu_Popup5_GeneralHistory_Delete,1)
+                                DisableMenuItem(5,#Menu_Popup5_GeneralHistory_Edit,1)
+                            EndIf 
+                                DisplayPopupMenu(5,WindowID(#Window_Main))
+                    EndSelect
+          
+                Case #Gad_RollInfo_Original_List
+                    If EventType() = #PB_EventType_LeftDoubleClick
+                        If Check_Manager_Mode()
+                            Init_Window_Readings_Edit(System\Selected_Roll_ID,#Database_Overwrite,#Reading_Master)
+                        EndIf
+                    EndIf
+                    If EventType()=#PB_EventType_RightClick
+                        DisableMenuItem(6,#Menu_Popup6_Original_Reading_Delete,0) ;/ enable all 3 items
+                        DisableMenuItem(6,#Menu_Popup6_Original_Reading_Edit,0)
+                        DisableMenuItem(6,#Menu_Popup6_Original_Reading_Insert,0)
+                
+                        If GetGadgetItemText(#Gad_RollInfo_Original_List,0,0) = ""
+                            DisableMenuItem(6,#Menu_Popup6_Original_Reading_Delete,1) ;/ enable all 3 items
+                            DisableMenuItem(6,#Menu_Popup6_Original_Reading_Edit,1)
+                        Else
+                            DisableMenuItem(6,#Menu_Popup6_Original_Reading_Insert,1)
+                        EndIf 
+                        DisplayPopupMenu(6,WindowID(#Window_Main))
+                    EndIf
+          
+                Case #Gad_RollInfo_History_List
+          
+                    If EventType() = #PB_EventType_LeftClick
+                        If GetGadgetState(#Gad_RollInfo_History_List) > -1
+                            SelectElement(HistoryList(),GetGadgetState(#Gad_RollInfo_History_List))
+                            System\Selected_HistoryID = HistoryList()
+                            Image_Refresh_History(System\Selected_HistoryID)
+                        EndIf
+                    EndIf            
+                    If EventType() = #PB_EventType_LeftDoubleClick
+                        If GetGadgetState(#Gad_RollInfo_History_List) > -1
+                            If Check_Manager_Mode()
+                                SelectElement(HistoryList(),GetGadgetState(#Gad_RollInfo_History_List))
+                                System\Selected_HistoryID = HistoryList()
+                                Image_Refresh_History(System\Selected_HistoryID)
+                                Init_Window_Readings_Edit(System\Selected_Roll_ID,#Database_Overwrite,#Reading_Historical,HistoryList())
+                            EndIf
+                    
+                        EndIf
+                    EndIf
+                    
+                    If EventType()=#PB_EventType_RightClick
+                        DisableMenuItem(7,#Menu_Popup7_Historical_Reading_Delete,0)
+                        DisableMenuItem(7,#Menu_Popup7_Historical_Usage_Add,0)
+                        DisableMenuItem(7,#Menu_Popup7_Historical_Reading_Edit,0)
+                        DisableMenuItem(7,#Menu_Popup7_Historical_Reading_Insert,0)
+                    
+                        If GetGadgetState(#Gad_RollInfo_History_List) > -1
+                            SelectElement(HistoryList(),GetGadgetState(#Gad_RollInfo_History_List))
+                            System\Selected_HistoryID = HistoryList()
+                        ;Debug "On line: "+Str(GetGadgetState(#Gad_RollInfo_History_List))+" - HistoryID: "+Str(HistoryList())
+                        Else
+                            DisableMenuItem(7,#Menu_Popup7_Historical_Reading_Delete,1)
+                            DisableMenuItem(7,#Menu_Popup7_Historical_Reading_Edit,1)
+                            DisableMenuItem(7,#Menu_Popup7_Historical_Usage_Add,1)
+                            ;Debug "Clicked History list whilst not over a line"
+                        EndIf 
+                        DisplayPopupMenu(7,WindowID(#Window_Main))
+                    EndIf
+          
+                Case #Gad_Report_ExportCSV
+                    Export_CSV(0)
+                Case #Gad_Report_ExportXLS
+                    Export_Excel(0)
+                Case #Gad_RollInfo_Import_AMS
+                    Import_AMS()
+                Case #Gad_RollInfo_ExportRollName
+                    SendToAQCIni(GetGadgetText(#Gad_Rollinfo_RollID_String),System\Last_Drawn_Roll)
+                Case #Gad_Report_ExportPDF
+                    Export_RollReport_PDF()
+                Case #Gad_RollInfo_SetScan
+                    CameraSetAVGMode(GetGadgetText(#Gad_Rollinfo_RollID_String))
+                Case #Gad_2D_Analysis_Image
+                    ;Debug "2d Event: "+Str(EventType())
+                Case #Gad_NavTree
+          
+                    If EventType() = #PB_EventType_DragStart
+                        ;Debug "Drag-Move Initialised"
+                        System\Drag_Selected = GetGadgetState(#Gad_NavTree)
+                        If System\Drag_Selected > -1 ;/ actually dragged something
+                            ;Debug "Drag Flag set"
+                            SelectElement(NavTree(),System\Drag_Selected)
+                            If Navtree()\RollID > 0 ;/ have dragged a roll, good!
+                                dragtxt.s = GetGadgetItemText(#Gad_NavTree, GetGadgetState(#Gad_NavTree)) 
+                                SetDragCallback(@DragCallBack())
+                                DragText(dragtxt, #PB_Drag_Move) 
+                            Else
+                                ;Debug "Drag Cancelled"
+                                System\Drag_Selected = 0
+                            EndIf
+                        EndIf
+                    EndIf
+          
+                    If EventType()=#PB_EventType_RightClick
+                        SelectElement(NavTree(),GetGadgetState(#Gad_NavTree))
+                        ;Debug "GadLine: "+Str(GetGadgetState(#Gad_NavTree))+" - Level: "+Str(NavTree()\Type)
+                        If NavTree()\Type = #NavTree_Company : DisplayPopupMenu(0,WindowID(#Window_Main)) : EndIf
+                        If NavTree()\Type = #NavTree_Site : DisplayPopupMenu(1,WindowID(#Window_Main)) : EndIf
+                        If NavTree()\Type = #NavTree_Group : DisplayPopupMenu(2,WindowID(#Window_Main)) : EndIf
+                        If NavTree()\Type = #NavTree_Roll : DisplayPopupMenu(3,WindowID(#Window_Main)) : EndIf
+                    EndIf
+          
+                    If EventType()=#PB_EventType_LeftClick 
+                        If GetGadgetState(#Gad_NavTree) < 0 : SetGadgetState(#Gad_NavTree,0) : EndIf
+                        
+                        SelectElement(NavTree(),GetGadgetState(#Gad_NavTree))
+                            ;Debug "Pos: "+Str(GetGadgetState(#Gad_NavTree))+" - Site: "+Str(Navtree()\SiteID)+" - Group: "+Str(Navtree()\GroupID)+" - Roll: "+Str(Navtree()\RollID)
+                            System\Selected_Site = Navtree()\SiteID
+                            System\Selected_Group = Navtree()\GroupID
+                            System\Selected_Roll_ID = Navtree()\RollID
+                            ;Debug "NavTree Clicked : "+Str(GetGadgetState(#Gad_NavTree))
+                            System\TV_Line = GetGadgetState(#Gad_NavTree)
+                            If System\TV_Line = -1 : System\TV_Line = 0 : EndIf 
+                                System\TV_Depth = GetGadgetItemAttribute(#Gad_NavTree,System\TV_Line,#PB_Tree_SubLevel)
+                        
+                                SelectElement(NavTree(),System\TV_Line)
+                        
+                                If NavTree()\Type = #NavTree_Company
+                                    Show_Window(#Panel_HomeScreen,#PB_Compiler_Line)
+                                    Redraw_HomeScreen()
+                                EndIf
+                        
+                                If NavTree()\Type = #NavTree_Site
+                                    Show_Window(#Panel_Group_List,#PB_Compiler_Line)
+                                    System\Last_Drawn_Report_SiteID = NavTree()\SiteID
+                                    System\Last_Drawn_Report_GroupID = -1
+                                    Report_Generate(System\Last_Drawn_Report_SiteID,System\Last_Drawn_Report_GroupID)
+                                EndIf
+                        
+                                If NavTree()\Type = #NavTree_Group
+                                    Show_Window(#Panel_Group_List,#PB_Compiler_Line)
+                                    System\Last_Drawn_Report_SiteID = NavTree()\SiteID
+                                    System\Last_Drawn_Report_GroupID = NavTree()\GroupID
+                                    Report_Generate(System\Last_Drawn_Report_SiteID,System\Last_Drawn_Report_GroupID)
+                                EndIf
+                        
+                                If NavTree()\Type = #NavTree_Roll
+                                    Show_Window(#Panel_Roll_Info,#PB_Compiler_Line)
+                                    Redraw_RollID(NavTree()\RollID)
+                                EndIf
+                        
+                                System\Selected_Roll_ID_Text = NavTree()\String
+                                System\Selected_Roll_ID = NavTree()\RollID
+                        
+                                ;Message("Event: "+Str(System\Window_Main_Events)+" - Type: "+Str(EventType())+" - TreegadgetState: "+Str(System\TV_Line)+" - "+Str(System\TV_Depth)) ;/DNT
+                        
+                    EndIf 
+        
+            EndSelect
+      
+    EndSelect
 EndProcedure
 
 ;/ initiate the database environment
 If UseSQLiteDatabase() = 0
-  MessageRequester("Error","Unable to initialise the database environment, Exitting",#PB_MessageRequester_Ok)
+  MessageRequester("Error","Unable to initialise the database environment, Exiting",#PB_MessageRequester_Ok)
   End
 EndIf
 
@@ -14728,10 +15199,10 @@ Procedure Database_CreateLocalSettingsDB()
   SQL + "[VarianceGood] Int, [VarianceBad] Int,  [CapacityGood] Int, [CapacityBad] Int, [Monitor] Int, [ImportPath] Char, [Import_Delete] Int, "
   SQL + "[Database_Path] Char, [Default_Site] Int, [Polling_Interval] Int, [DefaultOnly] Int, [Show_Depth] Int);"
   
-  Result = Database_Update(#Databases_LocalSettings,SQL,#PB_Compiler_Line)
+  Result = Database_Update(#Databases_LocalSettings, SQL, #PB_Compiler_Line)
   
   If Result = 0
-    MessageRequester("Error","Unable to generate local settings database, exitting")  
+    MessageRequester("Error","Unable to generate local settings database, exiting")
     End
   EndIf
   
@@ -14760,7 +15231,7 @@ If OpenDatabase(#Databases_LocalSettings,LocalSettingsDB,"","",#PB_Database_SQLi
   DatabaseFile = System\Database_Path+"\AMS_SS.db" 
   ;CloseDatabase(#Databases_LocalSettings)
 Else
-  MessageRequester("Error","Unable to open the AMS settings database, Exitting"+Chr(10)+Chr(10)+"("+LocalSettingsDB+")",#PB_MessageRequester_Ok)
+  MessageRequester("Error","Unable to open the AMS settings database, exiting"+Chr(10)+Chr(10)+"("+LocalSettingsDB+")",#PB_MessageRequester_Ok)
   End
 EndIf
 ;EndIf
@@ -14810,6 +15281,7 @@ Redraw_NavTree()
 Show_Window(#Panel_HomeScreen,#PB_Compiler_Line)
 ResizeGadgets()
 SendMessage_(WindowID(#Window_Main),#WM_SETREDRAW,#True,0)
+
 
 ;{- Main loop
 System\LiveMonitorNextTime = ElapsedMilliseconds() + 2000
@@ -15049,6 +15521,10 @@ DataSection
   IncludeBinary "Images\Padlock_Closed.png" ;/DNT
   Padlock_Closed_End:
   
+  Launcher:
+  IncludeBinary "Images\Launchericon.ico"
+  Launcher_End:
+  
   Print_Start:
   IncludeBinary "Images\Print.png" ;/DNT
   Print_End:
@@ -15061,20 +15537,21 @@ DataSection
 EndDataSection
 ;}
 
-; IDE Options = PureBasic 6.00 LTS (Windows - x64)
+; IDE Options = PureBasic 6.04 LTS (Windows - x64)
 ; CursorPosition = 661
-; FirstLine = 658
-; Folding = --v0--fu1h-f9--9-f----+-0-----h8-
+; FirstLine = 676
+; Folding = ----------------------------------
+; Markers = 10057
 ; EnableThread
 ; EnableXP
 ; EnableUser
 ; UseIcon = Images\AniCAM_Mini_T.ico
-; Executable = Executable\Anilox Management System v1.71d.exe
+; Executable = Executable\Anilox Management System v1.72.exe
 ; CPU = 5
 ; CompileSourceDirectory
 ; Warnings = Display
 ; EnablePurifier
-; EnableCompileCount = 1096
-; EnableBuildCount = 20
+; EnableCompileCount = 1264
+; EnableBuildCount = 24
 ; Watchlist = System\Settings_Volume_UnitMask
 ; EnableUnicode

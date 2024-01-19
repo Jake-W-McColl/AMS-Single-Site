@@ -14585,10 +14585,10 @@ DataSection
 EndDataSection
 ;}
 
-; IDE Options = PureBasic 5.71 beta 2 LTS (Windows - x86)
-; CursorPosition = 11475
-; FirstLine = 6620
-; Folding = bcAAAAwBAAyAoAAeAAgAII9Hg5gwkvwJBKQgbkjf9Y0
+; IDE Options = PureBasic 5.71 LTS (Windows - x86)
+; CursorPosition = 7540
+; FirstLine = 3033
+; Folding = bcAAAAwBAAyAoAAeAAgAIM9Hg5gwkvwJx
 ; Markers = 3055
 ; EnableThread
 ; EnableXP
@@ -14598,5 +14598,7 @@ EndDataSection
 ; DisableDebugger
 ; Warnings = Display
 ; EnablePurifier
+; EnableCompileCount = 3
+; EnableBuildCount = 0
 ; Watchlist = System\Settings_Volume_UnitMask
 ; EnableUnicode

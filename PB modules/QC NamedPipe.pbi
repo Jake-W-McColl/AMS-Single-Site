@@ -17,17 +17,17 @@ EndEnumeration
 ; EndStructure
 
 Structure HW
-  PipeName.s
-  PipeName_DeviceOnly.s
-  Width.l : Height.l : Widthm1.l : Heightm1.l
-  PixelCount.l
-  IsHD.l ;/ used to half size the graphic displays.
-  Draw_BufferSize.l
-  Pipe_12bitBufferSize.l
-  Pipe_12bitBufferSizePPMM.l
-  Pipe_24BitBufferSize.l    
-  *lpOutbuffer
-  lpBytesRead.l
+    PipeName.s
+    PipeName_DeviceOnly.s
+    Width.l : Height.l : Widthm1.l : Heightm1.l
+    PixelCount.l
+    IsHD.l ;/ used to half size the graphic displays.
+    Draw_BufferSize.l
+    Pipe_12bitBufferSize.l
+    Pipe_12bitBufferSizePPMM.l
+    Pipe_24BitBufferSize.l    
+    *lpOutbuffer
+    lpBytesRead.l
 EndStructure
 ; Structure LineAnalysis
 ;   Width.s
@@ -36,107 +36,107 @@ EndStructure
 ;   ;HeightT.s
 ; EndStructure
 Structure Scan
-  ScanNumber.i
-  PPMMs.s
-  PPMM.f
-  File.s
-  Vol.s
-  VolAverage.s
-  Vol1.s
-  Vol2.s
-  Vol3.s
-  Vol4.s
-  Vol5.s
-  Depth.s
-  Divisor.d
-  JobDepthF.d
-  RollID.s
-  Time.s
-  Date.s
-  Screen.s
-  Operator.s
-  Customer.s
-  Comment.s
-  DebugInfo.s
-  Lens.s
-  Wall.s
-  Opening.s
-  Angle.s
+    ScanNumber.i
+    PPMMs.s
+    PPMM.f
+    File.s
+    Vol.s
+    VolAverage.s
+    Vol1.s
+    Vol2.s
+    Vol3.s
+    Vol4.s
+    Vol5.s
+    Depth.s
+    Divisor.d
+    JobDepthF.d
+    RollID.s
+    Time.s
+    Date.s
+    Screen.s
+    Operator.s
+    Customer.s
+    Comment.s
+    DebugInfo.s
+    Lens.s
+    Wall.s
+    Opening.s
+    Angle.s
   
-  ;/ JM20220428 - for reporting
-  CrossSection_Width.s 
-  CrossSection_Height.s
-  ScreenAngle.s
-  Angle_Left.s
-  Angle_Right.s
-  Angle_Full.s
-  Height.s
-  Width_Top.s
-  Width_Middle.s
-  Width_Bottom.s
-  Custom.s[8]
-  ;/Line.LineAnalysis[8]
-  
-  Min.f
-  Max.f
-  
-  TimeStamp.i
+    ;/ JM20220428 - for reporting
+    CrossSection_Width.s 
+    CrossSection_Height.s
+    ScreenAngle.s
+    Angle_Left.s
+    Angle_Right.s
+    Angle_Full.s
+    Height.s
+    Width_Top.s
+    Width_Middle.s
+    Width_Bottom.s
+    Custom.s[8]
+    ;/Line.LineAnalysis[8]
+    
+    Min.f
+    Max.f
+    
+    TimeStamp.i
 EndStructure
-
-
 
 Structure Pipe_System
-  Main_ScreenUnit.l
-  Main_VolUnit.l
-  Main_HeightUnit.l
-  Main_ScreenUnitTxt.s
-  Main_VolUnitTxt.s
-  Main_HeightUnitTxt.s
+    Main_ScreenUnit.l
+    Main_VolUnit.l
+    Main_HeightUnit.l
+    Main_ScreenUnitTxt.s
+    Main_VolUnitTxt.s
+    Main_HeightUnitTxt.s
 EndStructure
 Structure pipe_rgb
-  r.a : g.a : b.a
+    r.a : g.a : b.a
 EndStructure
 
 Global NewList NamedPipes.s(), HW.HW, Pipe_System.Pipe_System
 Global NewList Scans.Scan()
 
 Procedure.s Command_SendToAniCAMPipe(Txt.s)
-  Protected Result.i;, X.i, Y.i
-  If FindString(HW\PipeName,"\\.\pipe\")
-    HW\PipeName = HW\PipeName ;/ bacon sandwiches are bacon sandwiches
-  Else
-     HW\PipeName = "\\.\pipe\"+HW\PipeName ;/JM20220822 moved appending here
-  EndIf
+    Protected Result.i;, X.i, Y.i
 
-  Debug "Calling named pipe with pipename: "+HW\PipeName
-  If CallNamedPipe_(HW\PipeName, @txt, StringByteLength(txt)+2 , HW\lpOutbuffer, HW\Pipe_12bitBufferSizePPMM, @HW\lpBytesRead, 100)
-    ;AddDebug("Command Txt: "+Txt + " - Returned Bytes: "+Str(lpBytesRead))
-    Debug "Command Txt: "+Txt + " - Returned Bytes: "+Str(hw\lpBytesRead)
-    If HW\lpBytesRead > HW\Pipe_24BitBufferSize : HW\lpBytesRead = HW\Pipe_24BitBufferSize : EndIf ;/ truncate if oversized...
-    If HW\lpBytesRead < 1024                                                                       ;/ rationalize expected return
-      Debug "Returning: "+Str(Result)
-      ProcedureReturn PeekS(HW\lpOutBuffer,hw\lpBytesRead)
+    If FindString(HW\PipeName,"\\.\pipe\")
+        HW\PipeName = HW\PipeName ;/ bacon sandwiches are bacon sandwiches
     Else
-      ProcedureReturn ""
+        HW\PipeName = "\\.\pipe\"+HW\PipeName ;/JM20220822 moved appending here
     EndIf
-  Else
-    ;AddDebug("Failed response - Pipe error?")
-    Debug "Failed response - Pipe error in Command_SendToAniCAMPipe?"
-    ProcedureReturn "-1"
-  EndIf
+
+    Debug "Calling named pipe with pipename: "+HW\PipeName
+    If CallNamedPipe_(HW\PipeName, @txt, StringByteLength(txt)+2 , HW\lpOutbuffer, HW\Pipe_12bitBufferSizePPMM, @HW\lpBytesRead, 100)
+        ;AddDebug("Command Txt: "+Txt + " - Returned Bytes: "+Str(lpBytesRead))
+        Debug "Command Txt: "+Txt + " - Returned Bytes: "+Str(hw\lpBytesRead)
+        If HW\lpBytesRead > HW\Pipe_24BitBufferSize : HW\lpBytesRead = HW\Pipe_24BitBufferSize : EndIf ;/ truncate if oversized...
+        If HW\lpBytesRead < 1024                                                                       ;/ rationalize expected return
+            Debug "Returning: "+Str(Result)
+            ProcedureReturn PeekS(HW\lpOutBuffer,hw\lpBytesRead)
+        Else
+            ProcedureReturn ""
+        EndIf
+    Else
+        ;AddDebug("Failed response - Pipe error?")
+        Debug "Failed response - Pipe error in Command_SendToAniCAMPipe?"
+        ProcedureReturn "-1"
+    EndIf
 EndProcedure
 
 Procedure Update_Image12_FromPipeMem(Image.i,PPMM = #False) ;/ 12 bit mono...
-  Protected *Pos.word, P, PixelCount.i = HW\Width * HW\Height, *buffer.integer
-  If IsImage(Image)
-    StartDrawing(ImageOutput(Image))
-      *Buffer = DrawingBuffer()
-      If PPMM = #True : *Pos = hw\lpOutBuffer + 4 : Else : *Pos = hw\lpOutBuffer : EndIf
-      For P = 1 To PixelCount-1
-        *Buffer\i = *Pos\w : *Pos + 2 : *Buffer + 3
-      Next
-    StopDrawing()
-  EndIf
+    Protected *Pos.word, P, PixelCount.i = HW\Width * HW\Height, *buffer.integer
+
+    If IsImage(Image)
+        StartDrawing(ImageOutput(Image))
+        *Buffer = DrawingBuffer()
+        If PPMM = #True : *Pos = hw\lpOutBuffer + 4 : Else : *Pos = hw\lpOutBuffer : EndIf
+            For P = 1 To PixelCount-1
+                *Buffer\i = *Pos\w : *Pos + 2 : *Buffer + 3
+            Next
+        StopDrawing()
+    EndIf
 EndProcedure
 
 Procedure Update_Image24_FromPipeMem(Image.i) ;/ 24 bit RGB
@@ -466,8 +466,8 @@ DataSection ;/ Valid pipes...
   Data.s "AniloxQC", "AniloxQC_HD", "GravureQC", "GravureQC_HD", "FlexoQC", "FlexoQC_HD", "AniloxQC_LS", "AniloxQC_LS_HD", "EngravingQC", "EngravingQC_HD"
 EndDataSection
 
-; IDE Options = PureBasic 5.71 LTS (Windows - x86)
-; CursorPosition = 88
-; FirstLine = 75
+; IDE Options = PureBasic 6.02 LTS (Windows - x64)
+; CursorPosition = 121
+; FirstLine = 107
 ; Folding = ---
 ; EnableXP

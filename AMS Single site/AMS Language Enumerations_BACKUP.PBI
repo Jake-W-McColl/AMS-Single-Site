@@ -1,4 +1,4 @@
-Global Dim tTxt.s(500) ;/ will need to extend if stringtable extends.
+Global Dim tTxt.s(1000)
 
 Enumeration
   #Str_MMDDYYYY
@@ -376,8 +376,36 @@ Enumeration
   #Str_Graphingby
   #Str_Depthvalueat
   #Str_FromReferencemeasurement
+  #Str_Addselectedfield
+  #Str_OrderUp
+  #Str_AddGeneralHistoryfield
+  #Str_Orderdown
+  #Str_Removeselected
+  #Str_ReportFieldSelection
+  #Str_Youcannoteditthestandardlayout
+  #Str_Deletelayout
+  #Str_Areyousureyouwanttodeletelayout
+  #Str_Youmustenteralayoutname
+  #Str_Doyouwanttouseanexistinglayoutasatemplate
+  #Str_SelectLayout
+  #Str_LayoutName
+  #Str_ReportLayouteditor
+  #Str_Youcannotdeletethestandardlayout
+  #Str_Angle
+  #Str_GeneralHistoryList
+  #Str_NewGeneralHistoryType
+  #Str_EnternewGeneralHistoryTypename
+  #Str_EditGeneralHistoryType
+  #Str_EditGeneralHistoryTypename
+  #Str_assignedtothis
+  #Str_Usage
+  #Str_Musthave
+  #Str_PrintDistance
+  #Str_EditPrintDistanceFault
+  #Str_EditPrintDistance
+  #Str_Selectfield
+  #Str_SelectGeneralInformationvalue
+  #Str_EngravingPercentage
+  #Str_Ref
+  #Str_LastComment
 EndEnumeration
-
-; IDE Options = PureBasic 5.71 beta 1 LTS (Windows - x86)
-; Folding = -
-; EnableXP
