@@ -1052,6 +1052,8 @@ Enumeration ;/Images
   #Image_Padlock_Open
   #Image_Padlock_Closed
   
+  #Image_Launcher
+  
   #Image_Graph
   #Image_Graph_Scaled
   
@@ -1103,6 +1105,8 @@ Enumeration ;/Gadgets
   #Gad_Icon_Export_IMG
   #Gad_Icon_Export_Print
   #Gad_Icon_Manager_Mode
+  
+  #Gad_Icon_Launcher
   
   #Gad_AutoImport
   
@@ -6188,6 +6192,7 @@ Procedure.i Database_LoadSettings() ;/ Loads settings from database + Load suita
 
     If Right(DatabaseError(), 8) = "CAM_TYPE"
         DatabaseUpdate(#Databases_LocalSettings, "ALTER TABLE AMS_LocalSettings ADD COLUMN [CAM_TYPE] INT")
+        DatabaseUpdate(#Databases_LocalSettings, "UPDATE AMS_LocalSettings SET CAM_TYPE = 0")        
     Else
         System\Settings_CameraType.i  = Database_IntQuery("Select CAM_TYPE from AMS_LocalSettings;", #Databases_LocalSettings, #PB_Compiler_Line)
     EndIf
@@ -8447,7 +8452,9 @@ EndProcedure
 ;/SL20231005 Opens the installed version on AQC and sets the Sections to the same as the roll reference ones
 Procedure CameraSetAVGMode(strRollID.s)
     Protected strFilePath.s, strExecutable.s, result.i, strSQL.s, Vol1.f, Vol2.f, Vol3.f, Vol4.f, Vol5.f, SectionCount.i
-    Protected strDir.s
+    Protected strDir.s, intTime.i
+    
+    intTime = 500
     
     Select System\Settings_CameraType
         Case 0 ;/7.3
@@ -8507,12 +8514,17 @@ Procedure CameraSetAVGMode(strRollID.s)
             Repeat
                 If Len(HW\PipeName) = 0 
                     Delay(500)
+                    intTime + 500
                 EndIf
-            Until Len(HW\PipeName) > 1
-
+            Until Len(HW\PipeName) > 1 Or intTime > 9000
+            
             If Command_SendToAniCAMPipe("?$VIEWVIDEO") = "0"
                 Command_SendToAniCAMPipe("$VIEWVIDEO=1")
                 Delay(6000)
+                If Command_SendToAniCAMPipe("?$VIEWVIDEO") = "0"
+                    MessageRequester("No Camera", "No Camera Detected, please check the connection and try again.", #PB_MessageRequester_Warning)
+                ProcedureReturn
+            EndIf    
             EndIf   
         
             Command_SendToAniCAMPipe("$AVGMODERESET=1")    
@@ -9521,18 +9533,18 @@ Procedure Init_Settings() ;/ Last Updated PJ 06.01.2022
     
     X = 210 :  Y = 24
     FrameGadget(#Settings_GeneralHistoryList_Frame,X,Y,236,160,tTxt(#Str_GeneralHistoryList))
-        ListViewGadget(#Settings_GeneralHistoryList_List,X+4,Y+16,140,140)
+    ListViewGadget(#Settings_GeneralHistoryList_List,X+4,Y+16,140,140)
 
     FrameGadget(#Settings_CamType_Frame,X,Y,236,126, tTxt(#Str_CameraType))
-        ComboBoxGadget(#Settings_CamType_Combo, X+10, Y+20, 120, 20)
-            AddGadgetItem(#Settings_CamType_Combo, 0, "Anicam V7.3")
-            SetGadgetItemData(#Settings_CamType_Combo, 0, 0)
+    ComboBoxGadget(#Settings_CamType_Combo, X+10, Y+20, 120, 20)
+    AddGadgetItem(#Settings_CamType_Combo, 0, "Anicam V7.3")
+    SetGadgetItemData(#Settings_CamType_Combo, 0, 0)
         
-            AddGadgetItem(#Settings_CamType_Combo, 1, "Anicam HD / HD+")
-            SetGadgetItemData(#Settings_CamType_Combo, 1, 1)
-        ;/SL 06/11/2023 Uncomment when ready for Low Screen to be added
-            ;AddGadgetItem(#Settings_CamType_Combo, 2, "SurfaceCAM")
-            ;SetGadgetItemData(#Settings_CamType_Combo, 2, 2)
+    AddGadgetItem(#Settings_CamType_Combo, 1, "Anicam HD / HD+")
+    SetGadgetItemData(#Settings_CamType_Combo, 1, 1)
+    ;/SL 06/11/2023 Uncomment when ready for Low Screen to be added
+    ;AddGadgetItem(#Settings_CamType_Combo, 2, "SurfaceCAM")
+    ;SetGadgetItemData(#Settings_CamType_Combo, 2, 2)
     
     SetGadgetState(#Settings_CamType_Combo, System\Settings_CameraType)
 
@@ -13764,6 +13776,8 @@ Procedure Init_Images()
   CatchImage(#Image_BorderRolls,?BorderRolls)
   CatchImage(#Image_TroikaAMS,?TroikaAMS)
   
+  CatchImage(#Image_Launcher,?Launcher)
+  
   CatchImage(#Image_Padlock_Open,?Padlock_Open)
   CatchImage(#Image_Padlock_Closed,?Padlock_Closed)
   CatchImage(#Image_PrinterIcon,?Print_Start)
@@ -13884,8 +13898,11 @@ Procedure Init_Window_Main()
   
   SetGadgetState(#Gad_AutoImport,System\LiveMonitor)
   
-  ButtonImageGadget(#Gad_Icon_Manager_Mode,240,Y,42,32,ImageID(#Image_Padlock_Closed))
+  ButtonImageGadget(#Gad_Icon_Manager_Mode,207,Y,42,32,ImageID(#Image_Padlock_Closed))
   GadgetToolTip(#Gad_Icon_Manager_Mode,tTxt(#Str_ManagerMode)+":"+" "+tTxt(#Str_CurrentlyOff))
+  
+  ResizeImage(#Image_Launcher, 25, 25, #PB_Image_Smooth)
+  ButtonImageGadget(#Gad_Icon_Launcher, 250, Y, 32,32,ImageID(#Image_Launcher))
   
   CloseGadgetList() ;/ end of container section
   
@@ -14734,7 +14751,24 @@ Procedure Process_Window_Events()
 
                 Case #Gad_RollInfo_Import_New
                     Init_Window_Readings_Edit(System\Selected_Roll_ID,#Database_Insert,-1)
-                
+                Case #Gad_Icon_Launcher
+                    If FindWindow_(0, "Untitled - Paint") = 0 
+                        If RunProgram("mspaint") = 0
+                            MessageRequester("Warning", "Troika Systems Launcher not Found", #PB_MessageRequester_Warning)
+                            ProcedureReturn
+                        EndIf
+                    Else
+                        Protected hWnd = FindWindow_(0,"Untitled - Paint")
+                        SetWindowPos_(hWnd, #HWND_TOP, 0, 0, 0, 0, #SWP_NOMOVE | #SWP_NOSIZE | #SWP_SHOWWINDOW)
+                    
+                    EndIf
+                    
+;
+;                     If RunProgram("C:\Program Files\Troika Systems LTD\Launcher.exe") = 0
+;                         MessageRequester("Warning", "Troika Systems Launcher not Found", #PB_MessageRequester_Warning)
+;                         ProcedureReturn
+;                     EndIf
+                    
                 Case #Gad_Icon_Manager_Mode
                     If System\Manager_Mode = 1
                         System\Manager_Mode = 0
@@ -15487,6 +15521,10 @@ DataSection
   IncludeBinary "Images\Padlock_Closed.png" ;/DNT
   Padlock_Closed_End:
   
+  Launcher:
+  IncludeBinary "Images\Launchericon.ico"
+  Launcher_End:
+  
   Print_Start:
   IncludeBinary "Images\Print.png" ;/DNT
   Print_End:
@@ -15499,21 +15537,21 @@ DataSection
 EndDataSection
 ;}
 
-; IDE Options = PureBasic 6.03 LTS (Windows - x64)
-; CursorPosition = 9532
-; FirstLine = 9521
+; IDE Options = PureBasic 6.04 LTS (Windows - x64)
+; CursorPosition = 661
+; FirstLine = 676
 ; Folding = ----------------------------------
-; Markers = 10045
+; Markers = 10057
 ; EnableThread
 ; EnableXP
 ; EnableUser
 ; UseIcon = Images\AniCAM_Mini_T.ico
-; Executable = Executable\Anilox Management System v1.71d.exe
+; Executable = Executable\Anilox Management System v1.72.exe
 ; CPU = 5
 ; CompileSourceDirectory
 ; Warnings = Display
 ; EnablePurifier
-; EnableCompileCount = 1259
-; EnableBuildCount = 22
+; EnableCompileCount = 1264
+; EnableBuildCount = 24
 ; Watchlist = System\Settings_Volume_UnitMask
 ; EnableUnicode

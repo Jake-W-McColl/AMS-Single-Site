@@ -405,6 +405,13 @@ Enumeration
   #Str_EditPrintDistance
   #Str_Selectfield
   #Str_SelectGeneralInformationvalue
-  #Str_CameraType
   #Str_LastComment
+  #Str_Ref
+  #Str_CameraType
 EndEnumeration
+
+; IDE Options = PureBasic 6.04 LTS (Windows - x64)
+; CursorPosition = 404
+; FirstLine = 359
+; EnableXP
+; DPIAware
