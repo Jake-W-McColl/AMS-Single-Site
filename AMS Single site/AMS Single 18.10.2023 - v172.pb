@@ -14752,13 +14752,13 @@ Procedure Process_Window_Events()
                 Case #Gad_RollInfo_Import_New
                     Init_Window_Readings_Edit(System\Selected_Roll_ID,#Database_Insert,-1)
                 Case #Gad_Icon_Launcher
-                    If FindWindow_(0, "Untitled - Paint") = 0 
-                        If RunProgram("mspaint") = 0
+                    If FindWindow_(0, "Troika Systems Launcher") = 0 
+                        If RunProgram("C:\Program Files\Troika Systems\Launcher.exe") = 0
                             MessageRequester("Warning", "Troika Systems Launcher not Found", #PB_MessageRequester_Warning)
                             ProcedureReturn
                         EndIf
                     Else
-                        Protected hWnd = FindWindow_(0,"Untitled - Paint")
+                        Protected hWnd = FindWindow_(0,"Troika Systems Launcher")
                         SetWindowPos_(hWnd, #HWND_TOP, 0, 0, 0, 0, #SWP_NOMOVE | #SWP_NOSIZE | #SWP_SHOWWINDOW)
                     
                     EndIf
@@ -15538,8 +15538,8 @@ EndDataSection
 ;}
 
 ; IDE Options = PureBasic 6.04 LTS (Windows - x64)
-; CursorPosition = 661
-; FirstLine = 676
+; CursorPosition = 14760
+; FirstLine = 14750
 ; Folding = ----------------------------------
 ; Markers = 10057
 ; EnableThread
@@ -15551,7 +15551,7 @@ EndDataSection
 ; CompileSourceDirectory
 ; Warnings = Display
 ; EnablePurifier
-; EnableCompileCount = 1264
-; EnableBuildCount = 24
+; EnableCompileCount = 1273
+; EnableBuildCount = 27
 ; Watchlist = System\Settings_Volume_UnitMask
 ; EnableUnicode
