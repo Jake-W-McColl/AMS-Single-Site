@@ -14753,7 +14753,7 @@ Procedure Process_Window_Events()
                     Init_Window_Readings_Edit(System\Selected_Roll_ID,#Database_Insert,-1)
                 Case #Gad_Icon_Launcher
                     If FindWindow_(0, "Untitled - Paint") = 0 
-                        If RunProgram("mspaint") = 0
+                        If RunProgram("C:\Program Files\Troika Systems Ltd\Troika Systems Launcher.exe") = 0
                             MessageRequester("Warning", "Troika Systems Launcher not Found", #PB_MessageRequester_Warning)
                             ProcedureReturn
                         EndIf
@@ -15538,8 +15538,8 @@ EndDataSection
 ;}
 
 ; IDE Options = PureBasic 6.04 LTS (Windows - x64)
-; CursorPosition = 661
-; FirstLine = 676
+; CursorPosition = 14755
+; FirstLine = 14751
 ; Folding = ----------------------------------
 ; Markers = 10057
 ; EnableThread
